@@ -1,5 +1,4 @@
 import { Elysia, t } from 'elysia'
-import { streamText, stepCountIs } from 'ai'
 import {
   createStory,
   getStory,
@@ -37,6 +36,7 @@ import { registry } from './fragments/registry'
 import { buildContextState, assembleMessages } from './llm/context-builder'
 import { createFragmentTools } from './llm/tools'
 import { getModel } from './llm/client'
+import { createWriterAgent } from './llm/writer-agent'
 import {
   getGlobalConfigSafe,
   addProvider,
@@ -65,9 +65,10 @@ import {
 } from './plugins/hooks'
 import { collectPluginTools } from './plugins/tools'
 import { triggerLibrarian, getLibrarianRuntimeStatus } from './librarian/scheduler'
-import { refineFragment } from './librarian/refine'
-import { librarianChat } from './librarian/chat'
+import { invokeAgent } from './agents'
 import { exportStoryAsZip, importStoryFromZip } from './story-archive'
+import type { RefineResult } from './librarian/refine'
+import type { ChatResult } from './librarian/chat'
 import {
   getState as getLibrarianState,
   listAnalyses as listLibrarianAnalyses,
@@ -681,11 +682,19 @@ export function createApp(dataDir: string = DATA_DIR) {
       }
 
       try {
-        const { textStream, completion } = await refineFragment(dataDir, params.storyId, {
-          fragmentId: body.fragmentId,
-          instructions: body.instructions,
-          maxSteps: story.settings.maxSteps ?? 5,
+        const { output: refineOutput, trace } = await invokeAgent({
+          dataDir,
+          storyId: params.storyId,
+          agentName: 'librarian.refine',
+          input: {
+            fragmentId: body.fragmentId,
+            instructions: body.instructions,
+            maxSteps: story.settings.maxSteps ?? 5,
+          },
         })
+
+        const { textStream, completion } = refineOutput as RefineResult
+        requestLogger.info('Agent trace (refine)', { trace })
 
         // Log completion in background
         completion.then((result) => {
@@ -748,10 +757,18 @@ export function createApp(dataDir: string = DATA_DIR) {
       }
 
       try {
-        const { eventStream, completion } = await librarianChat(dataDir, params.storyId, {
-          messages: body.messages,
-          maxSteps: story.settings.maxSteps ?? 10,
+        const { output: chatOutput, trace } = await invokeAgent({
+          dataDir,
+          storyId: params.storyId,
+          agentName: 'librarian.chat',
+          input: {
+            messages: body.messages,
+            maxSteps: story.settings.maxSteps ?? 10,
+          },
         })
+
+        const { eventStream, completion } = chatOutput as ChatResult
+        requestLogger.info('Agent trace (chat)', { trace })
 
         // Persist chat history after completion (in background)
         completion.then(async (result) => {
@@ -932,12 +949,13 @@ export function createApp(dataDir: string = DATA_DIR) {
       requestLogger.info('Starting LLM stream...')
       const { model, modelId: resolvedModelId } = await getModel(dataDir, params.storyId)
       requestLogger.info('Resolved model', { resolvedModelId })
-      const result = streamText({
+      const writerAgent = createWriterAgent({
         model,
-        messages,
         tools,
-        toolChoice: 'auto',
-        stopWhen: stepCountIs(story.settings.maxSteps ?? 10),
+        maxSteps: story.settings.maxSteps ?? 10,
+      })
+      const result = await writerAgent.stream({
+        messages,
       })
 
       // If saveResult is true, we need to stream AND save

@@ -1,5 +1,5 @@
 import type { Fragment } from '../fragments/schema'
-import { runLibrarian } from './agent'
+import { invokeAgent } from '../agents'
 import { createLogger } from '../logging'
 
 const pending = new Map<string, ReturnType<typeof setTimeout>>()
@@ -70,7 +70,12 @@ export function triggerLibrarian(
       try {
         requestLogger.info('Starting librarian analysis...', { fragmentId: fragment.id })
         const startTime = Date.now()
-        await runLibrarian(dataDir, storyId, fragment.id)
+        await invokeAgent({
+          dataDir,
+          storyId,
+          agentName: 'librarian.analyze',
+          input: { fragmentId: fragment.id },
+        })
         const durationMs = Date.now() - startTime
         requestLogger.info('Librarian analysis completed', { fragmentId: fragment.id, durationMs })
         setRuntimeStatus(storyId, {

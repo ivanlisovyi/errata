@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-// Mock the agent module so runLibrarian doesn't actually call LLM
-vi.mock('@/server/librarian/agent', () => ({
-  runLibrarian: vi.fn(),
+// Mock the agent runner so scheduler doesn't execute real agents
+vi.mock('@/server/agents', () => ({
+  invokeAgent: vi.fn(),
 }))
 
-import { runLibrarian } from '@/server/librarian/agent'
+import { invokeAgent } from '@/server/agents'
 import { triggerLibrarian, clearPending, getPendingCount, getLibrarianRuntimeStatus } from '@/server/librarian/scheduler'
 import type { Fragment } from '@/server/fragments/schema'
 
-const mockedRunLibrarian = vi.mocked(runLibrarian)
+const mockedInvokeAgent = vi.mocked(invokeAgent)
 
 function makeFragment(id: string): Fragment {
   const now = new Date().toISOString()
@@ -35,15 +35,19 @@ describe('librarian scheduler', () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     clearPending()
-    mockedRunLibrarian.mockResolvedValue({
-      id: 'la-test',
-      createdAt: new Date().toISOString(),
-      fragmentId: 'pr-0001',
-      summaryUpdate: '',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
+    mockedInvokeAgent.mockResolvedValue({
+      runId: 'ar-test',
+      output: {
+        id: 'la-test',
+        createdAt: new Date().toISOString(),
+        fragmentId: 'pr-0001',
+        summaryUpdate: '',
+        mentionedCharacters: [],
+        contradictions: [],
+        knowledgeSuggestions: [],
+        timelineEvents: [],
+      },
+      trace: [],
     })
   })
 
@@ -52,17 +56,22 @@ describe('librarian scheduler', () => {
     vi.useRealTimers()
   })
 
-  it('triggers runLibrarian after debounce period', async () => {
+  it('triggers librarian analyze agent after debounce period', async () => {
     triggerLibrarian('/data', 'story-1', makeFragment('pr-0001'))
 
-    expect(mockedRunLibrarian).not.toHaveBeenCalled()
+    expect(mockedInvokeAgent).not.toHaveBeenCalled()
     expect(getPendingCount()).toBe(1)
     expect(getLibrarianRuntimeStatus('story-1').runStatus).toBe('scheduled')
 
     await vi.advanceTimersByTimeAsync(2000)
 
-    expect(mockedRunLibrarian).toHaveBeenCalledTimes(1)
-    expect(mockedRunLibrarian).toHaveBeenCalledWith('/data', 'story-1', 'pr-0001')
+    expect(mockedInvokeAgent).toHaveBeenCalledTimes(1)
+    expect(mockedInvokeAgent).toHaveBeenCalledWith({
+      dataDir: '/data',
+      storyId: 'story-1',
+      agentName: 'librarian.analyze',
+      input: { fragmentId: 'pr-0001' },
+    })
     expect(getPendingCount()).toBe(0)
     expect(getLibrarianRuntimeStatus('story-1').runStatus).toBe('idle')
   })
@@ -77,8 +86,13 @@ describe('librarian scheduler', () => {
     await vi.advanceTimersByTimeAsync(2000)
 
     // Only the last fragment should be used
-    expect(mockedRunLibrarian).toHaveBeenCalledTimes(1)
-    expect(mockedRunLibrarian).toHaveBeenCalledWith('/data', 'story-1', 'pr-0003')
+    expect(mockedInvokeAgent).toHaveBeenCalledTimes(1)
+    expect(mockedInvokeAgent).toHaveBeenCalledWith({
+      dataDir: '/data',
+      storyId: 'story-1',
+      agentName: 'librarian.analyze',
+      input: { fragmentId: 'pr-0003' },
+    })
   })
 
   it('runs independently for different stories', async () => {
@@ -89,14 +103,24 @@ describe('librarian scheduler', () => {
 
     await vi.advanceTimersByTimeAsync(2000)
 
-    expect(mockedRunLibrarian).toHaveBeenCalledTimes(2)
-    expect(mockedRunLibrarian).toHaveBeenCalledWith('/data', 'story-1', 'pr-0001')
-    expect(mockedRunLibrarian).toHaveBeenCalledWith('/data', 'story-2', 'pr-0002')
+    expect(mockedInvokeAgent).toHaveBeenCalledTimes(2)
+    expect(mockedInvokeAgent).toHaveBeenCalledWith({
+      dataDir: '/data',
+      storyId: 'story-1',
+      agentName: 'librarian.analyze',
+      input: { fragmentId: 'pr-0001' },
+    })
+    expect(mockedInvokeAgent).toHaveBeenCalledWith({
+      dataDir: '/data',
+      storyId: 'story-2',
+      agentName: 'librarian.analyze',
+      input: { fragmentId: 'pr-0002' },
+    })
   })
 
-  it('does not propagate errors from runLibrarian', async () => {
+  it('does not propagate errors from agent runner', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    mockedRunLibrarian.mockRejectedValue(new Error('LLM failed'))
+    mockedInvokeAgent.mockRejectedValue(new Error('LLM failed'))
 
     triggerLibrarian('/data', 'story-1', makeFragment('pr-0001'))
 
@@ -122,6 +146,6 @@ describe('librarian scheduler', () => {
 
     await vi.advanceTimersByTimeAsync(5000)
 
-    expect(mockedRunLibrarian).not.toHaveBeenCalled()
+    expect(mockedInvokeAgent).not.toHaveBeenCalled()
   })
 })

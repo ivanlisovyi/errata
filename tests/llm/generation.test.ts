@@ -9,19 +9,29 @@ import {
 } from '@/server/fragments/storage'
 import type { StoryMeta, Fragment } from '@/server/fragments/schema'
 
-// Mock the AI SDK streamText
+const { mockAgentCtor, mockAgentStream } = vi.hoisted(() => ({
+  mockAgentCtor: vi.fn(),
+  mockAgentStream: vi.fn(),
+}))
+
+// Mock the AI SDK ToolLoopAgent
 vi.mock('ai', async () => {
   const actual = await vi.importActual('ai')
   return {
     ...actual,
-    streamText: vi.fn(),
+    ToolLoopAgent: class {
+      constructor(config: unknown) {
+        mockAgentCtor(config)
+      }
+
+      stream(args: unknown) {
+        return mockAgentStream(args)
+      }
+    },
   }
 })
 
-import { streamText } from 'ai'
 import { createApp } from '@/server/api'
-
-const mockedStreamText = vi.mocked(streamText)
 
 function makeStory(): StoryMeta {
   const now = new Date().toISOString()
@@ -115,7 +125,7 @@ describe('generation endpoint', () => {
     await cleanup()
   })
 
-  it('POST /stories/:storyId/generate calls streamText with correct context', async () => {
+  it('POST /stories/:storyId/generate calls writer agent with correct context', async () => {
     const guideline = makeFragment({
       id: 'gl-0001',
       type: 'guideline',
@@ -126,7 +136,7 @@ describe('generation endpoint', () => {
     })
     await createFragment(dataDir, storyId, guideline)
 
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('The shadows deepened.') as any,
     )
 
@@ -140,10 +150,9 @@ describe('generation endpoint', () => {
     })
 
     expect(res.status).toBe(200)
-    expect(mockedStreamText).toHaveBeenCalledTimes(1)
+    expect(mockAgentStream).toHaveBeenCalledTimes(1)
 
-    // Verify streamText was called with correct messages
-    const callArgs = mockedStreamText.mock.calls[0][0]
+    const callArgs = mockAgentStream.mock.calls[0][0] as any
     expect(callArgs.messages).toBeDefined()
     const msg = callArgs.messages!.find((m: any) => m.role === 'user')
     expect(msg!.content).toContain('Dark gothic style.')
@@ -151,7 +160,7 @@ describe('generation endpoint', () => {
   })
 
   it('POST /stories/:storyId/generate includes fragment tools', async () => {
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('Generated text.') as any,
     )
 
@@ -166,12 +175,10 @@ describe('generation endpoint', () => {
 
     expect(res.status).toBe(200)
 
-    const callArgs = mockedStreamText.mock.calls[0][0]
+    const callArgs = mockAgentCtor.mock.calls[0][0] as any
     expect(callArgs.tools).toBeDefined()
-    // Built-in types have llmTools: false, so no type-specific tools
     expect(callArgs.tools).not.toHaveProperty('getCharacter')
     expect(callArgs.tools).not.toHaveProperty('listCharacters')
-    // listFragmentTypes is always present
     expect(callArgs.tools).toHaveProperty('listFragmentTypes')
   })
 
@@ -180,7 +187,7 @@ describe('generation endpoint', () => {
     story.settings.enabledBuiltinTools = []
     await updateStory(dataDir, story)
 
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('Generated text.') as any,
     )
 
@@ -195,7 +202,7 @@ describe('generation endpoint', () => {
 
     expect(res.status).toBe(200)
 
-    const callArgs = mockedStreamText.mock.calls[0][0]
+    const callArgs = mockAgentCtor.mock.calls[0][0] as any
     expect(Object.keys(callArgs.tools ?? {})).toEqual([])
   })
 
@@ -204,7 +211,7 @@ describe('generation endpoint', () => {
     story.settings.enabledBuiltinTools = ['listFragmentTypes']
     await updateStory(dataDir, story)
 
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('Generated text.') as any,
     )
 
@@ -219,14 +226,14 @@ describe('generation endpoint', () => {
 
     expect(res.status).toBe(200)
 
-    const callArgs = mockedStreamText.mock.calls[0][0]
+    const callArgs = mockAgentCtor.mock.calls[0][0] as any
     expect(callArgs.tools).toHaveProperty('listFragmentTypes')
     expect(callArgs.tools).not.toHaveProperty('listFragments')
     expect(callArgs.tools).not.toHaveProperty('getFragment')
   })
 
   it('POST /stories/:storyId/generate saves result when saveResult=true', async () => {
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('The dragon roared.') as any,
     )
 
@@ -289,7 +296,7 @@ describe('generation endpoint', () => {
     })
     await createFragment(dataDir, storyId, original)
 
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('Regenerated prose content.') as any,
     )
 
@@ -332,7 +339,7 @@ describe('generation endpoint', () => {
     })
     await createFragment(dataDir, storyId, original)
 
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('The hero crept through the dark forest.') as any,
     )
 
@@ -352,7 +359,7 @@ describe('generation endpoint', () => {
     await new Promise((r) => setTimeout(r, 100))
 
     // Verify the prompt included existing content
-    const callArgs = mockedStreamText.mock.calls[0][0]
+    const callArgs = mockAgentStream.mock.calls[0][0] as any
     const userMsg = callArgs.messages!.find((m: any) => m.role === 'user')
     expect(userMsg!.content).toContain('The hero walked slowly through the forest.')
     expect(userMsg!.content).toContain('Make it more suspenseful')
@@ -388,7 +395,7 @@ describe('generation endpoint', () => {
   })
 
   it('returns 404 when mode=regenerate with nonexistent fragment', async () => {
-    mockedStreamText.mockReturnValue(
+    mockAgentStream.mockResolvedValue(
       createMockStreamResult('test') as any,
     )
 
