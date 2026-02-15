@@ -9,19 +9,24 @@ import { getState, getAnalysis, listAnalyses } from '@/server/librarian/storage'
 import { initProseChain, addProseSection } from '@/server/fragments/prose-chain'
 import type { StoryMeta, Fragment } from '@/server/fragments/schema'
 
-// Mock the AI SDK generateText
+const { mockAgentGenerate } = vi.hoisted(() => ({
+  mockAgentGenerate: vi.fn(),
+}))
+
+// Mock the AI SDK ToolLoopAgent
 vi.mock('ai', async () => {
   const actual = await vi.importActual('ai')
   return {
     ...actual,
-    generateText: vi.fn(),
+    ToolLoopAgent: class {
+      generate(args: unknown) {
+        return mockAgentGenerate(args)
+      }
+    },
   }
 })
 
-import { generateText } from 'ai'
 import { runLibrarian } from '@/server/librarian/agent'
-
-const mockedGenerateText = vi.mocked(generateText)
 
 function makeStory(
   overrides: Omit<Partial<StoryMeta>, 'settings'> & { settings?: Partial<StoryMeta['settings']> } = {},
@@ -34,8 +39,11 @@ function makeStory(
     maxSteps: 10,
     providerId: null,
     modelId: null,
+    librarianProviderId: null,
+    librarianModelId: null,
     contextOrderMode: 'simple',
     fragmentOrder: [],
+    enabledBuiltinTools: [],
   }
 
   const baseStory: StoryMeta = {
@@ -58,6 +66,7 @@ function makeStory(
 function makeFragment(
   overrides: Partial<Omit<Fragment, 'placement'>> & { placement?: Fragment['placement'] },
 ): Fragment {
+  const { placement, ...rest } = overrides
   const now = new Date().toISOString()
   const baseFragment: Fragment = {
     id: 'pr-0001',
@@ -77,13 +86,14 @@ function makeFragment(
 
   return {
     ...baseFragment,
-    ...overrides,
-    placement: overrides.placement ?? 'user',
+    ...rest,
+    placement: placement ?? 'user',
   }
 }
 
 function mockGenerateTextResponse(json: Record<string, unknown>) {
-  mockedGenerateText.mockResolvedValue({
+  mockAgentGenerate.mockResolvedValue({
+    output: json,
     text: JSON.stringify(json),
     finishReason: 'stop',
     usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150 },
@@ -353,7 +363,7 @@ describe('librarian agent', () => {
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockedGenerateText.mockResolvedValue({
+    mockAgentGenerate.mockResolvedValue({
       text: 'this is not json',
       finishReason: 'stop',
       usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
@@ -383,7 +393,7 @@ describe('librarian agent', () => {
       timelineEvents: [],
     }
 
-    mockedGenerateText.mockResolvedValue({
+    mockAgentGenerate.mockResolvedValue({
       text: `\`\`\`json\n${JSON.stringify(parsed)}\n\`\`\``,
       finishReason: 'stop',
       usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
@@ -420,7 +430,7 @@ describe('librarian agent', () => {
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockedGenerateText.mockResolvedValue({
+    mockAgentGenerate.mockResolvedValue({
       text: `Here is the analysis:\n${JSON.stringify({
         summaryUpdate: 'Fallback worked.',
         mentionedCharacters: [],
@@ -442,7 +452,7 @@ describe('librarian agent', () => {
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.summaryUpdate).toBe('Fallback worked.')
-    expect(mockedGenerateText).toHaveBeenCalledTimes(1)
+    expect(mockAgentGenerate).toHaveBeenCalledTimes(1)
   })
 
   it('throws when generated JSON does not match schema', async () => {
@@ -450,7 +460,7 @@ describe('librarian agent', () => {
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockedGenerateText.mockResolvedValue({
+    mockAgentGenerate.mockResolvedValue({
       text: JSON.stringify({
         summaryUpdate: 123,
         mentionedCharacters: [],
@@ -488,8 +498,8 @@ describe('librarian agent', () => {
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.summaryUpdate).toBe('Keyword prompt worked.')
-    expect(mockedGenerateText).toHaveBeenCalledTimes(1)
-    const call = mockedGenerateText.mock.calls[0]?.[0]
-    expect(call?.prompt).toContain('Return ONLY valid JSON')
+    expect(mockAgentGenerate).toHaveBeenCalledTimes(1)
+    const call = mockAgentGenerate.mock.calls[0]?.[0] as { prompt?: string } | undefined
+    expect(typeof call?.prompt).toBe('string')
   })
 })

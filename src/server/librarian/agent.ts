@@ -1,4 +1,3 @@
-import { generateObject, generateText, Output } from 'ai'
 import { getModel } from '../llm/client'
 import { getStory, updateStory, listFragments, getFragment } from '../fragments/storage'
 import { getActiveProseIds } from '../fragments/prose-chain'
@@ -10,6 +9,10 @@ import {
 } from './storage'
 import { createLogger } from '../logging'
 import { z } from 'zod/v4'
+import {
+  createLibrarianAnalyzeJsonAgent,
+  createLibrarianAnalyzeStructuredAgent,
+} from './llm-agents'
 
 const logger = createLogger('librarian-agent')
 
@@ -79,18 +82,25 @@ async function generateStructuredAnalysisWithFallback(args: {
   headers: Record<string, string>
   requestLogger: ReturnType<typeof logger.child>
 }) {
+  const structuredAgent = createLibrarianAnalyzeStructuredAgent({
+    model: args.model,
+    instructions: args.system,
+    schema: LibrarianAnalysisSchema,
+  })
+
   try {
-    const result = await generateText({
-      model: args.model,
-      system: args.system,
+    const result = await structuredAgent.generate({
       prompt: args.prompt,
-      output: Output.object({
-        schema: LibrarianAnalysisSchema,
-      }),
       headers: args.headers,
     })
 
-    return result.output
+    if (result.output) {
+      return LibrarianAnalysisSchema.parse(result.output)
+    }
+
+    const rawJson = extractJsonObject(result.text ?? '')
+    const parsedJson = JSON.parse(rawJson)
+    return LibrarianAnalysisSchema.parse(parsedJson)
   } catch (error) {
     if (!isStructuredOutputUnsupportedError(error)) {
       throw error
@@ -103,9 +113,11 @@ async function generateStructuredAnalysisWithFallback(args: {
     Schema:
     ${JSON.stringify(LibrarianAnalysisSchema.toJSONSchema(), null, 2)}
     `
-    const textResult = await generateText({
+    const textAgent = createLibrarianAnalyzeJsonAgent({
       model: args.model,
-      system: args.system,
+      instructions: args.system,
+    })
+    const textResult = await textAgent.generate({
       prompt: fallbackPrompt,
       headers: args.headers,
     })

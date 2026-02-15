@@ -1,4 +1,3 @@
-import { streamText, stepCountIs } from 'ai'
 import { getModel } from '../llm/client'
 import { getStory } from '../fragments/storage'
 import { buildContextState } from '../llm/context-builder'
@@ -6,6 +5,7 @@ import { createFragmentTools } from '../llm/tools'
 import { pluginRegistry } from '../plugins/registry'
 import { collectPluginTools } from '../plugins/tools'
 import { createLogger } from '../logging'
+import { createLibrarianChatAgent } from './llm-agents'
 
 const logger = createLogger('librarian-chat')
 
@@ -163,14 +163,16 @@ export async function librarianChat(
   const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarian' })
   requestLogger.info('Resolved model', { modelId })
 
-  // Stream with write tools
-  const result = streamText({
+  const chatAgent = createLibrarianChatAgent({
     model,
-    system: chatSystemPrompt,
-    messages: aiMessages,
+    instructions: chatSystemPrompt,
     tools,
-    toolChoice: 'auto',
-    stopWhen: stepCountIs(opts.maxSteps ?? 10),
+    maxSteps: opts.maxSteps ?? 10,
+  })
+
+  // Stream with write tools
+  const result = await chatAgent.stream({
+    messages: aiMessages,
   })
 
   // Build NDJSON event stream from fullStream

@@ -1,9 +1,9 @@
-import { streamText, stepCountIs } from 'ai'
 import { getModel } from '../llm/client'
 import { getStory, getFragment } from '../fragments/storage'
 import { buildContextState } from '../llm/context-builder'
 import { createFragmentTools } from '../llm/tools'
 import { createLogger } from '../logging'
+import { createLibrarianRefineAgent } from './llm-agents'
 
 const logger = createLogger('librarian-refine')
 
@@ -111,16 +111,18 @@ export async function refineFragment(
   const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarian' })
   requestLogger.info('Resolved model', { modelId })
 
-  // Stream with write tools
-  const result = streamText({
+  const refineAgent = createLibrarianRefineAgent({
     model,
-    system: REFINE_SYSTEM_PROMPT,
+    instructions: REFINE_SYSTEM_PROMPT,
+    tools,
+    maxSteps: opts.maxSteps ?? 5,
+  })
+
+  // Stream with write tools
+  const result = await refineAgent.stream({
     messages: [
       { role: 'user', content: contextParts.join('\n') + '\n\n' + userParts.join('\n') },
     ],
-    tools,
-    toolChoice: 'auto',
-    stopWhen: stepCountIs(opts.maxSteps ?? 5),
   })
 
   // Tee the text stream
