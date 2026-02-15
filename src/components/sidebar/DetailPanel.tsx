@@ -132,10 +132,10 @@ export function DetailPanel({
     >
       <div className="flex flex-col h-full" style={{ width: panelWidth, minWidth: panelWidth }} data-component-id={componentId('detail-panel-section', activeSection)}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50" data-component-id="detail-panel-header">
-          <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{title}</h3>
-          <Button size="icon" variant="ghost" className="size-6 text-muted-foreground/50 hover:text-foreground" onClick={onClose} data-component-id="detail-panel-close">
-            <X className="size-3.5" />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/50" data-component-id="detail-panel-header">
+          <h2 className="font-display text-lg truncate">{title}</h2>
+          <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={onClose} data-component-id="detail-panel-close">
+            <X className="size-4" />
           </Button>
         </div>
 
