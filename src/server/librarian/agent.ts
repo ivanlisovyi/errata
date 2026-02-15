@@ -98,13 +98,19 @@ async function generateStructuredAnalysisWithFallback(args: {
 
     args.requestLogger.warn('Structured object generation failed; falling back to JSON text mode')
 
-    const fallbackPrompt = `${args.prompt}\n\nReturn ONLY valid JSON with keys: summaryUpdate, mentionedCharacters, contradictions, knowledgeSuggestions, timelineEvents.`
+    const fallbackPrompt = `${args.prompt}
+    Return ONLY valid JSON that follows this schema. Do not fence the JSON, just return the raw object text.
+    Schema:
+    ${JSON.stringify(LibrarianAnalysisSchema.toJSONSchema(), null, 2)}
+    `
     const textResult = await generateText({
       model: args.model,
       system: args.system,
       prompt: fallbackPrompt,
       headers: args.headers,
     })
+
+    args.requestLogger.debug('Raw LLM output for fallback', { text: textResult.text })
 
     const rawJson = extractJsonObject(textResult.text)
     const parsedJson = JSON.parse(rawJson)

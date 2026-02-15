@@ -104,6 +104,21 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
 
   const totalContradictions = analyses?.reduce((n, a) => n + a.contradictionCount, 0) ?? 0
   const totalSuggestions = analyses?.reduce((n, a) => n + a.suggestionCount, 0) ?? 0
+  const runStatus = status?.runStatus ?? 'idle'
+  const statusColor = runStatus === 'running'
+    ? 'bg-blue-500/70'
+    : runStatus === 'scheduled'
+      ? 'bg-amber-500/70'
+      : runStatus === 'error'
+        ? 'bg-red-500/70'
+        : 'bg-green-500/70'
+  const statusLabel = runStatus === 'running'
+    ? 'Running'
+    : runStatus === 'scheduled'
+      ? 'Scheduled'
+      : runStatus === 'error'
+        ? 'Error'
+        : 'Idle'
 
   return (
     <ScrollArea className="h-full">
@@ -112,9 +127,24 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
         <div>
           <h4 className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-2">Status</h4>
           <div className="flex items-center gap-2 text-sm">
-            <div className="size-1.5 rounded-full bg-green-500/70" />
-            <span className="text-sm">Idle</span>
+            <div className={`size-1.5 rounded-full ${statusColor}`} />
+            <span className="text-sm">{statusLabel}</span>
           </div>
+          {status?.pendingFragmentId && runStatus === 'scheduled' && (
+            <p className="text-[10px] text-muted-foreground/40 mt-1">
+              Pending: <span className="font-mono">{status.pendingFragmentId}</span>
+            </p>
+          )}
+          {status?.runningFragmentId && runStatus === 'running' && (
+            <p className="text-[10px] text-muted-foreground/40 mt-1">
+              Running: <span className="font-mono">{status.runningFragmentId}</span>
+            </p>
+          )}
+          {status?.lastError && runStatus === 'error' && (
+            <p className="text-[10px] text-red-500/80 mt-1 line-clamp-2">
+              {status.lastError}
+            </p>
+          )}
           {status?.lastAnalyzedFragmentId && (
             <p className="text-[10px] text-muted-foreground/40 mt-1">
               Last analyzed: <span className="font-mono">{status.lastAnalyzedFragmentId}</span>

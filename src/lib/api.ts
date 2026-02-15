@@ -111,6 +111,11 @@ export interface LibrarianState {
   lastAnalyzedFragmentId: string | null
   recentMentions: Record<string, string[]>
   timeline: Array<{ event: string; fragmentId: string }>
+  runStatus?: 'idle' | 'scheduled' | 'running' | 'error'
+  pendingFragmentId?: string | null
+  runningFragmentId?: string | null
+  lastError?: string | null
+  updatedAt?: string
 }
 
 export interface LibrarianAcceptSuggestionResponse {

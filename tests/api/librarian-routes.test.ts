@@ -93,11 +93,16 @@ describe('librarian API routes', () => {
       )
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data).toEqual({
+      expect(data).toMatchObject({
         lastAnalyzedFragmentId: null,
         recentMentions: {},
         timeline: [],
+        runStatus: 'idle',
+        pendingFragmentId: null,
+        runningFragmentId: null,
+        lastError: null,
       })
+      expect(typeof data.updatedAt).toBe('string')
     })
 
     it('returns saved state', async () => {

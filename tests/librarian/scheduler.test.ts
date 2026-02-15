@@ -6,7 +6,7 @@ vi.mock('@/server/librarian/agent', () => ({
 }))
 
 import { runLibrarian } from '@/server/librarian/agent'
-import { triggerLibrarian, clearPending, getPendingCount } from '@/server/librarian/scheduler'
+import { triggerLibrarian, clearPending, getPendingCount, getLibrarianRuntimeStatus } from '@/server/librarian/scheduler'
 import type { Fragment } from '@/server/fragments/schema'
 
 const mockedRunLibrarian = vi.mocked(runLibrarian)
@@ -57,12 +57,14 @@ describe('librarian scheduler', () => {
 
     expect(mockedRunLibrarian).not.toHaveBeenCalled()
     expect(getPendingCount()).toBe(1)
+    expect(getLibrarianRuntimeStatus('story-1').runStatus).toBe('scheduled')
 
     await vi.advanceTimersByTimeAsync(2000)
 
     expect(mockedRunLibrarian).toHaveBeenCalledTimes(1)
     expect(mockedRunLibrarian).toHaveBeenCalledWith('/data', 'story-1', 'pr-0001')
     expect(getPendingCount()).toBe(0)
+    expect(getLibrarianRuntimeStatus('story-1').runStatus).toBe('idle')
   })
 
   it('debounces multiple rapid triggers for the same story', async () => {

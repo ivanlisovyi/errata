@@ -64,7 +64,7 @@ import {
   runAfterSave,
 } from './plugins/hooks'
 import { collectPluginTools } from './plugins/tools'
-import { triggerLibrarian } from './librarian/scheduler'
+import { triggerLibrarian, getLibrarianRuntimeStatus } from './librarian/scheduler'
 import { refineFragment } from './librarian/refine'
 import { librarianChat } from './librarian/chat'
 import { exportStoryAsZip, importStoryFromZip } from './story-archive'
@@ -588,7 +588,12 @@ export function createApp(dataDir: string = DATA_DIR) {
 
     // --- Librarian ---
     .get('/stories/:storyId/librarian/status', async ({ params }) => {
-      return getLibrarianState(dataDir, params.storyId)
+      const state = await getLibrarianState(dataDir, params.storyId)
+      const runtime = getLibrarianRuntimeStatus(params.storyId)
+      return {
+        ...state,
+        ...runtime,
+      }
     })
 
     .get('/stories/:storyId/librarian/analyses', async ({ params }) => {
