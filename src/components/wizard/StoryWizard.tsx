@@ -677,7 +677,7 @@ function CharactersStep({
     const selected = castParsed.filter(c => c.selected)
     const newChars: CharData[] = selected.map(c => ({
       concept: c.concept,
-      content: '',
+      content: c.concept,
       fragmentId: null,
     }))
     setCharacters([...characters, ...newChars])
