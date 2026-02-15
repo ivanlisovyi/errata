@@ -524,7 +524,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
         <span className="text-[10px] text-muted-foreground/30">
           built by{' '}
           <a
-            href="https://github.com/nokusukun/"
+            href="https://github.com/tealios/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors underline underline-offset-2"

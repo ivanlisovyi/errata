@@ -48,6 +48,8 @@ function isStructuredOutputUnsupportedError(error: unknown): boolean {
     normalized.includes('responseformat')
     || normalized.includes('structuredoutputs')
     || normalized.includes('json response format schema')
+    || normalized.includes('no object generated')
+    || normalized.includes('did not match schema')
   )
 }
 
@@ -88,7 +90,7 @@ async function generateStructuredAnalysisWithFallback(args: {
       throw error
     }
 
-    args.requestLogger.warn('Provider does not support schema responseFormat; falling back to JSON text mode')
+    args.requestLogger.warn('Structured object generation failed; falling back to JSON text mode')
 
     const fallbackPrompt = `${args.prompt}\n\nReturn ONLY valid JSON with keys: summaryUpdate, mentionedCharacters, contradictions, knowledgeSuggestions, timelineEvents.`
     const textResult = await generateText({

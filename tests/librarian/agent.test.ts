@@ -25,32 +25,43 @@ import { runLibrarian } from '@/server/librarian/agent'
 const mockedGenerateObject = vi.mocked(generateObject)
 const mockedGenerateText = vi.mocked(generateText)
 
-function makeStory(overrides: Partial<StoryMeta> = {}): StoryMeta {
+function makeStory(
+  overrides: Omit<Partial<StoryMeta>, 'settings'> & { settings?: Partial<StoryMeta['settings']> } = {},
+): StoryMeta {
   const now = new Date().toISOString()
-  return {
+  const defaultSettings: StoryMeta['settings'] = {
+    outputFormat: 'markdown',
+    enabledPlugins: [],
+    summarizationThreshold: 0,
+    maxSteps: 10,
+    providerId: null,
+    modelId: null,
+    contextOrderMode: 'simple',
+    fragmentOrder: [],
+  }
+
+  const baseStory: StoryMeta = {
     id: 'story-test',
     name: 'Test Story',
     description: 'A test story',
     summary: '',
     createdAt: now,
     updatedAt: now,
-    settings: {
-      outputFormat: 'markdown',
-      enabledPlugins: [],
-      summarizationThreshold: 0,
-      maxSteps: 10,
-      providerId: null,
-      modelId: null,
-      contextOrderMode: 'simple' as const,
-      fragmentOrder: [],
-    },
+    settings: defaultSettings,
+  }
+
+  return {
+    ...baseStory,
     ...overrides,
+    settings: { ...defaultSettings, ...(overrides.settings ?? {}) },
   }
 }
 
-function makeFragment(overrides: Partial<Fragment>): Fragment {
+function makeFragment(
+  overrides: Partial<Omit<Fragment, 'placement'>> & { placement?: Fragment['placement'] },
+): Fragment {
   const now = new Date().toISOString()
-  return {
+  const baseFragment: Fragment = {
     id: 'pr-0001',
     type: 'prose',
     name: 'Test Prose',
@@ -64,7 +75,12 @@ function makeFragment(overrides: Partial<Fragment>): Fragment {
     updatedAt: now,
     order: 0,
     meta: {},
+  }
+
+  return {
+    ...baseFragment,
     ...overrides,
+    placement: overrides.placement ?? 'user',
   }
 }
 
@@ -419,6 +435,37 @@ describe('librarian agent', () => {
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.summaryUpdate).toBe('Fallback worked.')
+    expect(mockedGenerateText).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to text JSON mode when object generation fails schema matching', async () => {
+    await createStory(dataDir, makeStory())
+    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
+    await setupProseChain(dataDir, storyId, ['pr-0001'])
+
+    mockedGenerateObject.mockRejectedValue(new Error('No object generated: response did not match schema.'))
+    mockedGenerateText.mockResolvedValue({
+      text: JSON.stringify({
+        summaryUpdate: 'Schema fallback worked.',
+        mentionedCharacters: [],
+        contradictions: [],
+        knowledgeSuggestions: [],
+        timelineEvents: [],
+      }),
+      finishReason: 'stop',
+      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
+      response: { id: 'test', modelId: 'test', timestamp: new Date(), headers: {} },
+      request: {},
+      warnings: [],
+      files: [],
+      sources: [],
+      steps: [],
+      toolCalls: [],
+      toolResults: [],
+    } as any)
+
+    const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
+    expect(analysis.summaryUpdate).toBe('Schema fallback worked.')
     expect(mockedGenerateText).toHaveBeenCalledTimes(1)
   })
 })
