@@ -559,10 +559,13 @@ export function FragmentEditor({
 
 function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentId: string }) {
   const queryClient = useQueryClient()
-  const [showPicker, setShowPicker] = useState(false)
-  const [pendingMedia, setPendingMedia] = useState<{ id: string; kind: 'icon' | 'image' } | null>(null)
-  const [pendingBoundary, setPendingBoundary] = useState<BoundaryBox | undefined>(undefined)
-  const [showCropDialog, setShowCropDialog] = useState(false)
+  const [cropTarget, setCropTarget] = useState<{
+    fragmentId: string
+    kind: 'icon' | 'image'
+    url: string
+    name: string
+    boundary?: BoundaryBox
+  } | null>(null)
 
   const { data: currentFragment } = useQuery({
     queryKey: ['fragment', storyId, fragmentId],
@@ -581,8 +584,6 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
 
   const media = [...(iconFragments ?? []), ...(imageFragments ?? [])]
   const visualRefs = parseVisualRefs(currentFragment?.meta)
-
-  // Build a lookup so we can show thumbnails for linked refs
   const mediaById = new Map(media.map((m) => [m.id, m]))
 
   const saveMutation = useMutation({
@@ -604,15 +605,11 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fragment', storyId, fragmentId] })
       queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
-      setPendingMedia(null)
-      setPendingBoundary(undefined)
-      setShowPicker(false)
     },
   })
 
   const [uploading, setUploading] = useState(false)
 
-  // Upload a file, create an image fragment, and immediately link it
   const handleUploadAndLink = async (file: File) => {
     if (!currentFragment) return
     setUploading(true)
@@ -623,14 +620,12 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
         reader.onerror = () => reject(new Error('Failed to read file'))
         reader.readAsDataURL(file)
       })
-      // Create image fragment
       const created = await api.fragments.create(storyId, {
         type: 'image',
         name: file.name.replace(/\.[^.]+$/, ''),
         description: file.name.slice(0, 50),
         content: dataUrl,
       })
-      // Link it to the current fragment
       const nextRefs = [
         ...visualRefs,
         { fragmentId: created.id, kind: 'image' as const },
@@ -646,20 +641,16 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
       })
       queryClient.invalidateQueries({ queryKey: ['fragment', storyId, fragmentId] })
       queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
-      setPendingMedia(null)
-      setShowPicker(false)
     } catch {
-      // Errors are silently ignored; the UI state stays as-is
+      // silently ignored
     } finally {
       setUploading(false)
     }
   }
 
-  const handleLink = (mediaId: string, kind: 'icon' | 'image') => {
-    const nextRefs = [
-      ...visualRefs.filter((r) => !(r.fragmentId === mediaId && r.kind === kind)),
-      { fragmentId: mediaId, kind, boundary: pendingBoundary },
-    ]
+  // Single click to link — no intermediate selection step
+  const handleQuickLink = (mediaId: string, kind: 'icon' | 'image') => {
+    const nextRefs = [...visualRefs, { fragmentId: mediaId, kind }]
     saveMutation.mutate(nextRefs)
   }
 
@@ -668,11 +659,24 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
     saveMutation.mutate(nextRefs)
   }
 
+  const handleCropApply = (boundary: BoundaryBox | undefined) => {
+    if (!cropTarget) return
+    const nextRefs = visualRefs.map((r) =>
+      r.fragmentId === cropTarget.fragmentId && r.kind === cropTarget.kind
+        ? { ...r, boundary }
+        : r
+    )
+    saveMutation.mutate(nextRefs)
+    setCropTarget(null)
+  }
+
+  const unlinkedMedia = media.filter((m) => !visualRefs.some((r) => r.fragmentId === m.id))
+
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground mb-2 block uppercase tracking-wider">Visual</label>
 
-      {/* Currently linked visuals */}
+      {/* Linked visuals — with inline crop & unlink */}
       {visualRefs.length > 0 && (
         <div className="space-y-1.5 mb-3">
           {visualRefs.map((ref) => {
@@ -687,47 +691,93 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{m?.name ?? ref.fragmentId}</p>
-                  <p className="text-[10px] text-muted-foreground/50">{ref.kind}</p>
+                  <p className="text-[10px] text-muted-foreground/50">
+                    {ref.kind}
+                    {ref.boundary && (
+                      <span className="ml-1 text-muted-foreground/30">
+                        crop {Math.round(ref.boundary.width * 100)}% &times; {Math.round(ref.boundary.height * 100)}%
+                      </span>
+                    )}
+                  </p>
                 </div>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="size-6 shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/50 hover:text-destructive transition-all"
-                  onClick={() => handleRemove(ref.fragmentId, ref.kind)}
-                  disabled={saveMutation.isPending}
-                  title="Unlink"
-                >
-                  <Unlink className="size-3" />
-                </Button>
+                {url && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-6 shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/50 hover:text-foreground transition-all"
+                        onClick={() => setCropTarget({
+                          fragmentId: ref.fragmentId,
+                          kind: ref.kind,
+                          url,
+                          name: m?.name ?? ref.fragmentId,
+                          boundary: ref.boundary,
+                        })}
+                      >
+                        <Crop className="size-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Set crop region</TooltipContent>
+                  </Tooltip>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="size-6 shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/50 hover:text-destructive transition-all"
+                      onClick={() => handleRemove(ref.fragmentId, ref.kind)}
+                      disabled={saveMutation.isPending}
+                    >
+                      <Unlink className="size-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Unlink</TooltipContent>
+                </Tooltip>
               </div>
             )
           })}
         </div>
       )}
 
-      {visualRefs.length === 0 && !showPicker && (
+      {visualRefs.length === 0 && unlinkedMedia.length === 0 && (
         <p className="text-xs text-muted-foreground/40 italic mb-2">No image or icon linked</p>
       )}
 
-      {/* Add button / picker toggle */}
-      {!showPicker ? (
-        <div className="flex gap-1.5">
-          {media.length > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1.5"
-              onClick={() => setShowPicker(true)}
-            >
-              <Link2 className="size-3" />
-              Link existing
-            </Button>
-          )}
-          <label className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-md border text-xs cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : 'border-border/40 hover:bg-accent/50'}`}>
-            <Upload className="size-3" />
-            {uploading ? 'Uploading...' : 'Upload & link'}
+      {/* Available media — click to instantly link */}
+      {unlinkedMedia.length > 0 && (
+        <div className="grid grid-cols-4 gap-1.5 mb-2">
+          {unlinkedMedia.map((m) => {
+            const url = readImageUrl(m)
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => handleQuickLink(m.id, m.type as 'icon' | 'image')}
+                disabled={saveMutation.isPending}
+                className="relative rounded-md border border-border/40 overflow-hidden aspect-square transition-all hover:border-primary/50 hover:ring-1 hover:ring-primary/20 group/tile"
+                title={`Click to link ${m.name}`}
+              >
+                {url ? (
+                  <img src={url} alt={m.name} className="size-full object-cover bg-muted/20" />
+                ) : (
+                  <div className="size-full bg-muted/30 flex items-center justify-center">
+                    <ImagePlus className="size-4 text-muted-foreground/30" />
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/tile:bg-black/40 transition-colors">
+                  <Link2 className="size-3.5 text-white opacity-0 group-hover/tile:opacity-100 transition-opacity" />
+                </div>
+              </button>
+            )
+          })}
+          {/* Upload tile */}
+          <label className={`rounded-md border-2 border-dashed border-border/40 aspect-square flex flex-col items-center justify-center gap-0.5 transition-colors ${uploading ? 'opacity-50' : 'hover:border-primary/40 hover:bg-accent/30 cursor-pointer'}`}>
+            <Upload className="size-4 text-muted-foreground/40" />
+            <span className="text-[9px] text-muted-foreground/40">{uploading ? 'Uploading' : 'Upload'}</span>
             <input
               type="file"
               accept="image/*"
@@ -741,141 +791,37 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
             />
           </label>
         </div>
-      ) : (
-        <div className="space-y-2">
-          {/* Thumbnail grid picker */}
-          <div className="grid grid-cols-4 gap-1.5">
-            {media.map((m) => {
-              const url = readImageUrl(m)
-              const isSelected = pendingMedia?.id === m.id
-              const alreadyLinked = visualRefs.some((r) => r.fragmentId === m.id)
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setPendingMedia(isSelected ? null : { id: m.id, kind: m.type as 'icon' | 'image' })}
-                  className={`relative rounded-md border overflow-hidden aspect-square transition-all ${
-                    isSelected
-                      ? 'border-primary ring-1 ring-primary/30'
-                      : alreadyLinked
-                        ? 'border-border/40 opacity-40'
-                        : 'border-border/40 hover:border-primary/40'
-                  }`}
-                  title={`${m.name} (${m.type})`}
-                  disabled={alreadyLinked}
-                >
-                  {url ? (
-                    <img src={url} alt={m.name} className="size-full object-cover bg-muted/20" />
-                  ) : (
-                    <div className="size-full bg-muted/30 flex items-center justify-center">
-                      <ImagePlus className="size-4 text-muted-foreground/30" />
-                    </div>
-                  )}
-                  {alreadyLinked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/60">
-                      <Link2 className="size-3.5 text-muted-foreground/60" />
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-            {/* Upload tile */}
-            <label className={`rounded-md border-2 border-dashed border-border/40 aspect-square flex flex-col items-center justify-center gap-0.5 transition-colors ${uploading ? 'opacity-50' : 'hover:border-primary/40 hover:bg-accent/30 cursor-pointer'}`}>
-              <Upload className="size-4 text-muted-foreground/40" />
-              <span className="text-[9px] text-muted-foreground/40">{uploading ? 'Uploading' : 'Upload'}</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={uploading}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) void handleUploadAndLink(file)
-                  e.target.value = ''
-                }}
-              />
-            </label>
-          </div>
+      )}
 
-          {/* Selected media actions */}
-          {pendingMedia && (
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs text-muted-foreground flex-1">
-                  {mediaById.get(pendingMedia.id)?.name ?? pendingMedia.id}
-                  <span className="text-muted-foreground/40 ml-1">as {pendingMedia.kind}</span>
-                </p>
-              </div>
+      {/* Upload-only button when no unlinked media to show in grid */}
+      {unlinkedMedia.length === 0 && (
+        <label className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-md border text-xs cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : 'border-border/40 hover:bg-accent/50'}`}>
+          <Upload className="size-3" />
+          {uploading ? 'Uploading...' : 'Upload & link'}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={uploading}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) void handleUploadAndLink(file)
+              e.target.value = ''
+            }}
+          />
+        </label>
+      )}
 
-              {/* Visual crop */}
-              {(() => {
-                const selectedMedia = mediaById.get(pendingMedia.id)
-                const selectedUrl = selectedMedia ? readImageUrl(selectedMedia) : null
-                return selectedUrl ? (
-                  <>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className={`h-7 text-xs gap-1.5 ${pendingBoundary ? 'border-primary/40 text-primary' : ''}`}
-                      onClick={() => setShowCropDialog(true)}
-                    >
-                      <Crop className="size-3" />
-                      {pendingBoundary
-                        ? `Crop: ${Math.round(pendingBoundary.width * 100)}% × ${Math.round(pendingBoundary.height * 100)}%`
-                        : 'Set crop region'}
-                    </Button>
-                    <CropDialog
-                      open={showCropDialog}
-                      onOpenChange={setShowCropDialog}
-                      imageUrl={selectedUrl}
-                      imageName={selectedMedia?.name ?? pendingMedia.id}
-                      initialBoundary={pendingBoundary}
-                      onApply={(b) => setPendingBoundary(b)}
-                    />
-                  </>
-                ) : null
-              })()}
-
-              <div className="flex gap-1.5">
-                <Button
-                  type="button"
-                  size="sm"
-                  className="h-7 text-xs gap-1"
-                  onClick={() => handleLink(pendingMedia.id, pendingMedia.kind)}
-                  disabled={saveMutation.isPending}
-                >
-                  <Link2 className="size-3" />
-                  {saveMutation.isPending ? 'Linking...' : 'Link'}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs"
-                  onClick={() => { setShowPicker(false); setPendingMedia(null); setPendingBoundary(undefined) }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {!pendingMedia && (
-            <div className="flex justify-between items-center">
-              <p className="text-[11px] text-muted-foreground/40">Click an image to select it</p>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-6 text-[11px]"
-                onClick={() => setShowPicker(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
-        </div>
+      {/* Crop dialog — opened from linked visual's crop button */}
+      {cropTarget && (
+        <CropDialog
+          open={true}
+          onOpenChange={(open) => { if (!open) setCropTarget(null) }}
+          imageUrl={cropTarget.url}
+          imageName={cropTarget.name}
+          initialBoundary={cropTarget.boundary}
+          onApply={handleCropApply}
+        />
       )}
     </div>
   )
