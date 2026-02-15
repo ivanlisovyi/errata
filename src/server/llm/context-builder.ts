@@ -2,6 +2,7 @@ import { getStory, listFragments, getFragment } from '../fragments/storage'
 import { registry } from '../fragments/registry'
 import { createLogger } from '../logging'
 import { getActiveProseIds } from '../fragments/prose-chain'
+import { listAnalyses, getAnalysis } from '../librarian/storage'
 import type { Fragment, StoryMeta } from '../fragments/schema'
 
 export interface ContextBuildState {
@@ -28,6 +29,37 @@ export interface BuildContextOptions {
   proseLimit?: number
   /** Fragment ID to exclude from context (e.g., when regenerating) */
   excludeFragmentId?: string
+  /** Only include prose that comes before this fragment in the active prose chain */
+  proseBeforeFragmentId?: string
+  /** Build summary only from librarian updates before this fragment */
+  summaryBeforeFragmentId?: string
+  /** Exclude story summary from context */
+  excludeStorySummary?: boolean
+}
+
+async function buildSummaryBeforeFragment(
+  dataDir: string,
+  storyId: string,
+  fragmentIdsInOrder: string[],
+): Promise<string> {
+  if (fragmentIdsInOrder.length === 0) return ''
+
+  const summaries = await listAnalyses(dataDir, storyId)
+  if (summaries.length === 0) return ''
+
+  const analyses = await Promise.all(
+    summaries.map((s) => getAnalysis(dataDir, storyId, s.id)),
+  )
+
+  const position = new Map(fragmentIdsInOrder.map((id, idx) => [id, idx]))
+  const updates = analyses
+    .filter((a): a is NonNullable<typeof a> => !!a)
+    .filter((a) => position.has(a.fragmentId))
+    .filter((a) => a.summaryUpdate.trim().length > 0)
+    .sort((a, b) => (position.get(a.fragmentId) ?? 0) - (position.get(b.fragmentId) ?? 0))
+    .map((a) => a.summaryUpdate.trim())
+
+  return updates.join(' ').trim()
 }
 
 /**
@@ -40,7 +72,13 @@ export async function buildContextState(
   authorInput: string,
   opts: BuildContextOptions = {},
 ): Promise<ContextBuildState> {
-  const { proseLimit = DEFAULT_PROSE_LIMIT, excludeFragmentId } = opts
+  const {
+    proseLimit = DEFAULT_PROSE_LIMIT,
+    excludeFragmentId,
+    proseBeforeFragmentId,
+    summaryBeforeFragmentId,
+    excludeStorySummary,
+  } = opts
   const requestLogger = logger.child({ storyId })
   requestLogger.info('Building context state...')
 
@@ -64,12 +102,31 @@ export async function buildContextState(
   if (activeProseIds.length === 0) {
     requestLogger.debug('No prose chain found, falling back to listing all prose')
     proseFragments = await listFragments(dataDir, storyId, 'prose')
+
+    if (proseBeforeFragmentId) {
+      const beforeFragment = await getFragment(dataDir, storyId, proseBeforeFragmentId)
+      if (beforeFragment) {
+        proseFragments = proseFragments.filter(f =>
+          f.order < beforeFragment.order ||
+          (f.order === beforeFragment.order && f.createdAt < beforeFragment.createdAt),
+        )
+      }
+    }
+
     // Filter out excluded fragment
     if (excludeFragmentId) {
       proseFragments = proseFragments.filter(f => f.id !== excludeFragmentId)
     }
   } else {
     requestLogger.debug('Prose chain loaded', { activeProseCount: activeProseIds.length })
+
+    if (proseBeforeFragmentId) {
+      const beforeIndex = activeProseIds.indexOf(proseBeforeFragmentId)
+      if (beforeIndex !== -1) {
+        activeProseIds = activeProseIds.slice(0, beforeIndex)
+      }
+    }
+
     // Load the actual prose fragments from chain, excluding the specified fragment
     for (const proseId of activeProseIds) {
       // Skip the excluded fragment
@@ -101,6 +158,32 @@ export async function buildContextState(
   // Take only the last N prose fragments
   const recentProse = sortedProse.slice(-proseLimit)
 
+  let effectiveSummary = story.summary
+  if (excludeStorySummary) {
+    effectiveSummary = ''
+  } else if (summaryBeforeFragmentId) {
+    let summaryContextIds: string[] = []
+    if (activeProseIds.length > 0) {
+      const beforeIndex = activeProseIds.indexOf(summaryBeforeFragmentId)
+      summaryContextIds = beforeIndex !== -1
+        ? activeProseIds.slice(0, beforeIndex)
+        : activeProseIds
+    } else {
+      const beforeFragment = await getFragment(dataDir, storyId, summaryBeforeFragmentId)
+      if (beforeFragment) {
+        const allProse = await listFragments(dataDir, storyId, 'prose')
+        summaryContextIds = allProse
+          .filter(f =>
+            f.order < beforeFragment.order ||
+            (f.order === beforeFragment.order && f.createdAt < beforeFragment.createdAt),
+          )
+          .sort((a, b) => a.order - b.order || a.createdAt.localeCompare(b.createdAt))
+          .map(f => f.id)
+      }
+    }
+    effectiveSummary = await buildSummaryBeforeFragment(dataDir, storyId, summaryContextIds)
+  }
+
   // Split guidelines, knowledge, and characters into sticky (full) vs shortlist
   const sortByOrder = (a: Fragment, b: Fragment) => a.order - b.order || a.createdAt.localeCompare(b.createdAt)
   const stickyGuidelines = allGuidelines.filter((f) => f.sticky).sort(sortByOrder)
@@ -111,7 +194,7 @@ export async function buildContextState(
   const nonStickyCharacters = allCharacters.filter((f) => !f.sticky)
 
   const state = {
-    story,
+    story: { ...story, summary: effectiveSummary },
     proseFragments: recentProse,
     stickyGuidelines,
     stickyKnowledge,

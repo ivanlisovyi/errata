@@ -4,8 +4,10 @@ import {
   createStory,
   createFragment,
 } from '@/server/fragments/storage'
+import { addProseSection } from '@/server/fragments/prose-chain'
+import { saveAnalysis } from '@/server/librarian/storage'
 import type { StoryMeta, Fragment } from '@/server/fragments/schema'
-import { buildContext, type ContextBuildState } from '@/server/llm/context-builder'
+import { buildContext, buildContextState, type ContextBuildState } from '@/server/llm/context-builder'
 
 function makeStory(overrides: Partial<StoryMeta> = {}): StoryMeta {
   const now = new Date().toISOString()
@@ -313,5 +315,106 @@ describe('context-builder', () => {
     expect(sysMsg.content).not.toContain('listCharacters')
     expect(sysMsg.content).toContain('listFragmentTypes')
     expect(sysMsg.content).toContain('creative writing assistant')
+  })
+
+  it('includes only prose before target fragment when proseBeforeFragmentId is set', async () => {
+    const story = makeStory()
+    await createStory(dataDir, story)
+
+    const proseIds = ['pr-0001', 'pr-0002', 'pr-0003', 'pr-0004', 'pr-0005']
+    const proseContents = ['A passage', 'B passage', 'C passage', 'D passage', 'E passage']
+
+    for (let i = 0; i < proseIds.length; i++) {
+      const fragment = makeFragment({
+        id: proseIds[i],
+        type: 'prose',
+        name: `Prose ${i + 1}`,
+        content: proseContents[i],
+        order: i + 1,
+      })
+      await createFragment(dataDir, story.id, fragment)
+      await addProseSection(dataDir, story.id, fragment.id)
+    }
+
+    const state = await buildContextState(dataDir, story.id, 'Regenerate C', {
+      excludeFragmentId: 'pr-0003',
+      proseBeforeFragmentId: 'pr-0003',
+    })
+
+    const included = state.proseFragments.map(f => f.id)
+    expect(included).toEqual(['pr-0001', 'pr-0002'])
+  })
+
+  it('omits story summary when excludeStorySummary is true', async () => {
+    const story = makeStory({ summary: 'Late events that should not leak into regenerate context.' })
+    await createStory(dataDir, story)
+
+    const messages = await buildContext(dataDir, story.id, 'Regenerate this section', {
+      excludeStorySummary: true,
+    })
+    const user = messages.find((m) => m.role === 'user')!
+
+    expect(user.content).not.toContain('## Story Summary So Far')
+    expect(user.content).not.toContain('Late events that should not leak into regenerate context.')
+  })
+
+  it('includes only summary updates before target fragment when summaryBeforeFragmentId is set', async () => {
+    const story = makeStory({ summary: 'Global summary with future info that should be excluded.' })
+    await createStory(dataDir, story)
+
+    const proseIds = ['pr-0001', 'pr-0002', 'pr-0003', 'pr-0004', 'pr-0005']
+    for (let i = 0; i < proseIds.length; i++) {
+      const fragment = makeFragment({
+        id: proseIds[i],
+        type: 'prose',
+        name: `Prose ${i + 1}`,
+        content: `Passage ${i + 1}`,
+        order: i + 1,
+      })
+      await createFragment(dataDir, story.id, fragment)
+      await addProseSection(dataDir, story.id, fragment.id)
+    }
+
+    await saveAnalysis(dataDir, story.id, {
+      id: 'la-a',
+      createdAt: '2025-01-01T00:00:00.000Z',
+      fragmentId: 'pr-0001',
+      summaryUpdate: 'Summary A',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [],
+      timelineEvents: [],
+    })
+    await saveAnalysis(dataDir, story.id, {
+      id: 'la-b',
+      createdAt: '2025-01-02T00:00:00.000Z',
+      fragmentId: 'pr-0002',
+      summaryUpdate: 'Summary B',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [],
+      timelineEvents: [],
+    })
+    await saveAnalysis(dataDir, story.id, {
+      id: 'la-d',
+      createdAt: '2025-01-03T00:00:00.000Z',
+      fragmentId: 'pr-0004',
+      summaryUpdate: 'Summary D',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [],
+      timelineEvents: [],
+    })
+
+    const messages = await buildContext(dataDir, story.id, 'Regenerate C', {
+      proseBeforeFragmentId: 'pr-0003',
+      summaryBeforeFragmentId: 'pr-0003',
+      excludeFragmentId: 'pr-0003',
+    })
+    const user = messages.find((m) => m.role === 'user')!
+
+    expect(user.content).toContain('Summary A Summary B')
+    expect(user.content).not.toContain('Summary D')
+    expect(user.content).not.toContain('Global summary with future info that should be excluded.')
   })
 })

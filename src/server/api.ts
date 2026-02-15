@@ -874,7 +874,11 @@ export function createApp(dataDir: string = DATA_DIR) {
       // When regenerating/refining, exclude the fragment being replaced from context
       requestLogger.info('Building context...')
       const buildContextOpts = (mode === 'regenerate' || mode === 'refine') && existingFragment
-        ? { excludeFragmentId: existingFragment.id }
+        ? {
+            excludeFragmentId: existingFragment.id,
+            proseBeforeFragmentId: existingFragment.id,
+            summaryBeforeFragmentId: existingFragment.id,
+          }
         : {}
       let ctxState = await buildContextState(dataDir, params.storyId, effectiveInput, buildContextOpts)
       const contextFragments = {
