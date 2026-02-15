@@ -10,9 +10,12 @@ import {
   getFragment,
   listFragments,
   updateFragment,
+  updateFragmentVersioned,
   deleteFragment,
   archiveFragment,
   restoreFragment,
+  listFragmentVersions,
+  revertFragmentToVersion,
 } from '@/server/fragments/storage'
 import type { Fragment, StoryMeta } from '@/server/fragments/schema'
 
@@ -107,7 +110,12 @@ describe('Fragment CRUD', () => {
     const fragment = makeFragment()
     await createFragment(dataDir, storyId, fragment)
     const retrieved = await getFragment(dataDir, storyId, fragment.id)
-    expect(retrieved).toEqual(fragment)
+    expect(retrieved).toEqual({
+      ...fragment,
+      archived: false,
+      version: 1,
+      versions: [],
+    })
   })
 
   it('lists fragments by type', async () => {
@@ -148,6 +156,60 @@ describe('Fragment CRUD', () => {
     await updateFragment(dataDir, storyId, updated)
     const retrieved = await getFragment(dataDir, storyId, fragment.id)
     expect(retrieved!.content).toBe('New content here.')
+  })
+
+  it('creates a version snapshot when versioned content update runs', async () => {
+    const fragment = makeFragment({
+      id: 'ch-1000',
+      type: 'character',
+      name: 'Alice',
+      description: 'Original desc',
+      content: 'Original content',
+    })
+    await createFragment(dataDir, storyId, fragment)
+
+    const updated = await updateFragmentVersioned(
+      dataDir,
+      storyId,
+      'ch-1000',
+      { content: 'Updated content', description: 'Updated desc' },
+      { reason: 'test-refine' },
+    )
+
+    expect(updated).not.toBeNull()
+    expect(updated!.version).toBe(2)
+    expect(updated!.versions).toHaveLength(1)
+    expect(updated!.versions![0].version).toBe(1)
+    expect(updated!.versions![0].content).toBe('Original content')
+    expect(updated!.versions![0].reason).toBe('test-refine')
+  })
+
+  it('lists versions and can revert to a specific version', async () => {
+    const fragment = makeFragment({
+      id: 'gl-2000',
+      type: 'guideline',
+      name: 'Tone',
+      description: 'v1 desc',
+      content: 'v1 content',
+    })
+    await createFragment(dataDir, storyId, fragment)
+
+    await updateFragmentVersioned(dataDir, storyId, 'gl-2000', { content: 'v2 content', description: 'v2 desc' })
+    await updateFragmentVersioned(dataDir, storyId, 'gl-2000', { content: 'v3 content', description: 'v3 desc' })
+
+    const versions = await listFragmentVersions(dataDir, storyId, 'gl-2000')
+    expect(versions).not.toBeNull()
+    expect(versions).toHaveLength(2)
+    expect(versions![0].version).toBe(1)
+    expect(versions![1].version).toBe(2)
+
+    const reverted = await revertFragmentToVersion(dataDir, storyId, 'gl-2000', 1)
+    expect(reverted).not.toBeNull()
+    expect(reverted!.id).toBe('gl-2000')
+    expect(reverted!.content).toBe('v1 content')
+    expect(reverted!.description).toBe('v1 desc')
+    expect(reverted!.version).toBe(4)
+    expect(reverted!.versions).toHaveLength(3)
   })
 
   it('deletes a fragment', async () => {

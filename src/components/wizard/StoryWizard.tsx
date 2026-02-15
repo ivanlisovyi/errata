@@ -706,7 +706,7 @@ function CharactersStep({
     const char = characters[editingIndex]
     const charName = editName.trim() || char.concept.split(',')[0].trim() || char.concept
     const conceptDesc = char.concept.split(',').slice(1).join(',').trim()
-    const fragDescription = (conceptDesc || charName).slice(0, 50)
+    const fragDescription = (conceptDesc || charName).slice(0, 250)
 
     try {
       let savedId = char.fragmentId

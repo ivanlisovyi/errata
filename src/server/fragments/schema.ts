@@ -12,7 +12,7 @@ export const FragmentSchema = z.object({
   id: FragmentIdSchema,
   type: FragmentTypeSchema,
   name: z.string().max(100),
-  description: z.string().max(50),
+  description: z.string().max(250),
   content: z.string(),
   tags: z.array(z.string()).default([]),
   refs: z.array(FragmentIdSchema).default([]),
@@ -23,9 +23,44 @@ export const FragmentSchema = z.object({
   order: z.int().default(0),
   meta: z.record(z.string(), z.unknown()).default({}),
   archived: z.boolean().default(false),
+  version: z.int().min(1).default(1),
+  versions: z.array(z.object({
+    version: z.int().min(1),
+    name: z.string().max(100),
+    description: z.string().max(250),
+    content: z.string(),
+    createdAt: z.iso.datetime(),
+    reason: z.string().optional(),
+  })).default([]),
 })
 
-export type Fragment = z.infer<typeof FragmentSchema>
+export interface FragmentVersion {
+  version: number
+  name: string
+  description: string
+  content: string
+  createdAt: string
+  reason?: string
+}
+
+export interface Fragment {
+  id: string
+  type: string
+  name: string
+  description: string
+  content: string
+  tags: string[]
+  refs: string[]
+  sticky: boolean
+  placement: 'system' | 'user'
+  createdAt: string
+  updatedAt: string
+  order: number
+  meta: Record<string, unknown>
+  archived?: boolean
+  version?: number
+  versions?: FragmentVersion[]
+}
 
 export const StoryMetaSchema = z.object({
   id: z.string(),

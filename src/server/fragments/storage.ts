@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
-import type { Fragment, StoryMeta } from './schema'
+import type { Fragment, FragmentVersion, StoryMeta } from './schema'
 import { PREFIXES } from '@/lib/fragment-ids'
 
 // --- Path helpers ---
@@ -36,6 +36,27 @@ async function readJson<T>(path: string): Promise<T | null> {
 
 async function writeJson(path: string, data: unknown): Promise<void> {
   await writeFile(path, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+function normalizeFragment(fragment: Fragment | null): Fragment | null {
+  if (!fragment) return null
+  return {
+    ...fragment,
+    archived: fragment.archived ?? false,
+    version: fragment.version ?? 1,
+    versions: Array.isArray(fragment.versions) ? fragment.versions : [],
+  }
+}
+
+function makeVersionSnapshot(fragment: Fragment, reason?: string): FragmentVersion {
+  return {
+    version: fragment.version,
+    name: fragment.name,
+    description: fragment.description,
+    content: fragment.content,
+    createdAt: new Date().toISOString(),
+    ...(reason ? { reason } : {}),
+  }
 }
 
 // --- Story CRUD ---
@@ -100,7 +121,8 @@ export async function createFragment(
 ): Promise<void> {
   const dir = fragmentsDir(dataDir, storyId)
   await mkdir(dir, { recursive: true })
-  await writeJson(fragmentPath(dataDir, storyId, fragment.id), fragment)
+  const normalized = normalizeFragment(fragment)
+  await writeJson(fragmentPath(dataDir, storyId, fragment.id), normalized)
 }
 
 export async function getFragment(
@@ -108,7 +130,8 @@ export async function getFragment(
   storyId: string,
   fragmentId: string
 ): Promise<Fragment | null> {
-  return readJson<Fragment>(fragmentPath(dataDir, storyId, fragmentId))
+  const fragment = await readJson<Fragment>(fragmentPath(dataDir, storyId, fragmentId))
+  return normalizeFragment(fragment)
 }
 
 export async function listFragments(
@@ -132,10 +155,9 @@ export async function listFragments(
     const id = entry.replace('.json', '')
     if (prefix && !id.startsWith(prefix + '-')) continue
 
-    const fragment = await readJson<Fragment>(join(dir, entry))
+    const rawFragment = await readJson<Fragment>(join(dir, entry))
+    const fragment = normalizeFragment(rawFragment)
     if (fragment) {
-      // Default archived to false for legacy files
-      if (fragment.archived === undefined) fragment.archived = false
       // Skip archived fragments unless caller opts in
       if (!includeArchived && fragment.archived) continue
       fragments.push(fragment)
@@ -182,7 +204,94 @@ export async function updateFragment(
   storyId: string,
   fragment: Fragment
 ): Promise<void> {
-  await writeJson(fragmentPath(dataDir, storyId, fragment.id), fragment)
+  const normalized = normalizeFragment(fragment)
+  await writeJson(fragmentPath(dataDir, storyId, fragment.id), normalized)
+}
+
+export async function updateFragmentVersioned(
+  dataDir: string,
+  storyId: string,
+  fragmentId: string,
+  updates: Partial<Pick<Fragment, 'name' | 'description' | 'content'>>,
+  opts?: { reason?: string }
+): Promise<Fragment | null> {
+  const existing = await getFragment(dataDir, storyId, fragmentId)
+  if (!existing) return null
+
+  const nextName = updates.name ?? existing.name
+  const nextDescription = updates.description ?? existing.description
+  const nextContent = updates.content ?? existing.content
+  const hasVersionedChange =
+    nextName !== existing.name ||
+    nextDescription !== existing.description ||
+    nextContent !== existing.content
+
+  const now = new Date().toISOString()
+  const updated: Fragment = hasVersionedChange
+    ? {
+        ...existing,
+        name: nextName,
+        description: nextDescription,
+        content: nextContent,
+        updatedAt: now,
+        version: existing.version + 1,
+        versions: [...existing.versions, makeVersionSnapshot(existing, opts?.reason)],
+      }
+    : {
+        ...existing,
+        name: nextName,
+        description: nextDescription,
+        content: nextContent,
+        updatedAt: now,
+      }
+
+  await updateFragment(dataDir, storyId, updated)
+  return updated
+}
+
+export async function listFragmentVersions(
+  dataDir: string,
+  storyId: string,
+  fragmentId: string
+): Promise<FragmentVersion[] | null> {
+  const fragment = await getFragment(dataDir, storyId, fragmentId)
+  if (!fragment) return null
+  return [...fragment.versions]
+}
+
+export async function revertFragmentToVersion(
+  dataDir: string,
+  storyId: string,
+  fragmentId: string,
+  targetVersion?: number
+): Promise<Fragment | null> {
+  const fragment = await getFragment(dataDir, storyId, fragmentId)
+  if (!fragment) return null
+
+  const snapshot = targetVersion === undefined
+    ? fragment.versions.at(-1)
+    : fragment.versions.find((v) => v.version === targetVersion)
+  if (!snapshot) return null
+
+  const now = new Date().toISOString()
+  const nextVersion = fragment.version + 1
+  const updated: Fragment = {
+    ...fragment,
+    name: snapshot.name,
+    description: snapshot.description,
+    content: snapshot.content,
+    updatedAt: now,
+    version: nextVersion,
+    versions: [
+      ...fragment.versions,
+      makeVersionSnapshot(fragment, targetVersion === undefined
+        ? `revert-to-${snapshot.version}`
+        : `revert-to-${targetVersion}`),
+    ],
+  }
+
+  await updateFragment(dataDir, storyId, updated)
+  return updated
 }
 
 export async function deleteFragment(

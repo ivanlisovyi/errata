@@ -5,6 +5,7 @@ import {
   getFragment,
   listFragments,
   updateFragment,
+  updateFragmentVersioned,
   deleteFragment,
 } from '../fragments/storage'
 import { getActiveProseIds } from '../fragments/prose-chain'
@@ -245,7 +246,7 @@ export function createFragmentTools(
       inputSchema: z.object({
         type: z.string().describe('Fragment type, e.g. character, guideline, knowledge, prose'),
         name: z.string().max(100).describe('Fragment name/title'),
-        description: z.string().max(50).describe('Short description (max 50 chars)'),
+        description: z.string().max(250).describe('Short description (max 250 chars)'),
         content: z.string().describe('Full fragment content'),
       }),
       execute: withToolLogging('createFragment', storyId, async ({ type, name, description, content }) => {
@@ -265,6 +266,9 @@ export function createFragmentTools(
           updatedAt: now,
           order: 0,
           meta: {},
+          archived: false,
+          version: 1,
+          versions: [],
         }
         await createFragmentInStorage(dataDir, storyId, fragment)
         return { ok: true, id, type }
@@ -276,20 +280,26 @@ export function createFragmentTools(
       inputSchema: z.object({
         fragmentId: z.string().describe('The fragment ID'),
         newContent: z.string().describe('The new content to set'),
-        newDescription: z.string().max(50).describe('Updated description (max 50 chars)'),
+        newDescription: z.string().max(250).describe('Updated description (max 250 chars)'),
       }),
       execute: withToolLogging('updateFragment', storyId, async ({ fragmentId, newContent, newDescription }) => {
         const fragment = await getFragment(dataDir, storyId, fragmentId)
         if (!fragment) {
           return { error: `Fragment not found: ${fragmentId}` }
         }
-        const updated: Fragment = {
-          ...fragment,
-          content: newContent,
-          description: newDescription,
-          updatedAt: new Date().toISOString(),
+        const updated = await updateFragmentVersioned(
+          dataDir,
+          storyId,
+          fragmentId,
+          {
+            content: newContent,
+            description: newDescription,
+          },
+          { reason: 'llm-updateFragment' },
+        )
+        if (!updated) {
+          return { error: `Fragment not found: ${fragmentId}` }
         }
-        await updateFragment(dataDir, storyId, updated)
         return { ok: true, id: fragmentId }
       }),
     })
@@ -310,12 +320,16 @@ export function createFragmentTools(
         if (!fragment.content.includes(oldText)) {
           return { error: `Text not found in fragment ${fragmentId}: "${oldText}"` }
         }
-        const updated: Fragment = {
-          ...fragment,
-          content: fragment.content.replace(oldText, newText),
-          updatedAt: new Date().toISOString(),
+        const updated = await updateFragmentVersioned(
+          dataDir,
+          storyId,
+          fragmentId,
+          { content: fragment.content.replace(oldText, newText) },
+          { reason: 'llm-editFragment' },
+        )
+        if (!updated) {
+          return { error: `Fragment not found: ${fragmentId}` }
         }
-        await updateFragment(dataDir, storyId, updated)
         return { ok: true, id: fragmentId }
       }),
     })

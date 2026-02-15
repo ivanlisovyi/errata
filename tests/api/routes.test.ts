@@ -265,6 +265,74 @@ describe('Fragment API routes', () => {
     const listData = await listRes.json()
     expect(listData).toHaveLength(1)
   })
+
+  it('GET /api/stories/:sid/fragments/:fid/versions lists version snapshots', async () => {
+    const created = await (
+      await apiJson(`/stories/${storyId}/fragments`, {
+        type: 'character',
+        name: 'Alice',
+        description: 'v1',
+        content: 'v1 content',
+      })
+    ).json()
+
+    await apiJson(
+      `/stories/${storyId}/fragments/${created.id}`,
+      {
+        name: 'Alice',
+        description: 'v2',
+        content: 'v2 content',
+      },
+      'PUT',
+    )
+
+    const versionsRes = await api(`/stories/${storyId}/fragments/${created.id}/versions`)
+    expect(versionsRes.status).toBe(200)
+    const body = await versionsRes.json()
+    expect(body.versions).toHaveLength(1)
+    expect(body.versions[0].version).toBe(1)
+    expect(body.versions[0].content).toBe('v1 content')
+  })
+
+  it('POST /api/stories/:sid/fragments/:fid/versions/:version/revert restores the selected version', async () => {
+    const created = await (
+      await apiJson(`/stories/${storyId}/fragments`, {
+        type: 'knowledge',
+        name: 'World Rules',
+        description: 'v1',
+        content: 'v1 content',
+      })
+    ).json()
+
+    await apiJson(
+      `/stories/${storyId}/fragments/${created.id}`,
+      {
+        name: 'World Rules',
+        description: 'v2',
+        content: 'v2 content',
+      },
+      'PUT',
+    )
+
+    await apiJson(
+      `/stories/${storyId}/fragments/${created.id}`,
+      {
+        name: 'World Rules',
+        description: 'v3',
+        content: 'v3 content',
+      },
+      'PUT',
+    )
+
+    const revertRes = await api(`/stories/${storyId}/fragments/${created.id}/versions/1/revert`, {
+      method: 'POST',
+    })
+    expect(revertRes.status).toBe(200)
+    const reverted = await revertRes.json()
+    expect(reverted.id).toBe(created.id)
+    expect(reverted.content).toBe('v1 content')
+    expect(reverted.version).toBe(4)
+  })
 })
 
 // --- Fragment Types Route ---

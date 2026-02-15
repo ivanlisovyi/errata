@@ -30,7 +30,7 @@ Instructions:
 4. Explain what you changed and why after making edits.
 5. Ask clarifying questions when the request is ambiguous.
 6. You can make multiple tool calls in sequence to accomplish complex tasks.
-7. Keep fragment descriptions within the 50 character limit.
+7. Keep fragment descriptions within the 250 character limit.
 8. Be concise but thorough in your responses.
 
 Fragment ID prefixes: pr- (prose), ch- (character), gl- (guideline), kn- (knowledge).`

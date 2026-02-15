@@ -453,7 +453,7 @@ describe('generation endpoint', () => {
 
     expect(res.status).toBe(422)
     const body = await res.json()
-    expect(body.error).toContain('No previous content')
+    expect(body.error).toContain('No previous')
   })
 
   it('POST /stories/:storyId/fragments/:fragmentId/revert returns 404 for nonexistent fragment', async () => {

@@ -115,7 +115,7 @@ function ProviderSelect({ value, globalConfig, onChange, disabled }: {
     <select
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value || null)}
-      className="w-full max-w-[140px] h-[26px] px-2 text-[11px] bg-background border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none truncate"
+      className="w-full max-w-[140px] h-[26px] px-2 text-[11px] text-foreground/80 bg-muted/50 border border-border/50 rounded-md focus:border-primary/30 focus:outline-none truncate"
       disabled={disabled}
     >
       <option value="">

@@ -61,11 +61,12 @@ function StoryListPage() {
 
   const createMutation = useMutation({
     mutationFn: api.stories.create,
-    onSuccess: () => {
+    onSuccess: (newStory) => {
       queryClient.invalidateQueries({ queryKey: ['stories'] })
       setOpen(false)
       setName('')
       setDescription('')
+      navigate({ to: '/story/$storyId', params: { storyId: newStory.id } })
     },
   })
 

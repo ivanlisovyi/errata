@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api, type Fragment } from '@/lib/api'
+import { api, type Fragment, type FragmentVersion } from '@/lib/api'
 import { componentId, fragmentComponentId } from '@/lib/dom-ids'
 import { parseVisualRefs, readImageUrl, type BoundaryBox } from '@/lib/fragment-visuals'
 import { Button } from '@/components/ui/button'
@@ -46,6 +46,7 @@ export function FragmentEditor({
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [showRefine, setShowRefine] = useState(false)
+  const [previewVersion, setPreviewVersion] = useState<FragmentVersion | null>(null)
 
   // Fetch live fragment data so sticky/placement updates are reflected immediately
   const { data: liveFragment } = useQuery({
@@ -56,6 +57,7 @@ export function FragmentEditor({
   })
 
   const fragment = liveFragment ?? fragmentProp
+  const isVersionedType = !!fragment && ['prose', 'character', 'guideline', 'knowledge'].includes(fragment.type)
 
   // Media queries for clipboard copy (embed attached images)
   const { data: _imageFragments } = useQuery({
@@ -72,6 +74,12 @@ export function FragmentEditor({
     for (const f of _iconFragments ?? []) map.set(f.id, f)
     return map
   }, [_imageFragments, _iconFragments])
+
+  const { data: versionData } = useQuery({
+    queryKey: ['fragment-versions', storyId, fragment?.id],
+    queryFn: () => api.fragments.listVersions(storyId, fragment!.id),
+    enabled: !!fragment?.id && isVersionedType,
+  })
 
   // Sync local state from the source fragment (prop or live query data).
   // Uses liveFragment so that external updates (e.g. refinement agent) are reflected.
@@ -156,6 +164,37 @@ export function FragmentEditor({
     },
   })
 
+  const revertVersionMutation = useMutation({
+    mutationFn: (version: number) => api.fragments.revertToVersion(storyId, fragment!.id, version),
+    onSuccess: () => {
+      invalidate()
+      if (fragment?.id) {
+        queryClient.invalidateQueries({ queryKey: ['fragment-versions', storyId, fragment.id] })
+      }
+    },
+  })
+
+  const versions = (versionData?.versions ?? []).slice().sort((a, b) => b.version - a.version)
+
+  const versionDiffLines = useMemo(() => {
+    if (!fragment || !previewVersion) return [] as string[]
+    const current = fragment.content.split('\n')
+    const target = previewVersion.content.split('\n')
+    const max = Math.max(current.length, target.length)
+    const out: string[] = []
+    for (let i = 0; i < max; i += 1) {
+      const a = current[i]
+      const b = target[i]
+      if (a === b) {
+        if (a !== undefined) out.push(`  ${a}`)
+        continue
+      }
+      if (a !== undefined) out.push(`- ${a}`)
+      if (b !== undefined) out.push(`+ ${b}`)
+    }
+    return out
+  }, [fragment, previewVersion])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (mode === 'create') {
@@ -199,6 +238,7 @@ export function FragmentEditor({
       updatedAt: fragment?.updatedAt ?? '',
       order: fragment?.order ?? 0,
       meta: fragment?.meta ?? {},
+      archived: fragment?.archived ?? false,
     })
     : null
 
@@ -531,6 +571,72 @@ export function FragmentEditor({
         {/* Tags & Refs section */}
         {fragment && (
           <>
+            {isVersionedType && (
+              <>
+                <div className="h-px bg-border/30 mx-6" />
+                <div className="px-6 py-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Version history</p>
+                    <span className="text-[10px] text-muted-foreground/50">Current v{fragment.version ?? 1}</span>
+                  </div>
+                  {versions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground/50">No previous versions yet.</p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-36 overflow-auto pr-1">
+                      {versions.map((v: FragmentVersion) => (
+                        <div key={v.version} className="flex items-center justify-between rounded-md border border-border/40 px-2 py-1.5">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium">v{v.version}</p>
+                            <p className="text-[10px] text-muted-foreground/50 truncate">{new Date(v.createdAt).toLocaleString()}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs"
+                              onClick={() => setPreviewVersion(v)}
+                            >
+                              Preview
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs"
+                              onClick={() => revertVersionMutation.mutate(v.version)}
+                              disabled={revertVersionMutation.isPending}
+                            >
+                              Restore
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {previewVersion && (
+                    <div className="mt-2 space-y-2 rounded-md border border-border/40 bg-muted/20 p-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium">Diff preview for v{previewVersion.version}</p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-xs"
+                          onClick={() => setPreviewVersion(null)}
+                        >
+                          Close
+                        </Button>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/60">`-` current content, `+` selected version</p>
+                      <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded border border-border/30 bg-background/50 p-2 text-[11px] leading-4">
+                        {versionDiffLines.join('\n') || 'No content differences.'}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
             <div className="h-px bg-border/30 mx-6" />
             <div className="px-6 py-5 space-y-5">
               <TagsSection storyId={storyId} fragmentId={fragment.id} />
@@ -623,7 +729,7 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
       const created = await api.fragments.create(storyId, {
         type: 'image',
         name: file.name.replace(/\.[^.]+$/, ''),
-        description: file.name.slice(0, 50),
+        description: file.name.slice(0, 250),
         content: dataUrl,
       })
       const nextRefs = [

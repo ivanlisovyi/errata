@@ -168,6 +168,12 @@ function StoryEditorPage() {
   const handleSectionChange = useCallback((section: SidebarSection) => {
     setPluginCloseReturnSection(null)
     setActiveSection(section)
+    if (section === null) {
+      setSelectedFragment(null)
+      setCreatePrefill(null)
+      setEditorMode('view')
+      setDebugLogId(null)
+    }
   }, [])
 
   const handleOpenPluginPanelFromSettings = useCallback((pluginName: string) => {

@@ -76,8 +76,11 @@ describe('librarian API routes', () => {
         maxSteps: 10,
         providerId: null,
         modelId: null,
+        librarianProviderId: null,
+        librarianModelId: null,
         contextOrderMode: 'simple' as const,
         fragmentOrder: [],
+        enabledBuiltinTools: [],
       },
     })
   })
@@ -155,6 +158,17 @@ describe('librarian API routes', () => {
       // Should be summaries
       expect(data[0]).toHaveProperty('contradictionCount')
       expect(data[0]).not.toHaveProperty('summaryUpdate')
+    })
+  })
+
+  describe('GET /stories/:storyId/librarian/agent-runs', () => {
+    it('returns empty list when no agent runs exist', async () => {
+      const res = await app.fetch(
+        new Request(`http://localhost/api/stories/${storyId}/librarian/agent-runs`),
+      )
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data).toEqual([])
     })
   })
 

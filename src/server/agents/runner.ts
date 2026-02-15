@@ -1,12 +1,21 @@
 import { createLogger } from '../logging'
 import { agentRegistry } from './registry'
 import { ensureCoreAgentsRegistered } from './register-core'
+import { recordAgentRun } from './traces'
 import type {
   AgentCallOptions,
   AgentInvocationContext,
   AgentRunResult,
   AgentTraceEntry,
 } from './types'
+
+function computeTraceDurationMs(startedAt: string | undefined, finishedAt: string | undefined): number {
+  if (!startedAt || !finishedAt) return 0
+  const start = Date.parse(startedAt)
+  const finish = Date.parse(finishedAt)
+  if (Number.isNaN(start) || Number.isNaN(finish)) return 0
+  return Math.max(0, finish - start)
+}
 
 interface RuntimeState {
   rootRunId: string
@@ -181,19 +190,53 @@ export async function invokeAgent<TOutput = unknown>(args: {
     options,
   }
 
-  const result = await invokeInternal<TOutput>({
-    dataDir: args.dataDir,
-    storyId: args.storyId,
-    agentName: args.agentName,
-    input: args.input,
-    runtime,
-    parentRunId: null,
-    depth: 0,
-  })
+  try {
+    const result = await invokeInternal<TOutput>({
+      dataDir: args.dataDir,
+      storyId: args.storyId,
+      agentName: args.agentName,
+      input: args.input,
+      runtime,
+      parentRunId: null,
+      depth: 0,
+    })
 
-  return {
-    runId: result.runId,
-    output: result.output,
-    trace: runtime.trace,
+    const sortedTrace = [...runtime.trace].sort((a, b) => a.startedAt.localeCompare(b.startedAt))
+    const first = sortedTrace[0]
+    const last = sortedTrace[sortedTrace.length - 1]
+    recordAgentRun(args.storyId, {
+      rootRunId: runtime.rootRunId,
+      runId: result.runId,
+      storyId: args.storyId,
+      agentName: args.agentName,
+      status: 'success',
+      startedAt: first?.startedAt ?? new Date().toISOString(),
+      finishedAt: last?.finishedAt ?? new Date().toISOString(),
+      durationMs: computeTraceDurationMs(first?.startedAt, last?.finishedAt),
+      trace: sortedTrace,
+    })
+
+    return {
+      runId: result.runId,
+      output: result.output,
+      trace: runtime.trace,
+    }
+  } catch (error) {
+    const sortedTrace = [...runtime.trace].sort((a, b) => a.startedAt.localeCompare(b.startedAt))
+    const first = sortedTrace[0]
+    const last = sortedTrace[sortedTrace.length - 1]
+    recordAgentRun(args.storyId, {
+      rootRunId: runtime.rootRunId,
+      runId: first?.runId ?? runtime.rootRunId,
+      storyId: args.storyId,
+      agentName: args.agentName,
+      status: 'error',
+      startedAt: first?.startedAt ?? new Date().toISOString(),
+      finishedAt: last?.finishedAt ?? new Date().toISOString(),
+      durationMs: computeTraceDurationMs(first?.startedAt, last?.finishedAt),
+      error: error instanceof Error ? error.message : String(error),
+      trace: sortedTrace,
+    })
+    throw error
   }
 }

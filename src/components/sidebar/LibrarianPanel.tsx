@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   api,
+  type AgentRunTraceRecord,
   type LibrarianAnalysis,
   type LibrarianAnalysisSummary,
 } from '@/lib/api'
@@ -22,6 +23,7 @@ import {
   Wrench,
   MessageSquare,
   Activity,
+  GitBranch,
 } from 'lucide-react'
 import { RefinementPanel } from '@/components/refinement/RefinementPanel'
 import { LibrarianChat } from '@/components/librarian/LibrarianChat'
@@ -30,9 +32,26 @@ interface LibrarianPanelProps {
   storyId: string
 }
 
+const LIBRARIAN_TAB_STORAGE_KEY = 'errata.librarian.activeTab'
+
 export function LibrarianPanel({ storyId }: LibrarianPanelProps) {
+  const [activeTab, setActiveTab] = useState<'chat' | 'activity'>('chat')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const saved = window.localStorage.getItem(LIBRARIAN_TAB_STORAGE_KEY)
+    if (saved === 'chat' || saved === 'activity') {
+      setActiveTab(saved)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(LIBRARIAN_TAB_STORAGE_KEY, activeTab)
+  }, [activeTab])
+
   return (
-    <Tabs defaultValue="chat" className="h-full flex flex-col gap-0">
+    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'chat' | 'activity')} className="h-full flex flex-col gap-0">
       <div className="px-3 pt-2 shrink-0">
         <TabsList className="w-full h-8">
           <TabsTrigger value="chat" className="text-xs gap-1 flex-1">
@@ -59,6 +78,7 @@ export function LibrarianPanel({ storyId }: LibrarianPanelProps) {
 
 function ActivityContent({ storyId }: LibrarianPanelProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [expandedRunId, setExpandedRunId] = useState<string | null>(null)
   const [refineTarget, setRefineTarget] = useState<{ fragmentId: string; fragmentName: string; instructions?: string } | null>(null)
 
   const { data: characters } = useQuery({
@@ -94,6 +114,12 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
     queryKey: ['librarian-analyses', storyId],
     queryFn: () => api.librarian.listAnalyses(storyId),
     refetchInterval: 5000,
+  })
+
+  const { data: agentRuns } = useQuery({
+    queryKey: ['librarian-agent-runs', storyId],
+    queryFn: () => api.librarian.listAgentRuns(storyId),
+    refetchInterval: 3000,
   })
 
   const { data: expandedAnalysis } = useQuery({
@@ -149,6 +175,46 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
             <p className="text-[10px] text-muted-foreground/40 mt-1">
               Last analyzed: <span className="font-mono">{status.lastAnalyzedFragmentId}</span>
             </p>
+          )}
+        </div>
+
+        <div className="h-px bg-border/30" />
+
+        {/* Agent traces */}
+        <div>
+          <h4 className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <GitBranch className="size-3" />
+            Agent Activity
+          </h4>
+          {agentRuns && agentRuns.length > 0 ? (
+            <div className="space-y-1.5">
+              {agentRuns.slice(0, 8).map((run) => {
+                const expanded = expandedRunId === run.rootRunId
+                const runTime = new Date(run.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                return (
+                  <div key={run.rootRunId} className="rounded-lg border border-border/30">
+                    <button
+                      onClick={() => setExpandedRunId(expanded ? null : run.rootRunId)}
+                      className="w-full flex items-center gap-2 p-2.5 text-xs hover:bg-card/30 transition-colors rounded-lg"
+                    >
+                      {expanded ? <ChevronDown className="size-3 text-muted-foreground/40" /> : <ChevronRight className="size-3 text-muted-foreground/40" />}
+                      <span className="font-mono text-muted-foreground/70">{run.agentName}</span>
+                      <span className="text-muted-foreground/40">{runTime}</span>
+                      <span className="text-muted-foreground/40">{formatDuration(run.durationMs)}</span>
+                      <Badge
+                        variant={run.status === 'error' ? 'destructive' : 'outline'}
+                        className="ml-auto text-[10px] h-4"
+                      >
+                        {run.status}
+                      </Badge>
+                    </button>
+                    {expanded && <TraceTree run={run} />}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground/40 italic">No agent traces yet.</p>
           )}
         </div>
 
@@ -285,6 +351,55 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
         </div>
       </div>
     </ScrollArea>
+  )
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`
+  return `${(ms / 1000).toFixed(2)}s`
+}
+
+function TraceTree({ run }: { run: AgentRunTraceRecord }) {
+  const byParent = new Map<string | null, AgentRunTraceRecord['trace']>()
+  for (const entry of run.trace) {
+    const key = entry.parentRunId ?? null
+    const list = byParent.get(key) ?? []
+    list.push(entry)
+    byParent.set(key, list)
+  }
+  for (const [key, list] of byParent.entries()) {
+    byParent.set(key, [...list].sort((a, b) => a.startedAt.localeCompare(b.startedAt)))
+  }
+
+  const roots = byParent.get(null) ?? []
+
+  const renderNode = (node: AgentRunTraceRecord['trace'][number], depth: number) => {
+    const children = byParent.get(node.runId) ?? []
+    return (
+      <div key={node.runId} className="space-y-1">
+        <div className="flex items-start gap-2 text-[11px]" style={{ marginLeft: `${depth * 12}px` }}>
+          <span className="text-muted-foreground/35">{depth === 0 ? '●' : '└'}</span>
+          <span className="font-mono text-foreground/80">{node.agentName}</span>
+          <span className="text-muted-foreground/40">{formatDuration(node.durationMs)}</span>
+          <span className={node.status === 'error' ? 'text-red-500/80' : 'text-green-500/80'}>{node.status}</span>
+        </div>
+        {node.error && (
+          <p className="text-[10px] text-red-500/80" style={{ marginLeft: `${depth * 12 + 16}px` }}>
+            {node.error}
+          </p>
+        )}
+        {children.map((child) => renderNode(child, depth + 1))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="border-t border-border/20 p-2.5 space-y-1.5">
+      {roots.map((root) => renderNode(root, 0))}
+      {run.error && (
+        <p className="text-[10px] text-red-500/80 mt-1">{run.error}</p>
+      )}
+    </div>
   )
 }
 

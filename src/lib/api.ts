@@ -54,6 +54,17 @@ export interface Fragment {
   order: number
   meta: Record<string, unknown>
   archived: boolean
+  version?: number
+  versions?: FragmentVersion[]
+}
+
+export interface FragmentVersion {
+  version: number
+  name: string
+  description: string
+  content: string
+  createdAt: string
+  reason?: string
 }
 
 export interface FragmentTypeInfo {
@@ -116,6 +127,31 @@ export interface LibrarianState {
   runningFragmentId?: string | null
   lastError?: string | null
   updatedAt?: string
+}
+
+export interface AgentTraceEntry {
+  runId: string
+  parentRunId: string | null
+  rootRunId: string
+  agentName: string
+  startedAt: string
+  finishedAt: string
+  durationMs: number
+  status: 'success' | 'error'
+  error?: string
+}
+
+export interface AgentRunTraceRecord {
+  rootRunId: string
+  runId: string
+  storyId: string
+  agentName: string
+  status: 'success' | 'error'
+  startedAt: string
+  finishedAt: string
+  durationMs: number
+  error?: string
+  trace: AgentTraceEntry[]
 }
 
 export interface LibrarianAcceptSuggestionResponse {
@@ -419,6 +455,10 @@ export const api = {
     // Revert
     revert: (storyId: string, fragmentId: string) =>
       apiFetch<Fragment>(`/stories/${storyId}/fragments/${fragmentId}/revert`, { method: 'POST' }),
+    listVersions: (storyId: string, fragmentId: string) =>
+      apiFetch<{ versions: FragmentVersion[] }>(`/stories/${storyId}/fragments/${fragmentId}/versions`),
+    revertToVersion: (storyId: string, fragmentId: string, version: number) =>
+      apiFetch<Fragment>(`/stories/${storyId}/fragments/${fragmentId}/versions/${version}/revert`, { method: 'POST' }),
     // Reorder (bulk)
     reorder: (storyId: string, items: Array<{ id: string; order: number }>) =>
       apiFetch<{ ok: boolean }>(`/stories/${storyId}/fragments/reorder`, {
@@ -466,6 +506,8 @@ export const api = {
       apiFetch<LibrarianState>(`/stories/${storyId}/librarian/status`),
     listAnalyses: (storyId: string) =>
       apiFetch<LibrarianAnalysisSummary[]>(`/stories/${storyId}/librarian/analyses`),
+    listAgentRuns: (storyId: string) =>
+      apiFetch<AgentRunTraceRecord[]>(`/stories/${storyId}/librarian/agent-runs`),
     getAnalysis: (storyId: string, id: string) =>
       apiFetch<LibrarianAnalysis>(`/stories/${storyId}/librarian/analyses/${id}`),
     acceptSuggestion: (storyId: string, analysisId: string, index: number) =>

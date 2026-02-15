@@ -19,7 +19,7 @@ Guidelines for refinement:
 - If the user provides specific instructions, follow them precisely.
 - If no instructions are given, improve the fragment for consistency, clarity, and depth based on story events.
 - Preserve the fragment's existing voice and style unless asked otherwise.
-- Update descriptions to stay within the 50 character limit.
+- Update descriptions to stay within the 250 character limit.
 - Do NOT delete fragments unless explicitly asked.
 - Do NOT modify prose fragments — only characters, guidelines, and knowledge.`
 

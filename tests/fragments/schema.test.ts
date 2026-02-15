@@ -61,10 +61,13 @@ describe('FragmentSchema', () => {
     expect(result.sticky).toBe(false)
     expect(result.order).toBe(0)
     expect(result.meta).toEqual({})
+    expect(result.archived).toBe(false)
+    expect(result.version).toBe(1)
+    expect(result.versions).toEqual([])
   })
 
-  it('rejects description longer than 50 characters', () => {
-    const bad = { ...validFragment, description: 'x'.repeat(51) }
+  it('rejects description longer than 250 characters', () => {
+    const bad = { ...validFragment, description: 'x'.repeat(251) }
     expect(() => FragmentSchema.parse(bad)).toThrow()
   })
 

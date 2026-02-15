@@ -9,9 +9,12 @@ import {
   getFragment,
   listFragments,
   updateFragment,
+  updateFragmentVersioned,
   deleteFragment,
   archiveFragment,
   restoreFragment,
+  listFragmentVersions,
+  revertFragmentToVersion,
 } from './fragments/storage'
 import { createLogger } from './logging'
 import {
@@ -65,7 +68,7 @@ import {
 } from './plugins/hooks'
 import { collectPluginTools } from './plugins/tools'
 import { triggerLibrarian, getLibrarianRuntimeStatus } from './librarian/scheduler'
-import { invokeAgent } from './agents'
+import { invokeAgent, listAgentRuns } from './agents'
 import { exportStoryAsZip, importStoryFromZip } from './story-archive'
 import type { RefineResult } from './librarian/refine'
 import type { ChatResult } from './librarian/chat'
@@ -324,8 +327,11 @@ export function createApp(dataDir: string = DATA_DIR) {
         placement: 'user',
         createdAt: now,
         updatedAt: now,
+        archived: false,
         order: 0,
         meta: {},
+        version: 1,
+        versions: [],
       }
       await createFragment(dataDir, params.storyId, fragment)
       return fragment
@@ -367,11 +373,23 @@ export function createApp(dataDir: string = DATA_DIR) {
         set.status = 404
         return { error: 'Fragment not found' }
       }
+      const versioned = await updateFragmentVersioned(
+        dataDir,
+        params.storyId,
+        params.fragmentId,
+        {
+          name: body.name,
+          description: body.description,
+          content: body.content,
+        },
+        { reason: 'manual-update' },
+      )
+      if (!versioned) {
+        set.status = 404
+        return { error: 'Fragment not found' }
+      }
       const updated: Fragment = {
-        ...existing,
-        name: body.name,
-        description: body.description,
-        content: body.content,
+        ...versioned,
         ...(body.sticky !== undefined ? { sticky: body.sticky } : {}),
         ...(body.order !== undefined ? { order: body.order } : {}),
         ...(body.placement !== undefined ? { placement: body.placement } : {}),
@@ -403,12 +421,17 @@ export function createApp(dataDir: string = DATA_DIR) {
         return { error: 'Fragment not found' }
       }
       const newContent = existing.content.replace(body.oldText, body.newText)
-      const updated: Fragment = {
-        ...existing,
-        content: newContent,
-        updatedAt: new Date().toISOString(),
+      const updated = await updateFragmentVersioned(
+        dataDir,
+        params.storyId,
+        params.fragmentId,
+        { content: newContent },
+        { reason: 'manual-edit' },
+      )
+      if (!updated) {
+        set.status = 404
+        return { error: 'Fragment not found' }
       }
-      await updateFragment(dataDir, params.storyId, updated)
       return updated
     }, {
       body: t.Object({
@@ -430,6 +453,39 @@ export function createApp(dataDir: string = DATA_DIR) {
       }
       await deleteFragment(dataDir, params.storyId, params.fragmentId)
       return { ok: true }
+    })
+
+    .get('/stories/:storyId/fragments/:fragmentId/versions', async ({ params, set }) => {
+      const versions = await listFragmentVersions(dataDir, params.storyId, params.fragmentId)
+      if (!versions) {
+        set.status = 404
+        return { error: 'Fragment not found' }
+      }
+      return { versions }
+    })
+
+    .post('/stories/:storyId/fragments/:fragmentId/versions/:version/revert', async ({ params, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const targetVersion = Number.parseInt(params.version, 10)
+      if (Number.isNaN(targetVersion) || targetVersion < 1) {
+        set.status = 422
+        return { error: 'Invalid version' }
+      }
+      const fragment = await getFragment(dataDir, params.storyId, params.fragmentId)
+      if (!fragment) {
+        set.status = 404
+        return { error: 'Fragment not found' }
+      }
+      const updated = await revertFragmentToVersion(dataDir, params.storyId, params.fragmentId, targetVersion)
+      if (!updated) {
+        set.status = 422
+        return { error: `Version ${targetVersion} not found` }
+      }
+      return updated
     })
 
     // --- Archive / Restore ---
@@ -601,6 +657,10 @@ export function createApp(dataDir: string = DATA_DIR) {
       return listLibrarianAnalyses(dataDir, params.storyId)
     })
 
+    .get('/stories/:storyId/librarian/agent-runs', async ({ params }) => {
+      return listAgentRuns(params.storyId)
+    })
+
     .get('/stories/:storyId/librarian/analyses/:analysisId', async ({ params, set }) => {
       const analysis = await getLibrarianAnalysis(dataDir, params.storyId, params.analysisId)
       if (!analysis) {
@@ -632,7 +692,7 @@ export function createApp(dataDir: string = DATA_DIR) {
           id: createdFragmentId,
           type: suggestion.type,
           name: suggestion.name,
-          description: suggestion.description.slice(0, 50),
+          description: suggestion.description.slice(0, 250),
           content: suggestion.content,
           tags: [],
           refs: [],
@@ -646,6 +706,8 @@ export function createApp(dataDir: string = DATA_DIR) {
             analysisId: analysis.id,
             suggestionIndex: index,
           },
+          version: 1,
+          versions: [],
         }
         await createFragment(dataDir, params.storyId, fragment)
       }
@@ -828,11 +890,20 @@ export function createApp(dataDir: string = DATA_DIR) {
         set.status = 404
         return { error: 'Fragment not found' }
       }
+
+      // Preferred path: version history
+      const reverted = await revertFragmentToVersion(dataDir, params.storyId, params.fragmentId)
+      if (reverted) {
+        return reverted
+      }
+
+      // Legacy fallback: old previousContent meta
       const previousContent = fragment.meta?.previousContent
       if (typeof previousContent !== 'string') {
         set.status = 422
-        return { error: 'No previous content to revert to' }
+        return { error: 'No previous version to revert to' }
       }
+
       const updated: Fragment = {
         ...fragment,
         content: previousContent,
@@ -1020,7 +1091,7 @@ export function createApp(dataDir: string = DATA_DIR) {
                 id,
                 type: 'prose',
                 name: proseFragmentName,
-                description: body.input.slice(0, 50),
+                description: body.input.slice(0, 250),
                 content: genResult.text,
                 tags: [...existingFragment.tags],
                 refs: [...existingFragment.refs],
@@ -1036,6 +1107,8 @@ export function createApp(dataDir: string = DATA_DIR) {
                   previousFragmentId: existingFragment.id,
                   variationOf: existingFragment.id,
                 },
+                version: 1,
+                versions: [],
               }
               await createFragment(dataDir, params.storyId, fragment)
               savedFragmentId = id
@@ -1065,7 +1138,7 @@ export function createApp(dataDir: string = DATA_DIR) {
                 id,
                 type: 'prose',
                 name: proseFragmentName,
-                description: body.input.slice(0, 50),
+                description: body.input.slice(0, 250),
                 content: genResult.text,
                 tags: [],
                 refs: [],
@@ -1075,6 +1148,8 @@ export function createApp(dataDir: string = DATA_DIR) {
                 updatedAt: now,
                 order: 0,
                 meta: { generatedFrom: body.input },
+                version: 1,
+                versions: [],
               }
               await createFragment(dataDir, params.storyId, fragment)
               savedFragmentId = id

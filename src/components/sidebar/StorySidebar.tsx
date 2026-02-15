@@ -15,7 +15,6 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import {
-  Home,
   Info,
   Users,
   BookOpen,
@@ -31,6 +30,7 @@ import {
   Wrench,
   Book,
   Hash,
+  PenLine,
 } from 'lucide-react'
 import { componentId } from '@/lib/dom-ids'
 import { ErrataMark } from '@/components/ErrataLogo'
@@ -104,12 +104,12 @@ export function StorySidebar({
     <Sidebar collapsible="icon" data-component-id="story-sidebar">
       <SidebarHeader>
         <div className="flex items-center justify-between px-2 py-1.5" data-component-id="story-sidebar-header">
-          <span className="flex items-center gap-1.5 truncate">
+          <Link to="/" className="flex items-center gap-1.5 truncate hover:opacity-80 transition-opacity" title="Back to stories">
             <ErrataMark size={16} className="shrink-0 opacity-60" />
             <span className="font-display text-base italic truncate group-data-[collapsible=icon]:hidden">
               {story?.name ?? 'Errata'}
             </span>
-          </span>
+          </Link>
           <SidebarTrigger data-component-id="sidebar-collapse-trigger" />
         </div>
       </SidebarHeader>
@@ -120,22 +120,25 @@ export function StorySidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Home" data-component-id="sidebar-home-link">
-                  <Link to="/">
-                    <Home className="size-4" />
-                    <span>Home</span>
-                  </Link>
+                <SidebarMenuButton
+                  isActive={activeSection === null}
+                  onClick={() => onSectionChange(null)}
+                  tooltip="Story"
+                  data-component-id="sidebar-story-link"
+                >
+                  <PenLine className="size-4" />
+                  <span>Story</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={activeSection === 'story-info'}
                   onClick={() => handleToggle('story-info')}
-                  tooltip="Story Info"
+                  tooltip="Info"
                   data-component-id="sidebar-section-story-info"
                 >
                   <Info className="size-4" />
-                  <span>Story Info</span>
+                  <span>Info</span>
                   <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
                 </SidebarMenuButton>
               </SidebarMenuItem>

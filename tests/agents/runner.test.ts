@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { z } from 'zod/v4'
-import { agentRegistry, invokeAgent } from '@/server/agents'
+import { agentRegistry, invokeAgent, listAgentRuns, clearAgentRuns } from '@/server/agents'
 import type { AgentDefinition } from '@/server/agents'
 
 const prefix = 'test.runner'
@@ -54,6 +54,7 @@ const cycleAgentB: AgentDefinition = {
 
 describe('agent runner', () => {
   beforeEach(() => {
+    clearAgentRuns()
     agentRegistry.register(childAgent)
     agentRegistry.register(parentAgent)
     agentRegistry.register(disallowedParentAgent)
@@ -73,6 +74,13 @@ describe('agent runner', () => {
     expect(result.trace.length).toBe(2)
     expect(result.trace[0].agentName).toBe(`${prefix}.child`)
     expect(result.trace[1].agentName).toBe(`${prefix}.parent`)
+
+    const runs = listAgentRuns('story-test')
+    expect(runs).toHaveLength(1)
+    expect(runs[0].agentName).toBe(`${prefix}.parent`)
+    expect(runs[0].trace).toHaveLength(2)
+    expect(runs[0].trace.some((entry) => entry.agentName === `${prefix}.child`)).toBe(true)
+    expect(runs[0].trace.some((entry) => entry.agentName === `${prefix}.parent`)).toBe(true)
   })
 
   it('enforces allowedCalls policy', async () => {

@@ -239,7 +239,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
     ? form.name && form.baseURL && form.defaultModel
     : form.name && form.baseURL && form.apiKey && form.defaultModel)
 
-  const inputClass = "w-full h-9 px-3 text-sm bg-background border border-border/40 rounded-md focus:border-primary/30 focus:outline-none"
+  const inputClass = "w-full h-9 px-3 text-sm text-foreground bg-muted/30 border border-border/50 rounded-md focus:border-primary/30 focus:outline-none"
   const labelClass = "text-xs font-medium text-muted-foreground/70 mb-1.5 block"
 
   return (
