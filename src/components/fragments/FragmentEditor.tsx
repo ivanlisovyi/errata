@@ -245,14 +245,14 @@ export function FragmentEditor({
   return (
     <div className="flex flex-col h-full" data-component-id="fragment-editor-root">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border/50" data-component-id={componentId('fragment-editor', mode)}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-3 sm:py-4 gap-2 border-b border-border/50" data-component-id={componentId('fragment-editor', mode)}>
         <div className="flex items-center gap-2.5 min-w-0">
           <h2 className="font-display text-lg truncate">
             {mode === 'create' ? 'New Fragment' : fragment?.name ?? ''}
           </h2>
           {fragment && (
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[10px] font-mono text-muted-foreground/40">{fragment.id}</span>
+              <span className="text-[10px] font-mono text-muted-foreground/40 hidden sm:inline">{fragment.id}</span>
               <Badge variant="secondary" className="text-[10px] h-4">{fragment.type}</Badge>
               {fragment.sticky && (
                 <Badge className="text-[10px] h-4 gap-0.5">
@@ -263,7 +263,7 @@ export function FragmentEditor({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto">
           {fragment && mode !== 'create' && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -421,7 +421,7 @@ export function FragmentEditor({
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-auto">
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
           {mode === 'create' && (
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wider">Type</label>
@@ -859,7 +859,7 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
 
       {/* Available media — click to instantly link */}
       {unlinkedMedia.length > 0 && (
-        <div className="grid grid-cols-4 gap-1.5 mb-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2">
           {unlinkedMedia.map((m) => {
             const url = readImageUrl(m)
             return (

@@ -72,3 +72,108 @@ function useBoolPref(key: string, defaultValue: boolean): [boolean, (v: boolean)
 export function useQuickSwitch() {
   return useBoolPref('errata-quick-switch', false)
 }
+
+// --- Font preferences ---
+
+export type FontRole = 'display' | 'prose' | 'sans' | 'mono'
+
+export interface FontOption {
+  name: string
+  fallback: string
+}
+
+export const FONT_CATALOGUE: Record<FontRole, FontOption[]> = {
+  display: [
+    { name: 'Instrument Serif', fallback: 'Georgia, serif' },
+    { name: 'Playfair Display', fallback: 'Georgia, serif' },
+    { name: 'Cormorant Garamond', fallback: 'Georgia, serif' },
+  ],
+  prose: [
+    { name: 'Newsreader', fallback: 'Georgia, serif' },
+    { name: 'Literata', fallback: 'Georgia, serif' },
+    { name: 'Lora', fallback: 'Georgia, serif' },
+    { name: 'EB Garamond', fallback: 'Georgia, serif' },
+  ],
+  sans: [
+    { name: 'Outfit', fallback: '-apple-system, BlinkMacSystemFont, sans-serif' },
+    { name: 'DM Sans', fallback: '-apple-system, BlinkMacSystemFont, sans-serif' },
+    { name: 'Plus Jakarta Sans', fallback: '-apple-system, BlinkMacSystemFont, sans-serif' },
+  ],
+  mono: [
+    { name: 'JetBrains Mono', fallback: '"Fira Code", Menlo, monospace' },
+    { name: 'Fira Code', fallback: '"JetBrains Mono", Menlo, monospace' },
+    { name: 'Source Code Pro', fallback: 'Menlo, monospace' },
+  ],
+}
+
+export const DEFAULT_FONTS: Record<FontRole, string> = {
+  display: 'Instrument Serif',
+  prose: 'Newsreader',
+  sans: 'Outfit',
+  mono: 'JetBrains Mono',
+}
+
+export type FontPreferences = Partial<Record<FontRole, string>>
+
+const FONTS_KEY = 'errata-fonts'
+
+function getFontCssValue(role: FontRole, name: string): string {
+  const catalogue = FONT_CATALOGUE[role]
+  const option = catalogue.find(o => o.name === name) ?? catalogue[0]
+  return `"${option.name}", ${option.fallback}`
+}
+
+function applyFontPreferences(prefs: FontPreferences) {
+  const style = document.documentElement.style
+  for (const role of ['display', 'prose', 'sans', 'mono'] as FontRole[]) {
+    const name = prefs[role]
+    if (name && name !== DEFAULT_FONTS[role]) {
+      style.setProperty(`--font-${role}`, getFontCssValue(role, name))
+    } else {
+      style.removeProperty(`--font-${role}`)
+    }
+  }
+}
+
+function getInitialFontPreferences(): FontPreferences {
+  if (typeof window === 'undefined') return {}
+  try {
+    const stored = localStorage.getItem(FONTS_KEY)
+    return stored ? JSON.parse(stored) : {}
+  } catch {
+    return {}
+  }
+}
+
+export function useFontPreferences(): [FontPreferences, (role: FontRole, name: string) => void, () => void] {
+  const [prefs, setPrefs] = useState<FontPreferences>(getInitialFontPreferences)
+
+  useEffect(() => {
+    applyFontPreferences(prefs)
+  }, [prefs])
+
+  const setFont = useCallback((role: FontRole, name: string) => {
+    setPrefs(prev => {
+      const next = { ...prev }
+      if (name === DEFAULT_FONTS[role]) {
+        delete next[role]
+      } else {
+        next[role] = name
+      }
+      localStorage.setItem(FONTS_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const resetFonts = useCallback(() => {
+    setPrefs({})
+    localStorage.removeItem(FONTS_KEY)
+    applyFontPreferences({})
+  }, [])
+
+  return [prefs, setFont, resetFonts]
+}
+
+export function getActiveFont(role: FontRole, prefs: FontPreferences): string {
+  return prefs[role] ?? DEFAULT_FONTS[role]
+}

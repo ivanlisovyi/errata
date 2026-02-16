@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { useTheme } from '@/lib/theme'
+import { useTheme, useFontPreferences, getActiveFont, FONT_CATALOGUE } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import {
   Sun,
@@ -102,7 +102,7 @@ interface OnboardingWizardProps {
   onComplete: () => void
 }
 
-type Step = 'theme' | 'welcome' | 'provider-select' | 'provider-setup'
+type Step = 'theme' | 'typography' | 'welcome' | 'provider-select' | 'provider-setup'
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [step, setStep] = useState<Step>('theme')
@@ -117,7 +117,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     <div className="fixed inset-0 bg-background z-50 flex items-center justify-center">
       {step === 'theme' && (
         <ThemeStep
+          onNext={() => setStep('typography')}
+          onSkip={handleSkip}
+        />
+      )}
+      {step === 'typography' && (
+        <TypographyStep
           onNext={() => setStep('welcome')}
+          onBack={() => setStep('theme')}
           onSkip={handleSkip}
         />
       )}
@@ -232,6 +239,141 @@ function ThemeStep({
           Continue
         </Button>
         <div className="mt-4">
+          <button
+            onClick={onSkip}
+            className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+          >
+            Skip setup
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Step 0.5: Typography Selection ────────────────────
+
+const PROSE_SAMPLE = 'The morning light fell across the desk, illuminating pages scattered in careless heaps. She picked up her pen.'
+
+function TypographyStep({
+  onNext,
+  onBack,
+  onSkip,
+}: {
+  onNext: () => void
+  onBack: () => void
+  onSkip: () => void
+}) {
+  const [fontPrefs, setFont] = useFontPreferences()
+  const activeProse = getActiveFont('prose', fontPrefs)
+  const activeDisplay = getActiveFont('display', fontPrefs)
+
+  return (
+    <div className="max-w-xl mx-auto px-6">
+      <div className="text-center mb-10 animate-onboarding-fade-up">
+        <h2 className="font-display text-3xl italic mb-2">Choose your typeface</h2>
+        <p className="text-sm text-muted-foreground/60">
+          The reading font shapes your entire writing experience.
+        </p>
+      </div>
+
+      {/* Prose fonts — the main event */}
+      <div className="mb-8">
+        <p
+          className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-3 animate-onboarding-fade-up"
+          style={{ animationDelay: '100ms' }}
+        >
+          Prose
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {FONT_CATALOGUE.prose.map((opt, i) => {
+            const isActive = opt.name === activeProse
+            return (
+              <button
+                key={opt.name}
+                onClick={() => setFont('prose', opt.name)}
+                className={`group relative text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer animate-onboarding-fade-up ${
+                  isActive
+                    ? 'border-primary/40 bg-primary/5 shadow-sm'
+                    : 'border-border/30 hover:border-border/60 hover:bg-card/50'
+                }`}
+                style={{ animationDelay: `${150 + i * 80}ms` }}
+              >
+                <p className="text-[11px] font-medium text-muted-foreground/50 mb-2">{opt.name}</p>
+                <p
+                  className="text-[15px] leading-relaxed text-foreground/80"
+                  style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
+                >
+                  {PROSE_SAMPLE}
+                </p>
+                {isActive && (
+                  <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-primary flex items-center justify-center animate-onboarding-scale-in">
+                    <Check className="size-3 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Display fonts — secondary */}
+      <div className="mb-10">
+        <p
+          className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-3 animate-onboarding-fade-up"
+          style={{ animationDelay: '500ms' }}
+        >
+          Headings
+        </p>
+        <div
+          className="flex gap-3 animate-onboarding-fade-up"
+          style={{ animationDelay: '550ms' }}
+        >
+          {FONT_CATALOGUE.display.map((opt) => {
+            const isActive = opt.name === activeDisplay
+            return (
+              <button
+                key={opt.name}
+                onClick={() => setFont('display', opt.name)}
+                className={`relative flex-1 text-center p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? 'border-primary/40 bg-primary/5 shadow-sm'
+                    : 'border-border/30 hover:border-border/60 hover:bg-card/50'
+                }`}
+              >
+                <p
+                  className="text-xl italic mb-1 text-foreground/85"
+                  style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
+                >
+                  Chapter One
+                </p>
+                <p className="text-[10px] text-muted-foreground/40">{opt.name}</p>
+                {isActive && (
+                  <div className="absolute top-2 right-2 size-4 rounded-full bg-primary flex items-center justify-center animate-onboarding-scale-in">
+                    <Check className="size-2.5 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div
+        className="text-center animate-onboarding-fade-up"
+        style={{ animationDelay: '650ms' }}
+      >
+        <Button onClick={onNext} className="px-8">
+          Continue
+        </Button>
+        <div className="mt-4 flex items-center justify-center gap-4">
+          <button
+            onClick={onBack}
+            className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors flex items-center gap-1"
+          >
+            <ArrowLeft className="size-3" /> Back
+          </button>
+          <span className="text-border">|</span>
           <button
             onClick={onSkip}
             className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { api, type Fragment } from '@/lib/api'
 import type { FragmentPrefill } from '@/components/fragments/FragmentEditor'
 import { Button } from '@/components/ui/button'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { FragmentEditor } from '@/components/fragments/FragmentEditor'
 import { FragmentExportPanel } from '@/components/fragments/FragmentExportPanel'
 import { DebugPanel } from '@/components/generation/DebugPanel'
@@ -26,6 +26,7 @@ import {
   type ErrataExportData,
 } from '@/lib/fragment-clipboard'
 import { Upload } from 'lucide-react'
+import { useIsMobile } from '@/hooks/use-mobile'
 import '@/lib/plugin-panel-init'
 
 export const Route = createFileRoute('/story/$storyId')({
@@ -34,6 +35,7 @@ export const Route = createFileRoute('/story/$storyId')({
 
 function StoryEditorPage() {
   const { storyId } = Route.useParams()
+  const isMobile = useIsMobile()
   const pluginSidebarPrefsKey = `errata:plugin-sidebar:${storyId}`
   const [activeSection, setActiveSection] = useState<SidebarSection>(null)
   const [selectedFragment, setSelectedFragment] = useState<Fragment | null>(null)
@@ -140,6 +142,7 @@ function StoryEditorPage() {
   const handleSelectFragment = (fragment: Fragment) => {
     setSelectedFragment(fragment)
     setEditorMode('edit')
+    if (isMobile) setActiveSection(null) // Close detail panel on mobile so editor is visible
   }
 
   const handleCreateFragment = (type: string, prefill?: FragmentPrefill) => {
@@ -147,6 +150,7 @@ function StoryEditorPage() {
     setCreateType(type)
     setCreatePrefill(prefill ?? null)
     setEditorMode('create')
+    if (isMobile) setActiveSection(null)
   }
 
   const handleEditorClose = () => {
@@ -348,6 +352,11 @@ function StoryEditorPage() {
 
       {/* Main Content */}
       <SidebarInset className="overflow-hidden min-h-0 relative" data-component-id="main-prose-pane">
+        {/* Mobile sidebar trigger — visible only below md breakpoint */}
+        <div className="md:hidden absolute top-3 left-3 z-20">
+          <SidebarTrigger className="size-9 bg-background/80 backdrop-blur-sm border border-border/40 shadow-sm" />
+        </div>
+
         {/* Prose view — always mounted to preserve scroll position */}
         <ProseChainView
           storyId={storyId}

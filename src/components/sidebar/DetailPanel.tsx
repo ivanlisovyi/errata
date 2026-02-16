@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useIsMobile } from '@/hooks/use-mobile'
 import type { Fragment, StoryMeta } from '@/lib/api'
 import type { SidebarSection } from './StorySidebar'
 import { getPluginPanel } from '@/lib/plugin-panels'
@@ -83,6 +84,7 @@ export function DetailPanel({
   onExportProse,
   enabledPanelPlugins,
 }: DetailPanelProps) {
+  const isMobile = useIsMobile()
   const open = !!section
   const [mounted, setMounted] = useState(open)
   const [visible, setVisible] = useState(false)
@@ -124,6 +126,111 @@ export function DetailPanel({
 
   const panelWidth = activeSection === 'agent-activity' ? 480 : activeSection === 'story-info' ? 440 : activeSection === 'settings' ? 400 : activeSection === 'context-order' ? 380 : activeSection === 'archive' ? 340 : 340
 
+  const panelContent = (
+    <>
+      {activeSection === 'story-info' && (
+        <ScrollArea className="h-full">
+          <StoryInfoPanel storyId={storyId} story={story} onLaunchWizard={onLaunchWizard} onExport={onExport} onDownloadStory={onDownloadStory} onExportProse={onExportProse} />
+        </ScrollArea>
+      )}
+
+      {activeSection === 'settings' && (
+        <ScrollArea className="h-full">
+          <SettingsPanel
+            storyId={storyId}
+            story={story}
+            onManageProviders={onManageProviders}
+            onOpenPluginPanel={onOpenPluginPanel}
+            onTogglePluginSidebar={onTogglePluginSidebar}
+            pluginSidebarVisibility={pluginSidebarVisibility}
+          />
+        </ScrollArea>
+      )}
+
+      {activeSection === 'context-order' && (
+        <ContextOrderPanel storyId={storyId} story={story} />
+      )}
+
+      {activeSection === 'agent-activity' && (
+        <LibrarianPanel storyId={storyId} />
+      )}
+
+      {activeSection === 'archive' && (
+        <ArchivePanel storyId={storyId} />
+      )}
+
+      {SECTION_TO_TYPE[activeSection] && (
+        <FragmentList
+          storyId={storyId}
+          type={SECTION_TO_TYPE[activeSection]}
+          listIdBase={SECTION_LIST_IDS[activeSection] ?? componentId(activeSection, 'sidebar-list')}
+          onSelect={onSelectFragment}
+          onCreateNew={() => onCreateFragment(SECTION_TO_TYPE[activeSection])}
+          onImport={onImportFragment}
+          selectedId={selectedFragmentId}
+        />
+      )}
+
+      {activeSection === 'media' && (
+        <FragmentList
+          storyId={storyId}
+          allowedTypes={['image', 'icon']}
+          listIdBase="media-sidebar-list"
+          onSelect={onSelectFragment}
+          onCreateNew={() => onCreateFragment('image')}
+          selectedId={selectedFragmentId}
+        />
+      )}
+
+      {isPlugin && pluginName && (() => {
+        const PanelComponent = getPluginPanel(pluginName)
+        const pluginPanel = enabledPanelPlugins.find((plugin) => plugin.name === pluginName)
+        return PanelComponent ? (
+          <ScrollArea className="h-full">
+            <div data-component-id={componentId('plugin', pluginName, 'panel-root')}>
+              <PanelComponent storyId={storyId} />
+            </div>
+          </ScrollArea>
+        ) : pluginPanel?.mode === 'iframe' && pluginPanel.url ? (
+          <div className="h-full" data-component-id={componentId('plugin', pluginName, 'panel-root')}>
+            <iframe
+              src={`${pluginPanel.url}?storyId=${encodeURIComponent(storyId)}`}
+              title={`${pluginPanel.title} plugin panel`}
+              className="h-full w-full border-0 bg-background"
+              sandbox="allow-scripts allow-same-origin allow-forms"
+              data-component-id={componentId('plugin', pluginName, 'panel-iframe')}
+            />
+          </div>
+        ) : (
+          <p className="p-4 text-sm text-muted-foreground">Plugin panel not found</p>
+        )
+      })()}
+    </>
+  )
+
+  // Mobile: full-screen overlay
+  if (isMobile) {
+    return (
+      <div
+        ref={containerRef}
+        className={`fixed inset-0 z-40 flex flex-col bg-background transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onTransitionEnd={handleTransitionEnd}
+        data-component-id="detail-panel-root"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50" data-component-id="detail-panel-header">
+          <h2 className="font-display text-lg truncate">{title}</h2>
+          <Button size="icon" variant="ghost" className="size-9 text-muted-foreground/50 hover:text-foreground" onClick={onClose} data-component-id="detail-panel-close">
+            <X className="size-5" />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-hidden" data-component-id="detail-panel-content">
+          {panelContent}
+        </div>
+      </div>
+    )
+  }
+
+  // Desktop: inline animated panel
   return (
     <div
       ref={containerRef}
@@ -143,83 +250,7 @@ export function DetailPanel({
 
         {/* Content */}
         <div className="flex-1 overflow-hidden" data-component-id="detail-panel-content">
-          {activeSection === 'story-info' && (
-            <ScrollArea className="h-full">
-              <StoryInfoPanel storyId={storyId} story={story} onLaunchWizard={onLaunchWizard} onExport={onExport} onDownloadStory={onDownloadStory} onExportProse={onExportProse} />
-            </ScrollArea>
-          )}
-
-          {activeSection === 'settings' && (
-            <ScrollArea className="h-full">
-              <SettingsPanel
-                storyId={storyId}
-                story={story}
-                onManageProviders={onManageProviders}
-                onOpenPluginPanel={onOpenPluginPanel}
-                onTogglePluginSidebar={onTogglePluginSidebar}
-                pluginSidebarVisibility={pluginSidebarVisibility}
-              />
-            </ScrollArea>
-          )}
-
-          {activeSection === 'context-order' && (
-            <ContextOrderPanel storyId={storyId} story={story} />
-          )}
-
-          {activeSection === 'agent-activity' && (
-            <LibrarianPanel storyId={storyId} />
-          )}
-
-          {activeSection === 'archive' && (
-            <ArchivePanel storyId={storyId} />
-          )}
-
-          {SECTION_TO_TYPE[activeSection] && (
-            <FragmentList
-              storyId={storyId}
-              type={SECTION_TO_TYPE[activeSection]}
-              listIdBase={SECTION_LIST_IDS[activeSection] ?? componentId(activeSection, 'sidebar-list')}
-              onSelect={onSelectFragment}
-              onCreateNew={() => onCreateFragment(SECTION_TO_TYPE[activeSection])}
-              onImport={onImportFragment}
-              selectedId={selectedFragmentId}
-            />
-          )}
-
-          {activeSection === 'media' && (
-            <FragmentList
-              storyId={storyId}
-              allowedTypes={['image', 'icon']}
-              listIdBase="media-sidebar-list"
-              onSelect={onSelectFragment}
-              onCreateNew={() => onCreateFragment('image')}
-              selectedId={selectedFragmentId}
-            />
-          )}
-
-          {isPlugin && pluginName && (() => {
-            const PanelComponent = getPluginPanel(pluginName)
-            const pluginPanel = enabledPanelPlugins.find((plugin) => plugin.name === pluginName)
-            return PanelComponent ? (
-              <ScrollArea className="h-full">
-                <div data-component-id={componentId('plugin', pluginName, 'panel-root')}>
-                  <PanelComponent storyId={storyId} />
-                </div>
-              </ScrollArea>
-            ) : pluginPanel?.mode === 'iframe' && pluginPanel.url ? (
-              <div className="h-full" data-component-id={componentId('plugin', pluginName, 'panel-root')}>
-                <iframe
-                  src={`${pluginPanel.url}?storyId=${encodeURIComponent(storyId)}`}
-                  title={`${pluginPanel.title} plugin panel`}
-                  className="h-full w-full border-0 bg-background"
-                  sandbox="allow-scripts allow-same-origin allow-forms"
-                  data-component-id={componentId('plugin', pluginName, 'panel-iframe')}
-                />
-              </div>
-            ) : (
-              <p className="p-4 text-sm text-muted-foreground">Plugin panel not found</p>
-            )
-          })()}
+          {panelContent}
         </div>
       </div>
     </div>

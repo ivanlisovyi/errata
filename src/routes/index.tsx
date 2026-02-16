@@ -121,7 +121,7 @@ function StoryListPage() {
     <div className="min-h-screen bg-background" data-component-id="stories-page">
       {/* Header */}
       <header className="border-b border-border/50" data-component-id="stories-header">
-        <div className="max-w-4xl mx-auto flex items-center justify-between px-8 py-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
           <div>
             <h1><ErrataLogo variant="full" size={28} /></h1>
           </div>
@@ -198,7 +198,7 @@ function StoryListPage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-8 py-10">
+      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
         {isLoading && (
           <p className="text-muted-foreground text-sm">Loading stories...</p>
         )}
@@ -237,7 +237,7 @@ function StoryListPage() {
       <button
         data-component-id="onboarding-launch-button"
         onClick={() => setManualWizard(true)}
-        className="fixed bottom-4 left-4 flex items-center gap-1.5 text-[11px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+        className="fixed bottom-4 left-4 sm:bottom-4 sm:left-4 flex items-center gap-1.5 text-[11px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors safe-area-bottom"
       >
         <Sparkles className="size-3" />
         Setup wizard
@@ -338,7 +338,7 @@ function StoryCard({ story, onDelete }: { story: StoryMeta; onDelete: () => void
           data-component-id={`story-${story.id}-delete-button`}
           variant="ghost"
           size="icon"
-          className="size-8 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0 ml-4"
+          className="size-8 sm:opacity-0 sm:group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0 ml-4"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()

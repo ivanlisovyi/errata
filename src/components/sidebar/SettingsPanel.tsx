@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type StoryMeta, type GlobalConfigSafe } from '@/lib/api'
-import { useTheme, useQuickSwitch } from '@/lib/theme'
-import { Settings2, ChevronRight, ExternalLink, Eye, EyeOff, Puzzle } from 'lucide-react'
+import { useTheme, useQuickSwitch, useFontPreferences, getActiveFont, FONT_CATALOGUE, type FontRole } from '@/lib/theme'
+import { Settings2, ChevronRight, ChevronDown, ExternalLink, Eye, EyeOff, Puzzle, Wrench, RotateCcw } from 'lucide-react'
 
 interface SettingsPanelProps {
   storyId: string
@@ -101,6 +102,41 @@ function NumberStepper({ value, min, max, onChange, disabled, suffix }: {
   )
 }
 
+function FontPicker({ role, label, description, activeFont, onSelect }: {
+  role: FontRole
+  label: string
+  description: string
+  activeFont: string
+  onSelect: (name: string) => void
+}) {
+  const options = FONT_CATALOGUE[role]
+  return (
+    <div className="px-3 py-2.5">
+      <p className="text-[12px] font-medium text-foreground/80 mb-0.5">{label}</p>
+      <p className="text-[10px] text-muted-foreground/40 mb-2 leading-snug">{description}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((opt) => {
+          const isActive = opt.name === activeFont
+          return (
+            <button
+              key={opt.name}
+              onClick={() => onSelect(opt.name)}
+              style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
+              className={`px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150 ${
+                isActive
+                  ? 'border-foreground/25 bg-foreground/5 text-foreground shadow-[0_0_0_1px_var(--foreground)/5]'
+                  : 'border-transparent text-muted-foreground/45 hover:text-foreground/70 hover:bg-accent/30'
+              }`}
+            >
+              {opt.name}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function ProviderSelect({ value, globalConfig, onChange, disabled }: {
   value: string | null
   globalConfig: GlobalConfigSafe | null
@@ -171,8 +207,11 @@ export function SettingsPanel({
     updateMutation.mutate({ enabledPlugins: next })
   }
 
+  const [toolsOpen, setToolsOpen] = useState(false)
   const { theme, setTheme } = useTheme()
   const [quickSwitch, setQuickSwitch] = useQuickSwitch()
+  const [fontPrefs, setFont, resetFonts] = useFontPreferences()
+  const hasCustomFonts = Object.keys(fontPrefs).length > 0
   const enabledBuiltinTools = story.settings.enabledBuiltinTools ?? []
   const builtinToolOptions = [
     { name: 'getFragment', description: 'Get full content for any fragment by ID.' },
@@ -221,6 +260,52 @@ export function SettingsPanel({
           <SettingRow label="Quick switch" description="Show chevrons to swap between variations">
             <ToggleSwitch on={quickSwitch} onToggle={() => setQuickSwitch(!quickSwitch)} label="Toggle quick switch" />
           </SettingRow>
+        </div>
+      </div>
+
+      {/* Typography */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Typography</label>
+          {hasCustomFonts && (
+            <button
+              onClick={resetFonts}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-foreground/60 transition-colors"
+            >
+              <RotateCcw className="size-2.5" />
+              Reset
+            </button>
+          )}
+        </div>
+        <div className="rounded-lg border border-border/30 divide-y divide-border/20">
+          <FontPicker
+            role="display"
+            label="Display"
+            description="Titles, headings, story names"
+            activeFont={getActiveFont('display', fontPrefs)}
+            onSelect={(name) => setFont('display', name)}
+          />
+          <FontPicker
+            role="prose"
+            label="Prose"
+            description="Reading experience, story content"
+            activeFont={getActiveFont('prose', fontPrefs)}
+            onSelect={(name) => setFont('prose', name)}
+          />
+          <FontPicker
+            role="sans"
+            label="Interface"
+            description="UI text, buttons, labels"
+            activeFont={getActiveFont('sans', fontPrefs)}
+            onSelect={(name) => setFont('sans', name)}
+          />
+          <FontPicker
+            role="mono"
+            label="Code"
+            description="Fragment IDs, monospace text"
+            activeFont={getActiveFont('mono', fontPrefs)}
+            onSelect={(name) => setFont('mono', name)}
+          />
         </div>
       </div>
 
@@ -276,30 +361,47 @@ export function SettingsPanel({
               disabled={updateMutation.isPending}
             />
           </SettingRow>
-          <div className="px-3 py-2 border-t border-border/20">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div>
-                <p className="text-[12px] font-medium text-foreground/80">Built-in tools</p>
-                <p className="text-[10px] text-muted-foreground/40 mt-0.5 leading-snug">Enable only the built-in tools you want passed to the model.</p>
-              </div>
+        </div>
+      </div>
+
+      {/* Built-in Tools — collapsible sub-panel */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setToolsOpen(!toolsOpen)}
+          className="w-full flex items-center justify-between gap-2 rounded-lg border border-border/30 px-3 py-2.5 hover:bg-accent/20 transition-colors"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Wrench className="size-3.5 text-muted-foreground/40 shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[12px] font-medium text-foreground/80">Built-in tools</p>
+              <p className="text-[10px] text-muted-foreground/40 mt-0.5">
+                {enabledBuiltinTools.length} of {builtinToolOptions.length} enabled
+              </p>
+            </div>
+          </div>
+          <ChevronDown className={`size-3.5 text-muted-foreground/40 shrink-0 transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {toolsOpen && (
+          <div className="mt-2 rounded-lg border border-border/30 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border/20">
+              <p className="text-[10px] text-muted-foreground/40">Available during generation</p>
               <button
                 type="button"
-                className="text-[10px] text-muted-foreground/40 hover:text-foreground/60"
+                className="text-[10px] text-muted-foreground/30 hover:text-foreground/60 transition-colors"
                 onClick={() => updateMutation.mutate({ enabledBuiltinTools: [] })}
                 disabled={updateMutation.isPending || enabledBuiltinTools.length === 0}
               >
                 Disable all
               </button>
             </div>
-            <div className="space-y-1.5 max-h-40 overflow-auto pr-1">
+            <div className="divide-y divide-border/20">
               {builtinToolOptions.map((tool) => {
                 const enabled = enabledBuiltinTools.includes(tool.name)
                 return (
-                  <div key={tool.name} className="flex items-center justify-between gap-3 rounded-md border border-border/20 px-2 py-1.5">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-mono text-foreground/80 truncate">{tool.name}</p>
-                      <p className="text-[10px] text-muted-foreground/35 truncate">{tool.description}</p>
-                    </div>
+                  <div key={tool.name} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <p className="text-[11px] font-mono text-foreground/70 truncate min-w-0">{tool.name}</p>
                     <ToggleSwitch
                       on={enabled}
                       onToggle={() => toggleBuiltinTool(tool.name)}
@@ -311,7 +413,7 @@ export function SettingsPanel({
               })}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* LLM */}
