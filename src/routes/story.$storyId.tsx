@@ -393,7 +393,13 @@ function StoryEditorPage() {
               createType={createType}
               prefill={createPrefill}
               onClose={handleEditorClose}
-              onSaved={handleEditorClose}
+              onSaved={(created) => {
+                if (created) {
+                  setSelectedFragment(created)
+                  setCreatePrefill(null)
+                  setEditorMode('edit')
+                }
+              }}
             />
           </div>
         )}

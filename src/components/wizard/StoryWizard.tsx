@@ -427,6 +427,7 @@ function ContentStep({
   onContinue,
   onBack,
   onSkip,
+  onSaved,
   storyDesc,
 }: {
   storyId: string
@@ -434,14 +435,19 @@ function ContentStep({
   content: string
   setContent: (v: string) => void
   fragmentId: string | null
-  onContinue: (savedId: string | null) => void
+  onContinue: () => void
   onBack: () => void
   onSkip: () => void
+  onSaved: (id: string) => void
   storyDesc: string
 }) {
   const queryClient = useQueryClient()
   const gen = useGenerate(storyId)
   const [saving, setSaving] = useState(false)
+  const fragmentIdRef = useRef(fragmentId)
+
+  // Keep ref in sync with prop
+  useEffect(() => { fragmentIdRef.current = fragmentId }, [fragmentId])
 
   // Sync streaming text into content
   useEffect(() => {
@@ -472,11 +478,8 @@ function ContentStep({
     gen.generate(buildPrompt(instruction))
   }
 
-  const handleContinue = async () => {
-    if (!content.trim()) {
-      onContinue(fragmentId)
-      return
-    }
+  const saveFragment = useCallback(async (textToSave: string): Promise<string | null> => {
+    if (!textToSave.trim()) return fragmentIdRef.current
 
     setSaving(true)
     try {
@@ -485,19 +488,19 @@ function ContentStep({
       const nameMap = { guideline: 'Writing Guideline', world: 'World Setting', prose: 'Opening' } as const
       const descMap = { guideline: 'Core writing style and tone', world: 'World and setting details', prose: 'Story opening' } as const
 
-      let savedId = fragmentId
+      let savedId = fragmentIdRef.current
       if (savedId) {
         await api.fragments.update(storyId, savedId, {
           name: nameMap[step],
           description: descMap[step],
-          content: content.trim(),
+          content: textToSave.trim(),
         })
       } else {
         const created = await api.fragments.create(storyId, {
           type: fragType,
           name: nameMap[step],
           description: descMap[step],
-          content: content.trim(),
+          content: textToSave.trim(),
         })
         savedId = created.id
 
@@ -512,14 +515,34 @@ function ContentStep({
         }
       }
 
+      fragmentIdRef.current = savedId
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
       await queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
       setSaving(false)
-      onContinue(savedId)
+      return savedId
     } catch {
       setSaving(false)
-      onContinue(fragmentId)
+      return fragmentIdRef.current
     }
+  }, [storyId, step, queryClient])
+
+  // Auto-save when generation stream completes
+  const prevStreamingRef = useRef(false)
+  useEffect(() => {
+    if (prevStreamingRef.current && !gen.isStreaming && gen.text.trim()) {
+      saveFragment(gen.text).then(id => {
+        if (id) onSaved(id)
+      })
+    }
+    prevStreamingRef.current = gen.isStreaming
+  }, [gen.isStreaming]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleContinue = async () => {
+    if (content.trim()) {
+      const savedId = await saveFragment(content)
+      if (savedId) onSaved(savedId)
+    }
+    onContinue()
   }
 
   const placeholderMap = {
@@ -673,14 +696,41 @@ function CharactersStep({
     setCastInstruction('')
   }
 
-  const handleAcceptCast = () => {
+  const handleAcceptCast = async () => {
     const selected = castParsed.filter(c => c.selected)
-    const newChars: CharData[] = selected.map(c => ({
-      concept: c.concept,
-      content: c.concept,
-      fragmentId: null,
-    }))
+    setSaving(true)
+
+    const newChars: CharData[] = []
+    for (const c of selected) {
+      const charName = c.name
+      const fragDescription = c.concept.slice(0, 250)
+
+      try {
+        const created = await api.fragments.create(storyId, {
+          type: 'character',
+          name: charName,
+          description: fragDescription,
+          content: c.concept,
+        })
+        await api.fragments.toggleSticky(storyId, created.id, true)
+
+        newChars.push({
+          concept: c.concept,
+          content: c.concept,
+          fragmentId: created.id,
+        })
+      } catch {
+        newChars.push({
+          concept: c.concept,
+          content: c.concept,
+          fragmentId: null,
+        })
+      }
+    }
+
     setCharacters([...characters, ...newChars])
+    await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
+    setSaving(false)
     setShowCastPreview(false)
     setCastParsed([])
     castGen.clear()
@@ -930,10 +980,13 @@ function CharactersStep({
                 size="sm"
                 className="text-xs gap-1"
                 onClick={handleAcceptCast}
-                disabled={!castParsed.some(c => c.selected)}
+                disabled={!castParsed.some(c => c.selected) || saving}
               >
-                <Plus className="size-3" />
-                Add {castParsed.filter(c => c.selected).length} Characters
+                {saving ? (
+                  <>Saving {castParsed.filter(c => c.selected).length} characters...</>
+                ) : (
+                  <><Plus className="size-3" />Add {castParsed.filter(c => c.selected).length} Characters</>
+                )}
               </Button>
             </div>
           </div>
@@ -1028,7 +1081,7 @@ function CharactersStep({
           size="sm"
           className="gap-1.5"
           onClick={onContinue}
-          disabled={isBusy || isEditing || showCastPreview}
+          disabled={isBusy || isEditing || showCastPreview || saving}
         >
           Continue
           <ChevronRight className="size-3.5" />
@@ -1122,6 +1175,7 @@ function CompleteStep({
 
 export function StoryWizard({ storyId, onComplete }: StoryWizardProps) {
   const [step, setStep] = useState<WizardStep>('concept')
+  const [initialized, setInitialized] = useState(false)
 
   // Content state
   const [storyName, setStoryName] = useState('')
@@ -1140,12 +1194,52 @@ export function StoryWizard({ storyId, onComplete }: StoryWizardProps) {
     queryFn: () => api.stories.get(storyId),
   })
 
+  // Pre-populate from existing fragments
+  const { data: existingFragments } = useQuery({
+    queryKey: ['wizard-fragments', storyId],
+    queryFn: () => api.fragments.list(storyId),
+  })
+
   useEffect(() => {
     if (story) {
       if (!storyName) setStoryName(story.name === 'New Story' ? '' : story.name)
       if (!storyDesc) setStoryDesc(story.description)
     }
   }, [story]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-populate wizard state from existing fragments
+  useEffect(() => {
+    if (existingFragments && !initialized) {
+      setInitialized(true)
+
+      const gl = existingFragments.find(f => f.type === 'guideline')
+      if (gl) {
+        setGuidelineContent(gl.content)
+        setGuidelineId(gl.id)
+      }
+
+      const world = existingFragments.find(f => f.type === 'knowledge' && f.sticky)
+      if (world) {
+        setWorldContent(world.content)
+        setWorldId(world.id)
+      }
+
+      const chars = existingFragments.filter(f => f.type === 'character')
+      if (chars.length > 0) {
+        setCharacters(chars.map(c => ({
+          concept: c.description || c.name,
+          content: c.content,
+          fragmentId: c.id,
+        })))
+      }
+
+      const prose = existingFragments.find(f => f.type === 'prose')
+      if (prose) {
+        setProseContent(prose.content)
+        setProseId(prose.id)
+      }
+    }
+  }, [existingFragments, initialized])
 
   const goTo = (s: WizardStep) => setStep(s)
 
@@ -1172,7 +1266,8 @@ export function StoryWizard({ storyId, onComplete }: StoryWizardProps) {
           content={guidelineContent}
           setContent={setGuidelineContent}
           fragmentId={guidelineId}
-          onContinue={(id) => { setGuidelineId(id); goTo('world') }}
+          onSaved={(id) => setGuidelineId(id)}
+          onContinue={() => goTo('world')}
           onBack={() => goTo('concept')}
           onSkip={onComplete}
           storyDesc={storyDesc}
@@ -1188,7 +1283,8 @@ export function StoryWizard({ storyId, onComplete }: StoryWizardProps) {
           content={worldContent}
           setContent={setWorldContent}
           fragmentId={worldId}
-          onContinue={(id) => { setWorldId(id); goTo('characters') }}
+          onSaved={(id) => setWorldId(id)}
+          onContinue={() => goTo('characters')}
           onBack={() => goTo('guideline')}
           onSkip={onComplete}
           storyDesc={storyDesc}
@@ -1217,7 +1313,8 @@ export function StoryWizard({ storyId, onComplete }: StoryWizardProps) {
           content={proseContent}
           setContent={setProseContent}
           fragmentId={proseId}
-          onContinue={(id) => { setProseId(id); goTo('complete') }}
+          onSaved={(id) => setProseId(id)}
+          onContinue={() => goTo('complete')}
           onBack={() => goTo('characters')}
           onSkip={onComplete}
           storyDesc={storyDesc}

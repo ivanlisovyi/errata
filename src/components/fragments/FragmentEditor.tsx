@@ -26,7 +26,7 @@ interface FragmentEditorProps {
   createType?: string
   prefill?: FragmentPrefill | null
   onClose: () => void
-  onSaved: () => void
+  onSaved: (created?: Fragment) => void
 }
 
 export function FragmentEditor({
@@ -110,9 +110,9 @@ export function FragmentEditor({
   const createMutation = useMutation({
     mutationFn: (data: { type: string; name: string; description: string; content: string }) =>
       api.fragments.create(storyId, data),
-    onSuccess: () => {
+    onSuccess: (created) => {
       invalidate()
-      onSaved()
+      onSaved(created)
     },
   })
 
@@ -564,6 +564,10 @@ export function FragmentEditor({
                 className="min-h-[200px] h-full resize-none font-mono text-sm bg-transparent"
                 required
               />
+              <div className="flex justify-end gap-3 mt-1 text-[10px] text-muted-foreground/40 tabular-nums">
+                <span>{content.trim() ? content.trim().split(/\s+/).length : 0} words</span>
+                <span>{content.length} chars</span>
+              </div>
             </>
           )}
         </div>
