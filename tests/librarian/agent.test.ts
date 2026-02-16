@@ -4,6 +4,7 @@ import {
   createStory,
   getStory,
   createFragment,
+  getFragment,
 } from '@/server/fragments/storage'
 import { getState, getAnalysis, listAnalyses } from '@/server/librarian/storage'
 import { initProseChain, addProseSection } from '@/server/fragments/prose-chain'
@@ -41,6 +42,7 @@ function makeStory(
     modelId: null,
     librarianProviderId: null,
     librarianModelId: null,
+    autoApplyLibrarianSuggestions: false,
     contextOrderMode: 'simple',
     fragmentOrder: [],
     enabledBuiltinTools: [],
@@ -301,6 +303,119 @@ describe('librarian agent', () => {
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.knowledgeSuggestions).toHaveLength(1)
     expect(analysis.knowledgeSuggestions[0].name).toBe('Valdris')
+    expect(analysis.knowledgeSuggestions[0].sourceFragmentId).toBe('pr-0001')
+  })
+
+  it('auto-applies suggestions and updates existing suggestion fragments', async () => {
+    await createStory(dataDir, makeStory({
+      settings: {
+        autoApplyLibrarianSuggestions: true,
+        summarizationThreshold: 0,
+      },
+    }))
+    await createFragment(dataDir, storyId, makeFragment({
+      id: 'pr-0001',
+      content: 'Valdris was introduced in ancient records.',
+    }))
+    await createFragment(dataDir, storyId, makeFragment({
+      id: 'pr-0002',
+      content: 'Valdris is now protected by stone sentinels.',
+    }))
+    await setupProseChain(dataDir, storyId, ['pr-0001', 'pr-0002'])
+
+    mockGenerateTextResponse({
+      summaryUpdate: 'Valdris appears in old records.',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [
+        {
+          type: 'knowledge',
+          name: 'Valdris',
+          description: 'Ancient city',
+          content: 'Valdris is an ancient mountain city.',
+        },
+      ],
+      timelineEvents: [],
+    })
+
+    const first = await runLibrarian(dataDir, storyId, 'pr-0001')
+    expect(first.knowledgeSuggestions[0].accepted).toBe(true)
+    expect(first.knowledgeSuggestions[0].autoApplied).toBe(true)
+    const createdId = first.knowledgeSuggestions[0].createdFragmentId
+    expect(createdId).toBeTruthy()
+
+    mockGenerateTextResponse({
+      summaryUpdate: 'Valdris defenses were revealed.',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [
+        {
+          type: 'knowledge',
+          name: 'Valdris',
+          description: 'Ancient defended city',
+          content: 'Valdris is an ancient mountain city guarded by stone sentinels.',
+        },
+      ],
+      timelineEvents: [],
+    })
+
+    const second = await runLibrarian(dataDir, storyId, 'pr-0002')
+    expect(second.knowledgeSuggestions[0].accepted).toBe(true)
+    expect(second.knowledgeSuggestions[0].autoApplied).toBe(true)
+    expect(second.knowledgeSuggestions[0].createdFragmentId).toBe(createdId)
+
+    const suggestionFragment = await getFragment(dataDir, storyId, createdId!)
+    expect(suggestionFragment).toBeTruthy()
+    expect(suggestionFragment?.content).toContain('stone sentinels')
+    expect(suggestionFragment?.refs).toContain('pr-0001')
+    expect(suggestionFragment?.refs).toContain('pr-0002')
+  })
+
+  it('auto-applies targeted updates to existing knowledge fragments', async () => {
+    await createStory(dataDir, makeStory({
+      settings: {
+        autoApplyLibrarianSuggestions: true,
+        summarizationThreshold: 0,
+      },
+    }))
+    await createFragment(dataDir, storyId, makeFragment({
+      id: 'kn-0001',
+      type: 'knowledge',
+      name: 'Valdris',
+      description: 'Ancient city',
+      content: 'Valdris is an ancient city.',
+    }))
+    await createFragment(dataDir, storyId, makeFragment({
+      id: 'pr-0001',
+      content: 'Valdris is defended by sentinels made of stone.',
+    }))
+    await setupProseChain(dataDir, storyId, ['pr-0001'])
+
+    mockGenerateTextResponse({
+      summaryUpdate: 'Valdris defenses were revealed.',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [
+        {
+          type: 'knowledge',
+          targetFragmentId: 'kn-0001',
+          name: 'Valdris',
+          description: 'Ancient defended city',
+          content: 'Valdris is an ancient city defended by stone sentinels.',
+        },
+      ],
+      timelineEvents: [],
+    })
+
+    const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
+    expect(analysis.knowledgeSuggestions[0].accepted).toBe(true)
+    expect(analysis.knowledgeSuggestions[0].autoApplied).toBe(true)
+    expect(analysis.knowledgeSuggestions[0].createdFragmentId).toBe('kn-0001')
+
+    const updated = await getFragment(dataDir, storyId, 'kn-0001')
+    expect(updated).toBeTruthy()
+    expect(updated?.content).toContain('stone sentinels')
+    expect(updated?.refs).toContain('pr-0001')
   })
 
   it('tracks timeline events', async () => {

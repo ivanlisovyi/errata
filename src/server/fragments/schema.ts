@@ -79,11 +79,12 @@ export const StoryMetaSchema = z.object({
       modelId: z.string().nullable().default(null),
       librarianProviderId: z.string().nullable().default(null),
       librarianModelId: z.string().nullable().default(null),
+      autoApplyLibrarianSuggestions: z.boolean().default(false),
       contextOrderMode: z.enum(['simple', 'advanced']).default('simple'),
       fragmentOrder: z.array(z.string()).default([]),
       enabledBuiltinTools: z.array(z.string()).optional(),
     })
-    .default({ outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, contextOrderMode: 'simple', fragmentOrder: [], enabledBuiltinTools: [] }),
+    .default({ outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, autoApplyLibrarianSuggestions: false, contextOrderMode: 'simple', fragmentOrder: [], enabledBuiltinTools: [] }),
 })
 
 export type StoryMeta = z.infer<typeof StoryMetaSchema>

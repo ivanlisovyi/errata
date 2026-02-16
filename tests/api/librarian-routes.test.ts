@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createTempDir } from '../setup'
 import { createApp } from '@/server/api'
-import { createStory, getFragment } from '@/server/fragments/storage'
+import { createStory, createFragment, getFragment } from '@/server/fragments/storage'
 import {
   saveAnalysis,
   saveState,
@@ -220,6 +220,7 @@ describe('librarian API routes', () => {
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.analysis.knowledgeSuggestions[0].accepted).toBe(true)
+      expect(data.analysis.knowledgeSuggestions[0].autoApplied).toBe(false)
       expect(data.analysis.knowledgeSuggestions[1].accepted).toBeUndefined()
       expect(data.createdFragmentId).toBeTruthy()
 
@@ -227,6 +228,54 @@ describe('librarian API routes', () => {
       expect(created).toBeTruthy()
       expect(created?.name).toBe('Dragon Lore')
       expect(created?.type).toBe('knowledge')
+      expect(created?.refs).toContain('pr-0001')
+      expect(created?.meta?.sourceFragmentId).toBe('pr-0001')
+    })
+
+    it('updates an existing targeted fragment when suggestion has targetFragmentId', async () => {
+      const now = new Date().toISOString()
+      await createFragment(dataDir, storyId, {
+        id: 'kn-0001',
+        type: 'knowledge',
+        name: 'Valdris',
+        description: 'Ancient city',
+        content: 'Valdris is an ancient city.',
+        tags: [],
+        refs: [],
+        sticky: false,
+        placement: 'user',
+        createdAt: now,
+        updatedAt: now,
+        order: 0,
+        meta: {},
+      })
+
+      await saveAnalysis(dataDir, storyId, makeAnalysis({
+        id: 'analysis-target-update',
+        knowledgeSuggestions: [
+          {
+            type: 'knowledge',
+            targetFragmentId: 'kn-0001',
+            name: 'Valdris',
+            description: 'Ancient defended city',
+            content: 'Valdris is an ancient city defended by stone sentinels.',
+          },
+        ],
+      }))
+
+      const res = await app.fetch(
+        new Request(`http://localhost/api/stories/${storyId}/librarian/analyses/analysis-target-update/suggestions/0/accept`, {
+          method: 'POST',
+        }),
+      )
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.createdFragmentId).toBe('kn-0001')
+
+      const updated = await getFragment(dataDir, storyId, 'kn-0001')
+      expect(updated).toBeTruthy()
+      expect(updated?.description).toBe('Ancient defended city')
+      expect(updated?.content).toContain('stone sentinels')
     })
 
     it('returns 404 for non-existent analysis', async () => {

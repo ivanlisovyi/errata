@@ -4,7 +4,7 @@ import { api, type StoryMeta } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Download, Package, Wand2 } from 'lucide-react'
+import { Pencil, Download, Package, Wand2, FileText } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface StoryInfoPanelProps {
@@ -13,6 +13,7 @@ interface StoryInfoPanelProps {
   onLaunchWizard?: () => void
   onExport?: () => void
   onDownloadStory?: () => void
+  onExportProse?: () => void
 }
 
 function countWords(text: string): number {
@@ -44,7 +45,7 @@ function timeAgo(dateStr: string): string {
   return `${months}mo ago`
 }
 
-export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDownloadStory }: StoryInfoPanelProps) {
+export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDownloadStory, onExportProse }: StoryInfoPanelProps) {
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(story.name)
@@ -242,6 +243,12 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
           label="Download"
           description="Full story as one file"
           onClick={() => onDownloadStory?.()}
+        />
+        <ActionTile
+          icon={FileText}
+          label="Prose"
+          description="Story text as .txt"
+          onClick={() => onExportProse?.()}
         />
         {onLaunchWizard && (
           <ActionTile

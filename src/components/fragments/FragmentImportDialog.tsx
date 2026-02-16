@@ -231,7 +231,7 @@ export function FragmentImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileJson className="size-4 text-muted-foreground" />
@@ -242,7 +242,7 @@ export function FragmentImportDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-y-auto min-h-0 flex-1">
           {/* Input area - shown when nothing parsed yet */}
           {!parsed && (
             <>

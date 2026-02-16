@@ -22,6 +22,7 @@ import { FragmentImportDialog } from '@/components/fragments/FragmentImportDialo
 import {
   parseErrataExport,
   readFileAsText,
+  downloadTextFile,
   type ErrataExportData,
 } from '@/lib/fragment-clipboard'
 import { Upload } from 'lucide-react'
@@ -195,6 +196,21 @@ function StoryEditorPage() {
     setShowImportDialog(true)
   }, [])
 
+  const handleExportProse = useCallback(async () => {
+    const [chain, fragments] = await Promise.all([
+      api.proseChain.get(storyId),
+      api.fragments.list(storyId, 'prose'),
+    ])
+    const fragmentById = new Map(fragments.map(f => [f.id, f]))
+    const activeIds = chain.entries.map(e => e.active)
+    const contents = activeIds
+      .map(id => fragmentById.get(id)?.content)
+      .filter((c): c is string => !!c)
+    const text = contents.join('\n\n')
+    const safeName = (story?.name ?? 'story').replace(/[^a-zA-Z0-9_-]/g, '_')
+    downloadTextFile(text, `${safeName}.txt`)
+  }, [storyId, story?.name])
+
   // Listen for paste events — if errata data is on clipboard, offer to import
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -331,6 +347,7 @@ function StoryEditorPage() {
         onImportFragment={handleOpenImport}
         onExport={() => setShowExportPanel(true)}
         onDownloadStory={() => api.stories.exportAsZip(storyId)}
+        onExportProse={handleExportProse}
         enabledPanelPlugins={enabledPanelPlugins}
       />
 

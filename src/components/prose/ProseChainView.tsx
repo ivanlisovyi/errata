@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { StreamMarkdown } from '@/components/ui/stream-markdown'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { RefreshCw, Sparkles, Undo2, Loader2, PenLine, Bug, ChevronLeft, ChevronRight, Trash2, List, ChevronsDown } from 'lucide-react'
+import { useQuickSwitch } from '@/lib/theme'
 
 interface ProseChainViewProps {
   storyId: string
@@ -35,6 +36,7 @@ export function ProseChainView({
   })
   const [activeIndex, setActiveIndex] = useState(0)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [quickSwitch] = useQuickSwitch()
 
   // Fetch prose chain to get active fragment info
   const { data: proseChain } = useQuery({
@@ -75,6 +77,47 @@ export function ProseChainView({
     if (typeof window === 'undefined') return
     localStorage.setItem(FOLLOW_GENERATION_KEY, followGeneration ? '1' : '0')
   }, [followGeneration])
+
+  // Persist scroll position to sessionStorage
+  const SCROLL_POS_KEY = `errata:scroll-pos:${storyId}`
+  const restoredRef = useRef(false)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]')
+    if (!viewport) return
+
+    const handleScroll = () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => {
+        sessionStorage.setItem(SCROLL_POS_KEY, String(viewport.scrollTop))
+      }, 150)
+    }
+
+    viewport.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      viewport.removeEventListener('scroll', handleScroll)
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [SCROLL_POS_KEY])
+
+  // Restore scroll position once fragments are loaded
+  useEffect(() => {
+    if (restoredRef.current || orderedFragments.length === 0) return
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]')
+    if (!viewport) return
+
+    const saved = sessionStorage.getItem(SCROLL_POS_KEY)
+    if (saved) {
+      const pos = Number(saved)
+      if (!isNaN(pos)) {
+        requestAnimationFrame(() => {
+          viewport.scrollTop = pos
+        })
+      }
+    }
+    restoredRef.current = true
+  }, [orderedFragments, SCROLL_POS_KEY])
 
   // Scroll to bottom when streaming new content
   useEffect(() => {
@@ -158,6 +201,7 @@ export function ProseChainView({
                 isFirst={idx === 0}
                 onSelect={() => onSelectFragment(fragment)}
                 onDebugLog={onDebugLog}
+                quickSwitch={quickSwitch}
               />
             ))
           ) : (
@@ -740,6 +784,7 @@ function ProseBlock({
   isFirst,
   onSelect,
   onDebugLog,
+  quickSwitch,
 }: {
   storyId: string
   fragment: Fragment
@@ -750,6 +795,7 @@ function ProseBlock({
   isFirst?: boolean
   onSelect: () => void
   onDebugLog?: (logId: string) => void
+  quickSwitch: boolean
 }) {
   // isFirst/isLast are part of the interface for future use
   void isFirst
@@ -989,7 +1035,7 @@ function ProseBlock({
       )}
 
       {/* Hover chevron rails — full-height, cursor-following */}
-      {(hasMultiple || canQuickRegenerate) && (
+      {quickSwitch && (hasMultiple || canQuickRegenerate) && (
         <>
           <ChevronRail
             direction="prev"

@@ -81,6 +81,7 @@ import {
   saveChatHistory as saveLibrarianChatHistory,
   clearChatHistory as clearLibrarianChatHistory,
 } from './librarian/storage'
+import { applyKnowledgeSuggestion } from './librarian/suggestions'
 import type { StoryMeta, Fragment } from './fragments/schema'
 import { dirname, extname, resolve } from 'node:path'
 import { existsSync } from 'node:fs'
@@ -172,7 +173,7 @@ export function createApp(dataDir: string = DATA_DIR) {
         summary: '',
         createdAt: now,
         updatedAt: now,
-        settings: { outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, contextOrderMode: 'simple' as const, fragmentOrder: [], enabledBuiltinTools: [] },
+        settings: { outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, autoApplyLibrarianSuggestions: false, contextOrderMode: 'simple' as const, fragmentOrder: [], enabledBuiltinTools: [] },
       }
       await createStory(dataDir, story)
       return story
@@ -282,6 +283,7 @@ export function createApp(dataDir: string = DATA_DIR) {
           ...(body.modelId !== undefined ? { modelId: body.modelId } : {}),
           ...(body.librarianProviderId !== undefined ? { librarianProviderId: body.librarianProviderId } : {}),
           ...(body.librarianModelId !== undefined ? { librarianModelId: body.librarianModelId } : {}),
+          ...(body.autoApplyLibrarianSuggestions !== undefined ? { autoApplyLibrarianSuggestions: body.autoApplyLibrarianSuggestions } : {}),
           ...(body.contextOrderMode !== undefined ? { contextOrderMode: body.contextOrderMode } : {}),
           ...(body.fragmentOrder !== undefined ? { fragmentOrder: body.fragmentOrder } : {}),
           ...(body.enabledBuiltinTools !== undefined ? { enabledBuiltinTools: body.enabledBuiltinTools } : {}),
@@ -300,6 +302,7 @@ export function createApp(dataDir: string = DATA_DIR) {
         modelId: t.Optional(t.Union([t.String(), t.Null()])),
         librarianProviderId: t.Optional(t.Union([t.String(), t.Null()])),
         librarianModelId: t.Optional(t.Union([t.String(), t.Null()])),
+        autoApplyLibrarianSuggestions: t.Optional(t.Boolean()),
         contextOrderMode: t.Optional(t.Union([t.Literal('simple'), t.Literal('advanced')])),
         fragmentOrder: t.Optional(t.Array(t.String())),
         enabledBuiltinTools: t.Optional(t.Array(t.String())),
@@ -682,42 +685,21 @@ export function createApp(dataDir: string = DATA_DIR) {
         return { error: 'Invalid suggestion index' }
       }
 
-      const suggestion = analysis.knowledgeSuggestions[index]
-      let createdFragmentId: string | null = suggestion.createdFragmentId ?? null
-
-      if (!suggestion.accepted || !createdFragmentId) {
-        createdFragmentId = generateFragmentId(suggestion.type)
-        const now = new Date().toISOString()
-        const fragment: Fragment = {
-          id: createdFragmentId,
-          type: suggestion.type,
-          name: suggestion.name,
-          description: suggestion.description.slice(0, 250),
-          content: suggestion.content,
-          tags: [],
-          refs: [],
-          sticky: registry.getType(suggestion.type)?.stickyByDefault ?? false,
-          placement: 'user',
-          createdAt: now,
-          updatedAt: now,
-          order: 0,
-          meta: {
-            source: 'librarian-suggestion',
-            analysisId: analysis.id,
-            suggestionIndex: index,
-          },
-          version: 1,
-          versions: [],
-        }
-        await createFragment(dataDir, params.storyId, fragment)
-      }
+      const result = await applyKnowledgeSuggestion({
+        dataDir,
+        storyId: params.storyId,
+        analysis,
+        suggestionIndex: index,
+        reason: 'manual-accept',
+      })
 
       analysis.knowledgeSuggestions[index].accepted = true
-      analysis.knowledgeSuggestions[index].createdFragmentId = createdFragmentId
+      analysis.knowledgeSuggestions[index].autoApplied = false
+      analysis.knowledgeSuggestions[index].createdFragmentId = result.fragmentId
       await saveLibrarianAnalysis(dataDir, params.storyId, analysis)
       return {
         analysis,
-        createdFragmentId,
+        createdFragmentId: result.fragmentId,
       }
     })
 

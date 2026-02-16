@@ -16,10 +16,13 @@ export interface LibrarianAnalysis {
   }>
   knowledgeSuggestions: Array<{
     type: 'character' | 'knowledge'
+    targetFragmentId?: string
     name: string
     description: string
     content: string
+    sourceFragmentId?: string
     accepted?: boolean
+    autoApplied?: boolean
     createdFragmentId?: string
   }>
   timelineEvents: Array<{

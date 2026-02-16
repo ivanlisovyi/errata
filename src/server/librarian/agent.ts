@@ -7,6 +7,7 @@ import {
   saveState,
   type LibrarianAnalysis,
 } from './storage'
+import { applyKnowledgeSuggestion } from './suggestions'
 import { createLogger } from '../logging'
 import { z } from 'zod/v4'
 import {
@@ -16,12 +17,16 @@ import {
 
 const logger = createLogger('librarian-agent')
 
-const SYSTEM_PROMPT = `You are a librarian agent for a collaborative writing app. Your job is to analyze new prose fragments and maintain story continuity.
+const SYSTEM_PROMPT = `You are a librarian agent for a collaborative writing app. 
+Your job is to analyze new prose fragments and maintain story continuity.
 
 Rules:
 - mentionedCharacters: only include character IDs from the provided list that are actually referenced in the new prose (by name or clear reference).
 - contradictions: flag when the new prose contradicts established facts in the summary, character descriptions, or knowledge. Only flag clear contradictions, not ambiguities.
-- knowledgeSuggestions: suggest new fragments for important details introduced in the new prose that aren't already captured. Set type to "character" for new characters or "knowledge" for world-building details, locations, items, or facts.
+- knowledgeSuggestions: suggest creates or updates for character/knowledge fragments.
+- If an existing fragment should be refined, set targetFragmentId to that existing ID and provide the updated name/description/content.
+- If this is truly new information, omit targetFragmentId and suggest creating a new fragment.
+- Set type to "character" for characters or "knowledge" for world-building details, locations, items, or facts.
 - timelineEvents: note significant events. "position" is relative to the previous prose: "before" if it's a flashback, "during" if concurrent, "after" if it follows sequentially.
 - If there are no contradictions, suggestions, or timeline events, use empty arrays.
 - Return JSON only`
@@ -35,6 +40,7 @@ const LibrarianAnalysisSchema = z.object({
   })),
   knowledgeSuggestions: z.array(z.object({
     type: z.union([z.literal('character'), z.literal('knowledge')]),
+    targetFragmentId: z.string().optional(),
     name: z.string(),
     description: z.string(),
     content: z.string(),
@@ -263,6 +269,36 @@ export async function runLibrarian(
     createdAt: new Date().toISOString(),
     fragmentId,
     ...parsed,
+    knowledgeSuggestions: parsed.knowledgeSuggestions.map((suggestion) => ({
+      ...suggestion,
+      sourceFragmentId: fragmentId,
+    })),
+  }
+
+  const autoApplySuggestions = story.settings?.autoApplyLibrarianSuggestions === true
+  if (autoApplySuggestions && analysis.knowledgeSuggestions.length > 0) {
+    requestLogger.info('Auto-applying librarian suggestions', {
+      suggestionCount: analysis.knowledgeSuggestions.length,
+    })
+    for (let index = 0; index < analysis.knowledgeSuggestions.length; index += 1) {
+      try {
+        const result = await applyKnowledgeSuggestion({
+          dataDir,
+          storyId,
+          analysis,
+          suggestionIndex: index,
+          reason: 'auto-apply',
+        })
+        analysis.knowledgeSuggestions[index].accepted = true
+        analysis.knowledgeSuggestions[index].autoApplied = true
+        analysis.knowledgeSuggestions[index].createdFragmentId = result.fragmentId
+      } catch (error) {
+        requestLogger.error('Failed to auto-apply suggestion', {
+          suggestionIndex: index,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
   }
 
   // Only apply summary if prose is old enough (based on threshold)

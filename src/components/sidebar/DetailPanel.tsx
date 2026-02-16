@@ -29,6 +29,7 @@ interface DetailPanelProps {
   onImportFragment?: () => void
   onExport?: () => void
   onDownloadStory?: () => void
+  onExportProse?: () => void
   enabledPanelPlugins: Array<{
     name: string
     title: string
@@ -79,6 +80,7 @@ export function DetailPanel({
   onImportFragment,
   onExport,
   onDownloadStory,
+  onExportProse,
   enabledPanelPlugins,
 }: DetailPanelProps) {
   const open = !!section
@@ -143,7 +145,7 @@ export function DetailPanel({
         <div className="flex-1 overflow-hidden" data-component-id="detail-panel-content">
           {activeSection === 'story-info' && (
             <ScrollArea className="h-full">
-              <StoryInfoPanel storyId={storyId} story={story} onLaunchWizard={onLaunchWizard} onExport={onExport} onDownloadStory={onDownloadStory} />
+              <StoryInfoPanel storyId={storyId} story={story} onLaunchWizard={onLaunchWizard} onExport={onExport} onDownloadStory={onDownloadStory} onExportProse={onExportProse} />
             </ScrollArea>
           )}
 

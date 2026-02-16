@@ -33,6 +33,7 @@ export interface StoryMeta {
     modelId?: string | null
     librarianProviderId?: string | null
     librarianModelId?: string | null
+    autoApplyLibrarianSuggestions?: boolean
     contextOrderMode?: 'simple' | 'advanced'
     fragmentOrder?: string[]
     enabledBuiltinTools?: string[]
@@ -106,10 +107,13 @@ export interface LibrarianAnalysis {
   }>
   knowledgeSuggestions: Array<{
     type: 'character' | 'knowledge'
+    targetFragmentId?: string
     name: string
     description: string
     content: string
+    sourceFragmentId?: string
     accepted?: boolean
+    autoApplied?: boolean
     createdFragmentId?: string
   }>
   timelineEvents: Array<{
@@ -335,7 +339,7 @@ export const api = {
     list: () => apiFetch<PluginManifestInfo[]>('/plugins'),
   },
   settings: {
-    update: (storyId: string, data: { enabledPlugins?: string[]; outputFormat?: 'plaintext' | 'markdown'; summarizationThreshold?: number; maxSteps?: number; providerId?: string | null; modelId?: string | null; librarianProviderId?: string | null; librarianModelId?: string | null; contextOrderMode?: 'simple' | 'advanced'; fragmentOrder?: string[]; enabledBuiltinTools?: string[] }) =>
+    update: (storyId: string, data: { enabledPlugins?: string[]; outputFormat?: 'plaintext' | 'markdown'; summarizationThreshold?: number; maxSteps?: number; providerId?: string | null; modelId?: string | null; librarianProviderId?: string | null; librarianModelId?: string | null; autoApplyLibrarianSuggestions?: boolean; contextOrderMode?: 'simple' | 'advanced'; fragmentOrder?: string[]; enabledBuiltinTools?: string[] }) =>
       apiFetch<StoryMeta>(`/stories/${storyId}/settings`, {
         method: 'PATCH',
         body: JSON.stringify(data),

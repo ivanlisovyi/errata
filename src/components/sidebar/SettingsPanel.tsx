@@ -156,7 +156,7 @@ export function SettingsPanel({
   })
 
   const updateMutation = useMutation({
-    mutationFn: (data: { enabledPlugins?: string[]; outputFormat?: 'plaintext' | 'markdown'; summarizationThreshold?: number; maxSteps?: number; providerId?: string | null; modelId?: string | null; librarianProviderId?: string | null; librarianModelId?: string | null; contextOrderMode?: 'simple' | 'advanced'; fragmentOrder?: string[]; enabledBuiltinTools?: string[] }) =>
+    mutationFn: (data: { enabledPlugins?: string[]; outputFormat?: 'plaintext' | 'markdown'; summarizationThreshold?: number; maxSteps?: number; providerId?: string | null; modelId?: string | null; librarianProviderId?: string | null; librarianModelId?: string | null; autoApplyLibrarianSuggestions?: boolean; contextOrderMode?: 'simple' | 'advanced'; fragmentOrder?: string[]; enabledBuiltinTools?: string[] }) =>
       api.settings.update(storyId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['story', storyId] })
@@ -257,6 +257,14 @@ export function SettingsPanel({
               max={20}
               onChange={(v) => updateMutation.mutate({ summarizationThreshold: v })}
               disabled={updateMutation.isPending}
+            />
+          </SettingRow>
+          <SettingRow label="Auto-apply suggestions" description="Librarian auto creates and updates suggested fragments">
+            <ToggleSwitch
+              on={story.settings.autoApplyLibrarianSuggestions ?? false}
+              onToggle={() => updateMutation.mutate({ autoApplyLibrarianSuggestions: !(story.settings.autoApplyLibrarianSuggestions ?? false) })}
+              disabled={updateMutation.isPending}
+              label="Toggle auto-apply suggestions"
             />
           </SettingRow>
           <SettingRow label="Max steps" description="Tool-use rounds per generation">
