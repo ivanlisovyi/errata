@@ -7,10 +7,30 @@ export default defineConfig({
       projects: ['./tsconfig.json'],
     }),
   ],
+  esbuild: {
+    target: 'node20',
+  },
   test: {
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
+    mockReset: true,
+    restoreMocks: true,
+    clearMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+    sequence: {
+      hooks: 'stack',
+    },
+    deps: {
+      inline: [/ai/, /@ai-sdk/],
+    },
   },
 })

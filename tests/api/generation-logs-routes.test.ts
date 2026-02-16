@@ -1,49 +1,54 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
+// Mock the AI SDK ToolLoopAgent
+vi.mock('ai', async () => {
+  const actual = await vi.importActual('ai')
+  return {
+    ...actual,
+    stepCountIs: vi.fn((n: number) => n),
+    tool: vi.fn((def: unknown) => def),
+    ToolLoopAgent: class MockToolLoopAgent {
+      constructor() {}
+      stream() {
+        const text = 'Generated prose text'
+        const textStream = new ReadableStream<string>({
+          start(controller) {
+            controller.enqueue(text)
+            controller.close()
+          },
+        })
+        return {
+          textStream,
+          text: Promise.resolve(text),
+          usage: Promise.resolve({ promptTokens: 10, completionTokens: 20, totalTokens: 30 }),
+          finishReason: Promise.resolve('stop'),
+          steps: Promise.resolve([
+            {
+              toolCalls: [
+                {
+                  toolName: 'fragmentList',
+                  args: { type: 'character' },
+                },
+              ],
+              toolResults: [
+                {
+                  toolName: 'fragmentList',
+                  args: { type: 'character' },
+                  result: [{ id: 'ch-test', name: 'Alice' }],
+                },
+              ],
+            },
+          ]),
+        }
+      }
+    },
+  }
+})
+
 import { createTempDir } from '../setup'
 import { createApp } from '@/server/api'
 import { createStory } from '@/server/fragments/storage'
 import { saveGenerationLog, type GenerationLog } from '@/server/llm/generation-logs'
-
-// Mock the AI SDK to prevent real LLM calls
-vi.mock('ai', () => ({
-  stepCountIs: vi.fn((n: number) => n),
-  streamText: vi.fn(() => {
-    const text = 'Generated prose text'
-    // Create a proper ReadableStream for textStream that supports tee()
-    const textStream = new ReadableStream<string>({
-      start(controller) {
-        controller.enqueue(text)
-        controller.close()
-      },
-    })
-    return {
-      textStream,
-      text: Promise.resolve(text),
-      usage: Promise.resolve({ promptTokens: 10, completionTokens: 20, totalTokens: 30 }),
-      finishReason: Promise.resolve('stop' as const),
-      steps: Promise.resolve([
-        {
-          toolCalls: [
-            {
-              toolName: 'fragmentList',
-              args: { type: 'character' },
-            },
-          ],
-          toolResults: [
-            {
-              toolName: 'fragmentList',
-              args: { type: 'character' },
-              result: [{ id: 'ch-test', name: 'Alice' }],
-            },
-          ],
-        },
-      ]),
-      toTextStreamResponse: () =>
-        new Response(text, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } }),
-    }
-  }),
-  tool: vi.fn((def: unknown) => def),
-}))
 
 describe('generation-logs API routes', () => {
   let dataDir: string

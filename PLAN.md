@@ -536,7 +536,7 @@ export default namesPlugin;
 import { createDeepSeek } from '@ai-sdk/deepseek';
 
 export const deepseek = createDeepSeek({
-  apiKey: process.env.DEEPSEEK_API_KEY ?? 'DEEPSEEK_API_KEY',
+  apiKey: process.env.DEEPSEEK_API_KEY,
   // baseURL defaults to https://api.deepseek.com
 });
 
@@ -1012,7 +1012,7 @@ bun test --filter "storage" # Filter by name
 ## Environment Variables
 
 ```env
-DEEPSEEK_API_KEY=DEEPSEEK_API_KEY
+DEEPSEEK_API_KEY=your-api-key-here
 DATA_DIR=./data
 PORT=3000
 ```

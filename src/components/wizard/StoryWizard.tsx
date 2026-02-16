@@ -142,7 +142,7 @@ function StepShell({
 
       {/* Content */}
       <div className="flex-1 overflow-auto" key={step}>
-        <div className="animate-wizard-step-enter max-w-2xl mx-auto px-6 py-8">
+        <div className="animate-wizard-step-enter max-w-2xl mx-auto px-4 py-5 sm:px-6 sm:py-8">
           {/* Step watermark + heading */}
           <div className="relative mb-8">
             {meta.numeral && (

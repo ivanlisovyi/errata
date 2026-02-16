@@ -6,7 +6,7 @@ import type { LanguageModel } from 'ai'
 
 // Backward-compatible default model using DeepSeek env var
 const deepseek = createDeepSeek({
-  apiKey: process.env.DEEPSEEK_API_KEY ?? 'DEEPSEEK_API_KEY',
+  apiKey: process.env.DEEPSEEK_API_KEY,
 })
 export const defaultModel = deepseek('deepseek-chat')
 

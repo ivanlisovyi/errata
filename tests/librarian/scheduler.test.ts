@@ -5,6 +5,7 @@ vi.mock('@/server/agents', () => ({
   invokeAgent: vi.fn(),
 }))
 
+// Import mocked modules AFTER vi.mock (vitest hoists mocks to top)
 import { invokeAgent } from '@/server/agents'
 import { triggerLibrarian, clearPending, getPendingCount, getLibrarianRuntimeStatus } from '@/server/librarian/scheduler'
 import type { Fragment } from '@/server/fragments/schema'

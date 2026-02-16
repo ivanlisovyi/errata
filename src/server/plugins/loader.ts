@@ -60,7 +60,10 @@ export async function loadPlugin(
     )
   }
 
-  const mod = await import(pathToFileURL(pluginPath).href)
+  const mod = await import(
+    /* @vite-ignore */
+    pathToFileURL(pluginPath).href
+  )
   const plugin: WritingPlugin = mod.default ?? mod.plugin
   if (!plugin || !plugin.manifest) {
     throw new Error(`Plugin "${name}" does not export a valid WritingPlugin in ${pluginPath}`)

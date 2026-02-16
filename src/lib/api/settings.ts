@@ -1,0 +1,23 @@
+import { apiFetch } from './client'
+import type { StoryMeta } from './types'
+
+export const settings = {
+  update: (storyId: string, data: {
+    enabledPlugins?: string[]
+    outputFormat?: 'plaintext' | 'markdown'
+    summarizationThreshold?: number
+    maxSteps?: number
+    providerId?: string | null
+    modelId?: string | null
+    librarianProviderId?: string | null
+    librarianModelId?: string | null
+    autoApplyLibrarianSuggestions?: boolean
+    contextOrderMode?: 'simple' | 'advanced'
+    fragmentOrder?: string[]
+    enabledBuiltinTools?: string[]
+  }) =>
+    apiFetch<StoryMeta>(`/stories/${storyId}/settings`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+}
