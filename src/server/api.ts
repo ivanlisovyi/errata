@@ -37,6 +37,9 @@ import {
 import { generateFragmentId } from '@/lib/fragment-ids'
 import { registry } from './fragments/registry'
 import { buildContextState, createDefaultBlocks, compileBlocks } from './llm/context-builder'
+import { getBlockConfig, saveBlockConfig, addCustomBlock, updateCustomBlock, deleteCustomBlock, updateBlockOverrides } from './blocks/storage'
+import { applyBlockConfig } from './blocks/apply'
+import { CustomBlockDefinitionSchema, BlockOverrideSchema } from './blocks/schema'
 import { createFragmentTools } from './llm/tools'
 import { getModel } from './llm/client'
 import { createWriterAgent } from './llm/writer-agent'
@@ -638,6 +641,96 @@ export function createApp(dataDir: string = DATA_DIR) {
       }))
     })
 
+    // --- Block Config ---
+    .get('/stories/:storyId/blocks', async ({ params, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const config = await getBlockConfig(dataDir, params.storyId)
+      // Build default blocks for metadata
+      const ctxState = await buildContextState(dataDir, params.storyId, '(preview)')
+      const defaultBlocks = createDefaultBlocks(ctxState)
+      const builtinBlocks = defaultBlocks.map(b => ({
+        id: b.id,
+        role: b.role,
+        order: b.order,
+        source: b.source,
+        contentPreview: b.content.slice(0, 200),
+      }))
+      return { config, builtinBlocks }
+    })
+
+    .get('/stories/:storyId/blocks/preview', async ({ params, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const ctxState = await buildContextState(dataDir, params.storyId, '(preview)')
+      let blocks = createDefaultBlocks(ctxState)
+      const blockConfig = await getBlockConfig(dataDir, params.storyId)
+      blocks = applyBlockConfig(blocks, blockConfig, ctxState)
+      const messages = compileBlocks(blocks)
+      return { messages, blockCount: blocks.length }
+    })
+
+    .post('/stories/:storyId/blocks/custom', async ({ params, body, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const parsed = CustomBlockDefinitionSchema.safeParse(body)
+      if (!parsed.success) {
+        set.status = 422
+        return { error: 'Invalid block definition', details: parsed.error.issues }
+      }
+      const config = await addCustomBlock(dataDir, params.storyId, parsed.data)
+      return config
+    })
+
+    .put('/stories/:storyId/blocks/custom/:blockId', async ({ params, body, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const config = await updateCustomBlock(dataDir, params.storyId, params.blockId, body as Record<string, unknown>)
+      if (!config) {
+        set.status = 404
+        return { error: 'Custom block not found' }
+      }
+      return config
+    })
+
+    .delete('/stories/:storyId/blocks/custom/:blockId', async ({ params, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const config = await deleteCustomBlock(dataDir, params.storyId, params.blockId)
+      return config
+    })
+
+    .patch('/stories/:storyId/blocks/config', async ({ params, body, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const { overrides, blockOrder } = body as { overrides?: Record<string, unknown>; blockOrder?: string[] }
+      const config = await updateBlockOverrides(
+        dataDir,
+        params.storyId,
+        (overrides ?? {}) as Record<string, import('./blocks/schema').BlockOverride>,
+        blockOrder,
+      )
+      return config
+    })
+
     // --- Generation Logs ---
     .get('/stories/:storyId/generation-logs', async ({ params }) => {
       return listGenerationLogs(dataDir, params.storyId)
@@ -1003,6 +1096,8 @@ export function createApp(dataDir: string = DATA_DIR) {
       }))
 
       let blocks = createDefaultBlocks(ctxState, extraTools.length > 0 ? { extraTools } : undefined)
+      const blockConfig = await getBlockConfig(dataDir, params.storyId)
+      blocks = applyBlockConfig(blocks, blockConfig, ctxState)
       blocks = await runBeforeBlocks(enabledPlugins, blocks)
       let messages = compileBlocks(blocks)
       messages = await runBeforeGeneration(enabledPlugins, messages)
@@ -1167,7 +1262,7 @@ export function createApp(dataDir: string = DATA_DIR) {
             try {
               const rawUsage = await result.totalUsage
               if (rawUsage && typeof rawUsage.inputTokens === 'number') {
-                totalUsage = { inputTokens: rawUsage.inputTokens, outputTokens: rawUsage.outputTokens }
+                totalUsage = { inputTokens: rawUsage.inputTokens, outputTokens: rawUsage.outputTokens ? rawUsage.outputTokens : 0 }
               }
             } catch {
               // Some providers may not report usage

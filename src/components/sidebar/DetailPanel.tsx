@@ -5,6 +5,7 @@ import type { SidebarSection } from './StorySidebar'
 import { getPluginPanel } from '@/lib/plugin-panels'
 import { FragmentList } from '@/components/fragments/FragmentList'
 import { ContextOrderPanel } from '@/components/fragments/ContextOrderPanel'
+import { BlockEditorPanel } from '@/components/blocks/BlockEditorPanel'
 import { StoryInfoPanel } from './StoryInfoPanel'
 import { SettingsPanel } from './SettingsPanel'
 import { LibrarianPanel } from './LibrarianPanel'
@@ -49,6 +50,7 @@ const SECTION_TITLES: Record<string, string> = {
   media: 'Media',
   archive: 'Archive',
   'context-order': 'Context Order',
+  'block-editor': 'Block Editor',
   settings: 'Settings',
   'agent-activity': 'Librarian',
 }
@@ -145,6 +147,10 @@ export function DetailPanel({
             pluginSidebarVisibility={pluginSidebarVisibility}
           />
         </ScrollArea>
+      )}
+
+      {activeSection === 'block-editor' && (
+        <BlockEditorPanel storyId={storyId} />
       )}
 
       {activeSection === 'context-order' && (

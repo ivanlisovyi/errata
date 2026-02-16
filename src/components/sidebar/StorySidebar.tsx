@@ -25,6 +25,7 @@ import {
   Sparkles,
   BookMarked,
   ArrowUpDown,
+  Layers,
   Archive,
   Keyboard,
   Wrench,
@@ -45,6 +46,7 @@ export type SidebarSection =
   | 'media'
   | 'archive'
   | 'context-order'
+  | 'block-editor'
   | 'settings'
   | 'agent-activity'
   | `plugin-${string}`
@@ -185,6 +187,19 @@ export function StorySidebar({
           </SidebarGroupLabel>
           <SidebarGroupContent>
               <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeSection === 'block-editor'}
+                  onClick={() => handleToggle('block-editor')}
+                  tooltip="Block Editor"
+                  data-component-id="sidebar-section-block-editor"
+                >
+                  <Layers className="size-4" />
+                  <span>Block Editor</span>
+                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {story?.settings.contextOrderMode === 'advanced' && (
                 <SidebarMenuItem>
                   <SidebarMenuButton

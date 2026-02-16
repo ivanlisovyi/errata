@@ -366,6 +366,264 @@ export const HELP_SECTIONS: HelpSection[] = [
     ],
   },
   {
+    id: 'blocks',
+    title: 'Block Editor',
+    description: 'Control the LLM context structure — disable, reorder, override, and create blocks.',
+    subsections: [
+      {
+        id: 'overview',
+        title: 'What are blocks',
+        content: (
+          <>
+            <P>
+              Every generation prompt is built from <strong className="text-foreground/75">blocks</strong> — discrete
+              sections like writing instructions, the tool listing, story info, prose history, and your author input.
+              Blocks are assembled automatically from your story data, then compiled into the system and user messages
+              that the LLM sees.
+            </P>
+            <P>
+              The <strong className="text-foreground/75">Block Editor</strong> lets you see and control these blocks
+              directly. Open it from the sidebar under <strong className="text-foreground/75">Management</strong>.
+            </P>
+            <Tip>
+              Use the <strong className="text-foreground/75">Preview</strong> button in the Block Editor to see exactly
+              what the compiled prompt looks like with your changes applied.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'builtin-blocks',
+        title: 'Builtin blocks',
+        content: (
+          <>
+            <P>
+              These blocks are generated automatically from your story data. They appear in every
+              generation (unless you disable them).
+            </P>
+            <div className="mt-3 mb-1">
+              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">System message</p>
+              <div className="space-y-1.5 mb-3">
+                {[
+                  ['instructions', 'Core writing assistant instructions and output rules.'],
+                  ['tools', 'List of available tools the model can call during generation.'],
+                  ['system-fragments', 'Sticky fragments placed in "system" position (if any).'],
+                ].map(([name, desc]) => (
+                  <div key={name} className="flex gap-2 items-start">
+                    <code className="text-[10.5px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded shrink-0 mt-px">{name}</code>
+                    <p className="text-[11.5px] text-muted-foreground/55 leading-snug">{desc}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">User message</p>
+              <div className="space-y-1.5">
+                {[
+                  ['story-info', 'Story name and description.'],
+                  ['summary', 'Rolling story summary maintained by the librarian.'],
+                  ['user-fragments', 'Sticky fragments placed in "user" position (if any).'],
+                  ['shortlist-*', 'One-line listings of non-sticky guidelines, knowledge, characters.'],
+                  ['prose', 'Recent prose from the chain, limited by your context limit setting.'],
+                  ['author-input', 'Your direction for what should happen next.'],
+                ].map(([name, desc]) => (
+                  <div key={name} className="flex gap-2 items-start">
+                    <code className="text-[10.5px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded shrink-0 mt-px">{name}</code>
+                    <p className="text-[11.5px] text-muted-foreground/55 leading-snug">{desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Tip>
+              Some blocks are conditional — <Mono>summary</Mono> only appears if the librarian has
+              produced a summary, and <Mono>system-fragments</Mono> only appears if you have sticky
+              fragments placed in the system message.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'disabling',
+        title: 'Disabling blocks',
+        content: (
+          <>
+            <P>
+              Click the <strong className="text-foreground/75">toggle button</strong> on any block row to
+              disable it. Disabled blocks are excluded from the prompt entirely — the LLM won't see them.
+            </P>
+            <P>
+              Common uses: disable the <Mono>tools</Mono> block if you don't want the model to call tools,
+              disable <Mono>summary</Mono> if the librarian's summary is causing issues, or disable
+              shortlist blocks to keep the prompt shorter.
+            </P>
+            <Tip>
+              Disabling a block doesn't delete anything — toggle it back on anytime to restore it.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'overriding',
+        title: 'Overriding content',
+        content: (
+          <>
+            <P>
+              Expand any builtin block to see its content preview and modify it. Choose a <strong className="text-foreground/75">content mode</strong>:
+            </P>
+            <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-1.5">
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">None</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Default — the block uses its original content with no modifications.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">Prepend</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Your text is inserted before the block's original content. Use this to add rules or
+                  context at the top without losing the defaults.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">Append</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Your text is added after the block's original content. Good for adding supplementary notes.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">Override</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  The block's original content is entirely replaced with your text. Use this to write
+                  your own system prompt or completely redefine a section.
+                </p>
+              </div>
+            </div>
+            <Tip>
+              Overriding the <Mono>instructions</Mono> block is a powerful way to customize the model's
+              behavior without writing a plugin. For example, replace it with genre-specific writing directions.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'reordering',
+        title: 'Reordering blocks',
+        content: (
+          <>
+            <P>
+              Drag blocks by their <strong className="text-foreground/75">grip handle</strong> to reorder them.
+              The order controls how blocks appear within their role group — system blocks are ordered among
+              system blocks, and user blocks among user blocks.
+            </P>
+            <P>
+              Reordering affects what the model pays attention to. LLMs tend to focus more on content at
+              the beginning and end of a message. Place your most important context accordingly.
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'custom-blocks',
+        title: 'Custom blocks',
+        content: (
+          <>
+            <P>
+              Click <strong className="text-foreground/75">Add Custom Block</strong> at the bottom of the
+              Block Editor to inject your own content into the LLM prompt. Custom blocks sit alongside
+              builtin blocks and can be reordered, enabled, or disabled the same way.
+            </P>
+            <P>
+              When creating a custom block, choose:
+            </P>
+            <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-1.5">
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">Role</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  <Mono>system</Mono> for instructions and rules the model should follow.{' '}
+                  <Mono>user</Mono> for story context and reference material.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">Type: Simple</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Plain text injected as-is. Use for static instructions, world rules, style guides,
+                  or any fixed content.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">Type: Script</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  JavaScript that runs at generation time and returns a string. Has access to story data
+                  through a <Mono>ctx</Mono> parameter. The block is omitted if the script returns empty.
+                </p>
+              </div>
+            </div>
+          </>
+        ),
+      },
+      {
+        id: 'script-blocks',
+        title: 'Script blocks',
+        content: (
+          <>
+            <P>
+              Script blocks are custom blocks that run JavaScript at generation time. Write a function body
+              that receives <Mono>ctx</Mono> and returns a string. If it returns empty or throws an error,
+              the block is handled gracefully.
+            </P>
+            <div className="mt-3 mb-1">
+              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">Available on ctx</p>
+              <div className="space-y-1 mb-3">
+                {[
+                  ['ctx.story', 'Story metadata — name, description, summary, settings.'],
+                  ['ctx.proseFragments', 'Recent prose fragments included in context.'],
+                  ['ctx.stickyGuidelines', 'Pinned guideline fragments (full content).'],
+                  ['ctx.stickyKnowledge', 'Pinned knowledge fragments (full content).'],
+                  ['ctx.stickyCharacters', 'Pinned character fragments (full content).'],
+                  ['ctx.guidelineShortlist', 'Non-pinned guidelines.'],
+                  ['ctx.knowledgeShortlist', 'Non-pinned knowledge.'],
+                  ['ctx.characterShortlist', 'Non-pinned characters.'],
+                  ['ctx.authorInput', 'The author\'s current direction.'],
+                ].map(([field, desc]) => (
+                  <div key={field} className="flex gap-2 items-start">
+                    <code className="text-[10.5px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded shrink-0 mt-px">{field}</code>
+                    <p className="text-[11px] text-muted-foreground/55 leading-snug">{desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-3 mb-1">
+              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">Examples</p>
+              <div className="space-y-2">
+                <div className="rounded-md border border-border/25 bg-accent/15 px-3 py-2 text-[11px] font-mono text-foreground/55 leading-relaxed whitespace-pre-wrap">{`// Word count tracker
+const total = ctx.proseFragments
+  .reduce((n, f) => n + f.content.split(/\\s+/).length, 0)
+return \`Current story length: ~\${total} words.\``}</div>
+                <div className="rounded-md border border-border/25 bg-accent/15 px-3 py-2 text-[11px] font-mono text-foreground/55 leading-relaxed whitespace-pre-wrap">{`// Active character reminder
+const names = ctx.stickyCharacters
+  .map(c => c.name).join(', ')
+if (!names) return ''
+return \`Active characters: \${names}.\``}</div>
+                <div className="rounded-md border border-border/25 bg-accent/15 px-3 py-2 text-[11px] font-mono text-foreground/55 leading-relaxed whitespace-pre-wrap">{`// Conditional pacing note
+const n = ctx.proseFragments.length
+if (n < 3) return 'Early story — establish setting.'
+if (n > 15) return 'Move toward resolution.'
+return ''`}</div>
+              </div>
+            </div>
+            <Tip>
+              If a script throws an error, the block shows a "[Script error]" message in the prompt so
+              you can spot the problem. Check the Preview to verify scripts work as expected.
+            </Tip>
+          </>
+        ),
+      },
+    ],
+  },
+  {
     id: 'fragments',
     title: 'Fragments',
     description: 'Everything in Errata is a fragment. Learn how they compose into your story.',

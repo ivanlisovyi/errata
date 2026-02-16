@@ -216,6 +216,48 @@ export interface PluginManifestInfo {
   }
 }
 
+// Block Config types
+export interface BlockOverride {
+  enabled?: boolean
+  order?: number
+  contentMode?: 'override' | 'prepend' | 'append' | null
+  customContent?: string
+}
+
+export interface CustomBlockDefinition {
+  id: string
+  name: string
+  role: 'system' | 'user'
+  order: number
+  enabled: boolean
+  type: 'simple' | 'script'
+  content: string
+}
+
+export interface BlockConfig {
+  customBlocks: CustomBlockDefinition[]
+  overrides: Record<string, BlockOverride>
+  blockOrder: string[]
+}
+
+export interface BuiltinBlockMeta {
+  id: string
+  role: 'system' | 'user'
+  order: number
+  source: string
+  contentPreview: string
+}
+
+export interface BlocksResponse {
+  config: BlockConfig
+  builtinBlocks: BuiltinBlockMeta[]
+}
+
+export interface BlockPreviewResponse {
+  messages: Array<{ role: string; content: string }>
+  blockCount: number
+}
+
 export type ChatEvent =
   | { type: 'text'; text: string }
   | { type: 'reasoning'; text: string }
