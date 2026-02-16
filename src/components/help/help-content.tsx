@@ -79,24 +79,62 @@ export const HELP_SECTIONS: HelpSection[] = [
         content: (
           <>
             <P>
-              Context is built in two phases. First, the <Mono>buildContextState</Mono> step loads
-              your fragments and splits them into sticky (full content) and non-sticky (shortlist) groups.
-              Then <Mono>assembleMessages</Mono> renders them into system and user messages.
+              When you hit Generate, Errata assembles a prompt from your story's fragments and sends
+              it to the LLM. This happens in a specific sequence — understanding it helps you control
+              what the model sees and how it writes.
             </P>
+
+            <div className="mt-3 mb-3">
+              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">The pipeline</p>
+              <div className="space-y-1.5">
+                {[
+                  ['1', 'Load fragments', 'All fragments are loaded and sorted by type — prose, guidelines, characters, knowledge.'],
+                  ['2', 'Apply context limit', 'Recent prose is selected from the chain based on your Context Limit setting (fragment count, token budget, or character budget).'],
+                  ['3', 'Split sticky / non-sticky', 'Sticky fragments go in full. Non-sticky become one-line shortlist entries (ID, name, description).'],
+                  ['4', 'Plugin beforeContext hooks', 'Enabled plugins can modify the context state — adding, removing, or reordering fragments before they\'re rendered.'],
+                  ['5', 'Assemble messages', 'Everything is rendered into a system message and a user message.'],
+                  ['6', 'Plugin beforeGeneration hooks', 'Plugins get a final chance to modify the assembled messages before they\'re sent.'],
+                  ['7', 'Stream to LLM', 'The prompt is sent. The model can call tools (if enabled) to look up fragments, then writes prose.'],
+                  ['8', 'Save & analyze', 'Output is saved as a new prose fragment, plugin afterGeneration/afterSave hooks run, and the librarian is triggered.'],
+                ].map(([num, label, desc]) => (
+                  <div key={num} className="flex gap-2.5 items-start">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-foreground/8 text-[9px] font-mono font-bold text-foreground/40 flex items-center justify-center mt-0.5">{num}</span>
+                    <div className="min-w-0">
+                      <span className="text-[12px] font-medium text-foreground/70">{label}</span>
+                      <p className="text-[11px] text-muted-foreground/50 leading-snug">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 mb-1">
+              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">What the model sees</p>
+            </div>
             <P>
-              <strong className="text-foreground/75">System message</strong> contains the writing instructions,
-              available tool descriptions, and any fragments with <Mono>system</Mono> placement.
+              The final prompt is two messages. The <strong className="text-foreground/75">system message</strong> contains
+              writing instructions, the list of available tools, and any sticky fragments placed
+              in <Mono>system</Mono> position. The <strong className="text-foreground/75">user message</strong> contains,
+              in order:
             </P>
-            <P>
-              <strong className="text-foreground/75">User message</strong> contains the story name, description,
-              rolling summary, sticky fragments (with <Mono>user</Mono> placement), shortlists of non-sticky
-              fragments, recent prose from the chain, and your author input.
-            </P>
+            <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-0.5">
+              {[
+                'Story name and description',
+                'Rolling summary (maintained by the librarian)',
+                'Sticky fragments (user-placed) — full content',
+                'Non-sticky shortlists — one-line per fragment',
+                'Recent prose from the chain (context-limited)',
+                'Your author input',
+              ].map((item, i) => (
+                <p key={i} className="text-[11.5px] text-foreground/55 leading-snug">
+                  <span className="text-muted-foreground/30 mr-1.5">{i + 1}.</span>{item}
+                </p>
+              ))}
+            </div>
+
             <Tip>
-              Only recent prose is included — by default, the last 10 fragments. You can change
-              this limit (and switch to token or character budgets) in the Context Limit setting.
-              The librarian maintains a rolling summary of earlier prose so the model retains
-              story context beyond that window.
+              Use the Debug panel to see exactly what was sent for any generation — the Prompt tab
+              shows both messages in full.
             </Tip>
           </>
         ),
@@ -209,14 +247,26 @@ export const HELP_SECTIONS: HelpSection[] = [
         content: (
           <>
             <P>
-              The summarization threshold controls how many prose positions back the librarian will
-              look when building the rolling story summary. Setting it to 0 disables summarization.
+              The context limit means older prose eventually falls out of the prompt. Summarization
+              is what preserves that lost context — it's the model's long-term memory.
             </P>
             <P>
-              After each generation, the librarian analyzes the new prose and updates the running
-              summary. Older prose outside the context window is preserved through this summary,
-              keeping the model aware of earlier events.
+              After each generation, the librarian reads the new prose and writes a short
+              summary update. These updates are stitched together into a rolling summary that
+              appears in the prompt as "Story Summary So Far", positioned before the recent prose.
             </P>
+            <P>
+              The <strong className="text-foreground/75">summarization threshold</strong> controls
+              how many prose positions back the librarian looks when building its analysis.
+              A higher number gives the librarian more context to work with; a lower number
+              keeps analysis faster. Setting it to 0 disables summarization entirely.
+            </P>
+            <Tip>
+              Summarization and the context limit work as a pair: the context limit controls how
+              much raw prose the model sees, and summarization ensures everything before that
+              window is still represented. If you increase the context limit, you may be able to
+              lower the summarization threshold (or vice versa).
+            </Tip>
           </>
         ),
       },
@@ -226,7 +276,12 @@ export const HELP_SECTIONS: HelpSection[] = [
         content: (
           <>
             <P>
-              Controls how much recent prose is included in the generation prompt. Three modes are available:
+              This setting controls how much recent prose from the chain is included in the
+              generation prompt (step 2 of the pipeline). Prose is always selected from the
+              end of the chain backwards — the most recent writing comes first.
+            </P>
+            <P>
+              Three modes are available:
             </P>
             <P>
               <strong className="text-foreground/75">Fragments</strong> — Include the last N prose fragments
@@ -241,9 +296,16 @@ export const HELP_SECTIONS: HelpSection[] = [
               <strong className="text-foreground/75">Characters</strong> — Include recent prose up to a raw
               character count. Useful for precise control over context size.
             </P>
+            <P>
+              In all modes, at least one prose fragment is always included even if it exceeds the
+              budget. Everything before the limit is represented by the librarian's rolling summary,
+              so the model still has awareness of earlier events — just not the raw text.
+            </P>
             <Tip>
-              In all modes, at least one prose fragment is always included. Prose beyond the limit is
-              captured by the librarian's rolling summary, so the model still has awareness of earlier events.
+              A larger context limit means the model sees more of your actual prose, which
+              helps with consistency and voice. But it also costs more tokens per generation
+              and may push other context (guidelines, characters) proportionally further from
+              the model's attention. Find the balance that works for your story.
             </Tip>
           </>
         ),
@@ -253,6 +315,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         title: 'Keyboard shortcuts',
         content: (
           <>
+            <P>
+              Keyboard shortcuts are managed by the <strong className="text-foreground/75">Keybinds</strong> plugin.
+              Enable it in Settings to configure shortcuts for generation, navigation, and other actions.
+            </P>
+            <P>
+              Some defaults when the plugin is active:
+            </P>
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-foreground/65">Generate & save</span>
@@ -260,10 +329,14 @@ export const HELP_SECTIONS: HelpSection[] = [
               </div>
               <div className="h-px bg-border/15" />
               <div className="flex items-center justify-between">
-                <span className="text-[12px] text-foreground/65">Close help panel</span>
+                <span className="text-[12px] text-foreground/65">Close panel / dialog</span>
                 <Kbd>Esc</Kbd>
               </div>
             </div>
+            <Tip>
+              Check the Keybinds plugin panel for the full list of available shortcuts and to
+              customize them.
+            </Tip>
           </>
         ),
       },
@@ -468,12 +541,48 @@ export const HELP_SECTIONS: HelpSection[] = [
         content: (
           <>
             <P>
-              Plugins extend Errata with new fragment types, LLM tools, API routes, sidebar panels,
-              and pipeline hooks. Enable or disable them per-story in Settings.
+              Plugins extend Errata with new fragment types, LLM tools, API routes, and sidebar
+              panels. Enable or disable them per-story in Settings.
             </P>
             <P>
-              Each plugin can hook into the generation pipeline at four stages:
-              before context building, before generation, after generation, and after saving.
+              Each plugin can hook into four stages of the generation pipeline:
+            </P>
+            <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-1.5">
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">beforeContext</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Runs after fragments are loaded but before messages are assembled. Plugins can
+                  add, remove, or reorder fragments in the context state.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">beforeGeneration</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Runs after messages are assembled. Plugins can modify the final system and user
+                  messages before they're sent to the LLM.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">afterGeneration</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Runs after the LLM responds. Plugins can transform the generated text before
+                  it's saved as a fragment.
+                </p>
+              </div>
+              <div className="h-px bg-border/15" />
+              <div>
+                <p className="text-[11.5px] font-medium text-foreground/65">afterSave</p>
+                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                  Runs after the prose fragment is persisted. Plugins can trigger side effects
+                  like notifications or external syncs.
+                </p>
+              </div>
+            </div>
+            <P>
+              Plugins can also register custom LLM tools that the model can call during generation,
+              alongside the built-in fragment tools.
             </P>
           </>
         ),

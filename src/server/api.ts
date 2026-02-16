@@ -66,7 +66,7 @@ import {
   runAfterGeneration,
   runAfterSave,
 } from './plugins/hooks'
-import { collectPluginTools } from './plugins/tools'
+import { collectPluginToolsWithOrigin } from './plugins/tools'
 import { triggerLibrarian, getLibrarianRuntimeStatus } from './librarian/scheduler'
 import { invokeAgent, listAgentRuns } from './agents'
 import { exportStoryAsZip, importStoryFromZip } from './story-archive'
@@ -990,7 +990,7 @@ export function createApp(dataDir: string = DATA_DIR) {
         : Object.fromEntries(
             Object.entries(fragmentTools).filter(([toolName]) => enabledBuiltinTools.includes(toolName)),
           )
-      const pluginTools = collectPluginTools(enabledPlugins, dataDir, params.storyId)
+      const { tools: pluginTools, origins: pluginToolOrigins } = collectPluginToolsWithOrigin(enabledPlugins, dataDir, params.storyId)
       const tools = { ...filteredFragmentTools, ...pluginTools }
       requestLogger.info('Tools prepared', { toolCount: Object.keys(tools).length })
 
@@ -998,6 +998,7 @@ export function createApp(dataDir: string = DATA_DIR) {
       const extraTools = Object.entries(pluginTools).map(([name, t]) => ({
         name,
         description: (t as { description?: string }).description ?? '',
+        pluginName: pluginToolOrigins[name],
       }))
 
       let messages = assembleMessages(ctxState, extraTools.length > 0 ? { extraTools } : undefined)

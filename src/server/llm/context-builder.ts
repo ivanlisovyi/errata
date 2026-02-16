@@ -295,7 +295,12 @@ export async function buildContextState(
 
 export interface AssembleOptions {
   /** Extra tool descriptions to include in the context (e.g. plugin tools) */
-  extraTools?: Array<{ name: string; description: string }>
+  extraTools?: Array<{ name: string; description: string; pluginName?: string }>
+}
+
+/** Renders a single fragment with a source marker */
+function renderFragment(f: Fragment): string {
+  return `[@fragment=${f.id}]\n${registry.renderContext(f)}`
 }
 
 /**
@@ -303,9 +308,9 @@ export interface AssembleOptions {
  */
 function renderTypeGrouped(fragments: Fragment[], label: string): string[] {
   if (fragments.length === 0) return []
-  const parts: string[] = [`\n## ${label}`]
+  const parts: string[] = [`\n[@section=${label}]\n## ${label}`]
   for (const f of fragments) {
-    parts.push(registry.renderContext(f))
+    parts.push(renderFragment(f))
   }
   return parts
 }
@@ -335,9 +340,9 @@ function renderAdvancedOrder(fragments: Fragment[], fragmentOrder: string[]): st
     }
   }
 
-  const parts: string[] = ['\n## Context']
+  const parts: string[] = ['\n[@section=Context]\n## Context']
   for (const f of ordered) {
-    parts.push(registry.renderContext(f))
+    parts.push(renderFragment(f))
   }
   return parts
 }
@@ -383,26 +388,26 @@ export function assembleMessages(state: ContextBuildState, opts: AssembleOptions
   toolLines.push('- listFragmentTypes(): List all available fragment types')
   if (opts.extraTools) {
     for (const t of opts.extraTools) {
-      toolLines.push(`- ${t.name}: ${t.description}`)
+      toolLines.push(`[@plugin=${t.pluginName ?? t.name}]\n- ${t.name}: ${t.description}`)
     }
   }
 
   // Shortlists (always go in user message)
   const shortlistParts: string[] = []
   if (guidelineShortlist.length > 0) {
-    shortlistParts.push('\n## Available Guidelines')
+    shortlistParts.push('\n[@section=Available Guidelines]\n## Available Guidelines use getFragment tool to retrieve full content')
     for (const g of guidelineShortlist) {
       shortlistParts.push(`- ${g.id}: ${g.name} — ${g.description}`)
     }
   }
   if (knowledgeShortlist.length > 0) {
-    shortlistParts.push('\n## Available Knowledge')
+    shortlistParts.push('\n[@section=Available Knowledge]\n## Available Knowledge use getFragment tool to retrieve full content')
     for (const k of knowledgeShortlist) {
       shortlistParts.push(`- ${k.id}: ${k.name} — ${k.description}`)
     }
   }
   if (characterShortlist.length > 0) {
-    shortlistParts.push('\n## Available Characters')
+    shortlistParts.push('\n[@section=Available Characters]\n## Available Characters  use getFragment tool to retrieve full content')
     for (const c of characterShortlist) {
       shortlistParts.push(`- ${c.id}: ${c.name} — ${c.description}`)
     }
@@ -412,13 +417,14 @@ export function assembleMessages(state: ContextBuildState, opts: AssembleOptions
   const sysParts: string[] = []
 
   sysParts.push(
+    '[@section=Instructions]',
     'You are a creative writing assistant. Your task is to write prose that continues the story based on the author\'s direction.',
     'IMPORTANT: Output the prose directly as your text response. Do NOT use tools to write or save prose — that is handled automatically.',
     'Only use tools to look up context you need before writing.',
   )
 
   // Available tools listed in system prompt
-  sysParts.push('\n## Available Tools')
+  sysParts.push('\n[@section=Available Tools]\n## Available Tools')
   sysParts.push('You have access to the following tools:')
   sysParts.push(toolLines.join('\n'))
   sysParts.push(
@@ -447,10 +453,10 @@ export function assembleMessages(state: ContextBuildState, opts: AssembleOptions
   const userParts: string[] = []
 
   // Story info
-  userParts.push(`## Story: ${story.name}`)
+  userParts.push(`[@section=Story]\n## Story: ${story.name}`)
   userParts.push(`${story.description}`)
   if (story.summary) {
-    userParts.push(`\n## Story Summary So Far\n${story.summary}`)
+    userParts.push(`\n[@section=Summary]\n## Story Summary So Far\n${story.summary}`)
   }
 
   // User-placed sticky fragments
@@ -471,15 +477,15 @@ export function assembleMessages(state: ContextBuildState, opts: AssembleOptions
 
   // Prose chain
   if (proseFragments.length > 0) {
-    userParts.push('\n## Recent Prose')
+    userParts.push('\n[@section=Recent Prose]\n## Recent Prose')
     for (const p of proseFragments) {
-      userParts.push(registry.renderContext(p))
+      userParts.push(renderFragment(p))
     }
-    userParts.push('\n## End of Recent Prose')
+    userParts.push('\n[@section=End of Recent Prose]\n## End of Recent Prose')
   }
 
   // Author input
-  userParts.push('\nThe author wants the following to happen next: ' + authorInput)
+  userParts.push(`\n[@section=Author Input]\nThe author wants the following to happen next: ${authorInput}`)
 
   const userContent = userParts.join('\n')
 

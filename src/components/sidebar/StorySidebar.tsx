@@ -23,7 +23,7 @@ import {
   Settings,
   ChevronRight,
   Sparkles,
-  Activity,
+  BookMarked,
   ArrowUpDown,
   Archive,
   Keyboard,
@@ -32,7 +32,9 @@ import {
   Hash,
   PenLine,
   Home,
+  CircleHelp,
 } from 'lucide-react'
+import { useHelp } from '@/hooks/use-help'
 import { componentId } from '@/lib/dom-ids'
 
 export type SidebarSection =
@@ -96,6 +98,8 @@ export function StorySidebar({
   onSectionChange,
   enabledPanelPlugins,
 }: StorySidebarProps) {
+  const { openHelp } = useHelp()
+
   const handleToggle = (section: SidebarSection) => {
     onSectionChange(activeSection === section ? null : section)
   }
@@ -271,7 +275,7 @@ export function StorySidebar({
                   tooltip="Agent Activity"
                   data-component-id="sidebar-section-agent-activity"
                 >
-                  <Activity className="size-4" />
+                  <BookMarked className="size-4" />
                   <span>Librarian</span>
                   <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
                 </SidebarMenuButton>
@@ -283,6 +287,16 @@ export function StorySidebar({
 
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => openHelp()}
+              tooltip="Help"
+              data-component-id="sidebar-help-button"
+            >
+              <CircleHelp className="size-4" />
+              <span>Help</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={activeSection === 'settings'}
