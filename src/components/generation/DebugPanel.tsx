@@ -106,6 +106,11 @@ export function DebugPanel({ storyId, logId, fragmentId, onClose }: DebugPanelPr
                   <span>{selectedLog.model}</span>
                   <span>{selectedLog.durationMs}ms</span>
                   <span>{selectedLog.stepCount ?? 1} steps</span>
+                  {selectedLog.totalUsage && (
+                    <span title={`In: ${selectedLog.totalUsage.inputTokens.toLocaleString()} / Out: ${selectedLog.totalUsage.outputTokens.toLocaleString()}`}>
+                      {(selectedLog.totalUsage.inputTokens + selectedLog.totalUsage.outputTokens).toLocaleString()} tok
+                    </span>
+                  )}
                   <span>{selectedLog.finishReason}</span>
                   {selectedLog.fragmentId && (
                     <span className="font-mono">{selectedLog.fragmentId}</span>

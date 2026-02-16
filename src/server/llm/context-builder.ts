@@ -25,8 +25,16 @@ export interface ContextMessage {
 const DEFAULT_PROSE_LIMIT = 10
 const logger = createLogger('context-builder')
 
+export type ContextCompactType = 'proseLimit' | 'maxTokens' | 'maxCharacters'
+
+export interface ContextCompactOption {
+  type: ContextCompactType
+  value: number
+}
+
 export interface BuildContextOptions {
   proseLimit?: number
+  contextCompact?: ContextCompactOption
   /** Fragment ID to exclude from context (e.g., when regenerating) */
   excludeFragmentId?: string
   /** Only include prose that comes before this fragment in the active prose chain */
@@ -35,6 +43,42 @@ export interface BuildContextOptions {
   summaryBeforeFragmentId?: string
   /** Exclude story summary from context */
   excludeStorySummary?: boolean
+}
+
+/**
+ * Applies the prose limit to a sorted array of prose fragments.
+ * Supports three modes: proseLimit (count), maxTokens (estimated), maxCharacters.
+ */
+function applyProseLimit(
+  sorted: Fragment[],
+  compact: ContextCompactOption,
+): Fragment[] {
+  switch (compact.type) {
+    case 'maxTokens': {
+      const result: Fragment[] = []
+      let budget = compact.value
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const tokens = Math.ceil(sorted[i].content.length / 4)
+        if (budget - tokens < 0 && result.length > 0) break
+        budget -= tokens
+        result.unshift(sorted[i])
+      }
+      return result
+    }
+    case 'maxCharacters': {
+      const result: Fragment[] = []
+      let budget = compact.value
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const len = sorted[i].content.length
+        if (budget - len < 0 && result.length > 0) break
+        budget -= len
+        result.unshift(sorted[i])
+      }
+      return result
+    }
+    default: // 'proseLimit'
+      return sorted.slice(-compact.value)
+  }
 }
 
 async function buildSummaryBeforeFragment(
@@ -86,7 +130,8 @@ export async function buildContextState(
   opts: BuildContextOptions = {},
 ): Promise<ContextBuildState> {
   const {
-    proseLimit = DEFAULT_PROSE_LIMIT,
+    proseLimit,
+    contextCompact: optsContextCompact,
     excludeFragmentId,
     proseBeforeFragmentId,
     summaryBeforeFragmentId,
@@ -173,8 +218,15 @@ export async function buildContextState(
     (a, b) => a.order - b.order || a.createdAt.localeCompare(b.createdAt),
   )
 
-  // Take only the last N prose fragments
-  const recentProse = sortedProse.slice(-proseLimit)
+  // Resolve the prose compact option: opts override > legacy proseLimit > story setting > default
+  const effectiveCompact: ContextCompactOption =
+    optsContextCompact
+    ?? (proseLimit !== undefined ? { type: 'proseLimit', value: proseLimit } : undefined)
+    ?? (story.settings as Record<string, unknown>).contextCompact as ContextCompactOption | undefined
+    ?? { type: 'proseLimit', value: DEFAULT_PROSE_LIMIT }
+
+  // Apply the prose limit
+  const recentProse = applyProseLimit(sortedProse, effectiveCompact)
 
   let effectiveSummary = story.summary
   if (excludeStorySummary) {

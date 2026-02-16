@@ -8,6 +8,11 @@ export interface ToolCallLog {
   result: unknown
 }
 
+export interface TokenUsage {
+  inputTokens: number
+  outputTokens: number
+}
+
 export interface GenerationLog {
   id: string
   createdAt: string
@@ -21,6 +26,7 @@ export interface GenerationLog {
   stepCount: number
   finishReason: string
   stepsExceeded: boolean
+  totalUsage?: TokenUsage
 }
 
 export interface GenerationLogSummary {

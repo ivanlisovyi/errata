@@ -15,6 +15,7 @@ export const settings = {
     contextOrderMode?: 'simple' | 'advanced'
     fragmentOrder?: string[]
     enabledBuiltinTools?: string[]
+    contextCompact?: { type: 'proseLimit' | 'maxTokens' | 'maxCharacters'; value: number }
   }) =>
     apiFetch<StoryMeta>(`/stories/${storyId}/settings`, {
       method: 'PATCH',

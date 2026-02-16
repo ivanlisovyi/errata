@@ -173,7 +173,7 @@ export function createApp(dataDir: string = DATA_DIR) {
         summary: '',
         createdAt: now,
         updatedAt: now,
-        settings: { outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, autoApplyLibrarianSuggestions: false, contextOrderMode: 'simple' as const, fragmentOrder: [], enabledBuiltinTools: [] },
+        settings: { outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, autoApplyLibrarianSuggestions: false, contextOrderMode: 'simple' as const, fragmentOrder: [], enabledBuiltinTools: [], contextCompact: { type: 'proseLimit' as const, value: 10 } },
       }
       await createStory(dataDir, story)
       return story
@@ -287,6 +287,7 @@ export function createApp(dataDir: string = DATA_DIR) {
           ...(body.contextOrderMode !== undefined ? { contextOrderMode: body.contextOrderMode } : {}),
           ...(body.fragmentOrder !== undefined ? { fragmentOrder: body.fragmentOrder } : {}),
           ...(body.enabledBuiltinTools !== undefined ? { enabledBuiltinTools: body.enabledBuiltinTools } : {}),
+          ...(body.contextCompact !== undefined ? { contextCompact: body.contextCompact } : {}),
         },
         updatedAt: new Date().toISOString(),
       }
@@ -306,6 +307,10 @@ export function createApp(dataDir: string = DATA_DIR) {
         contextOrderMode: t.Optional(t.Union([t.Literal('simple'), t.Literal('advanced')])),
         fragmentOrder: t.Optional(t.Array(t.String())),
         enabledBuiltinTools: t.Optional(t.Array(t.String())),
+        contextCompact: t.Optional(t.Object({
+          type: t.Union([t.Literal('proseLimit'), t.Literal('maxTokens'), t.Literal('maxCharacters')]),
+          value: t.Number(),
+        })),
       }),
     })
 
@@ -1150,10 +1155,19 @@ export function createApp(dataDir: string = DATA_DIR) {
               requestLogger.info('Librarian analysis triggered')
             }
 
-            // Capture finish reason and step count
+            // Capture finish reason, step count, and token usage
             const finishReason = await result.finishReason ?? 'unknown'
             const stepCount = Array.isArray(steps) ? steps.length : 1
             const stepsExceeded = stepCount >= 10 && finishReason !== 'stop'
+            let totalUsage: { inputTokens: number; outputTokens: number } | undefined
+            try {
+              const rawUsage = await result.totalUsage
+              if (rawUsage && typeof rawUsage.inputTokens === 'number') {
+                totalUsage = { inputTokens: rawUsage.inputTokens, outputTokens: rawUsage.outputTokens }
+              }
+            } catch {
+              // Some providers may not report usage
+            }
 
             // Persist generation log
             const logId = `gen-${Date.now().toString(36)}`
@@ -1173,6 +1187,7 @@ export function createApp(dataDir: string = DATA_DIR) {
               stepCount,
               finishReason: String(finishReason),
               stepsExceeded,
+              ...(totalUsage ? { totalUsage } : {}),
             }
             await saveGenerationLog(dataDir, params.storyId, log)
             requestLogger.info('Generation log saved', { logId, stepCount, finishReason, stepsExceeded })

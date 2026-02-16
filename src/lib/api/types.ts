@@ -20,6 +20,7 @@ export interface StoryMeta {
     contextOrderMode?: 'simple' | 'advanced'
     fragmentOrder?: string[]
     enabledBuiltinTools?: string[]
+    contextCompact?: { type: 'proseLimit' | 'maxTokens' | 'maxCharacters'; value: number }
   }
 }
 
@@ -75,6 +76,7 @@ export interface LibrarianAnalysisSummary {
   fragmentId: string
   contradictionCount: number
   suggestionCount: number
+  pendingSuggestionCount: number
   timelineEventCount: number
 }
 
@@ -196,6 +198,7 @@ export interface GenerationLog {
   stepCount: number
   finishReason: string
   stepsExceeded: boolean
+  totalUsage?: { inputTokens: number; outputTokens: number }
 }
 
 export interface PluginManifestInfo {

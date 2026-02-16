@@ -83,8 +83,12 @@ export const StoryMetaSchema = z.object({
       contextOrderMode: z.enum(['simple', 'advanced']).default('simple'),
       fragmentOrder: z.array(z.string()).default([]),
       enabledBuiltinTools: z.array(z.string()).optional(),
+      contextCompact: z.object({
+        type: z.enum(['proseLimit', 'maxTokens', 'maxCharacters']),
+        value: z.number().int().min(1),
+      }).default({ type: 'proseLimit', value: 10 }),
     })
-    .default({ outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, autoApplyLibrarianSuggestions: false, contextOrderMode: 'simple', fragmentOrder: [], enabledBuiltinTools: [] }),
+    .default({ outputFormat: 'markdown', enabledPlugins: [], summarizationThreshold: 4, maxSteps: 10, providerId: null, modelId: null, librarianProviderId: null, librarianModelId: null, autoApplyLibrarianSuggestions: false, contextOrderMode: 'simple', fragmentOrder: [], enabledBuiltinTools: [], contextCompact: { type: 'proseLimit', value: 10 } }),
 })
 
 export type StoryMeta = z.infer<typeof StoryMetaSchema>

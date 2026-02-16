@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type StoryMeta, type GlobalConfigSafe } from '@/lib/api'
 import { useTheme, useQuickSwitch, useFontPreferences, getActiveFont, FONT_CATALOGUE, type FontRole } from '@/lib/theme'
-import { Settings2, ChevronRight, ChevronDown, ExternalLink, Eye, EyeOff, Puzzle, Wrench, RotateCcw } from 'lucide-react'
+import { Settings2, ChevronRight, ChevronDown, ExternalLink, Eye, EyeOff, Puzzle, Wrench, RotateCcw, CircleHelp } from 'lucide-react'
+import { useHelp } from '@/hooks/use-help'
 
 interface SettingsPanelProps {
   storyId: string
@@ -28,15 +29,13 @@ function ToggleSwitch({ on, onToggle, disabled, label }: { on: boolean; onToggle
     <button
       onClick={onToggle}
       disabled={disabled}
-      className={`relative shrink-0 h-[18px] w-[32px] rounded-full transition-colors ${
-        on ? 'bg-foreground' : 'bg-muted-foreground/20'
-      }`}
+      className={`relative shrink-0 h-[18px] w-[32px] rounded-full transition-colors ${on ? 'bg-foreground' : 'bg-muted-foreground/20'
+        }`}
       aria-label={label}
     >
       <span
-        className={`absolute top-[2px] h-[14px] w-[14px] rounded-full bg-background transition-[left] duration-150 ${
-          on ? 'left-[16px]' : 'left-[2px]'
-        }`}
+        className={`absolute top-[2px] h-[14px] w-[14px] rounded-full bg-background transition-[left] duration-150 ${on ? 'left-[16px]' : 'left-[2px]'
+          }`}
       />
     </button>
   )
@@ -55,11 +54,10 @@ function SegmentedControl<T extends string>({ value, options, onChange, disabled
           key={opt.value}
           onClick={() => onChange(opt.value)}
           disabled={disabled}
-          className={`px-2.5 text-[11px] font-medium transition-colors ${
-            value === opt.value
+          className={`px-2.5 text-[11px] font-medium transition-colors ${value === opt.value
               ? 'bg-foreground text-background'
               : 'bg-transparent text-muted-foreground/50 hover:text-foreground/70'
-          }`}
+            }`}
         >
           {opt.label}
         </button>
@@ -68,11 +66,24 @@ function SegmentedControl<T extends string>({ value, options, onChange, disabled
   )
 }
 
-function SettingRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
+function SettingRow({ label, description, helpTopic, children }: { label: string; description?: string; helpTopic?: string; children: React.ReactNode }) {
+  const { openHelp } = useHelp()
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2">
       <div className="min-w-0">
-        <p className="text-[12px] font-medium text-foreground/80">{label}</p>
+        <div className="flex items-center gap-1">
+          <p className="text-[12px] font-medium text-foreground/80">{label}</p>
+          {helpTopic && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); openHelp(helpTopic) }}
+              className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+              title="Learn more"
+            >
+              <CircleHelp className="size-3" />
+            </button>
+          )}
+        </div>
         {description && <p className="text-[10px] text-muted-foreground/40 mt-0.5 leading-snug">{description}</p>}
       </div>
       <div className="shrink-0">{children}</div>
@@ -80,8 +91,8 @@ function SettingRow({ label, description, children }: { label: string; descripti
   )
 }
 
-function NumberStepper({ value, min, max, onChange, disabled, suffix }: {
-  value: number; min: number; max: number; onChange: (v: number) => void; disabled?: boolean; suffix?: string
+function NumberStepper({ value, min, max, onChange, disabled, suffix, wide }: {
+  value: number; min: number; max: number; onChange: (v: number) => void; disabled?: boolean; suffix?: string; wide?: boolean
 }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -94,7 +105,7 @@ function NumberStepper({ value, min, max, onChange, disabled, suffix }: {
           const v = parseInt(e.target.value, 10)
           if (!isNaN(v) && v >= min && v <= max) onChange(v)
         }}
-        className="w-14 h-[26px] px-2 text-[11px] font-mono text-center bg-background border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none"
+        className={`${wide ? 'w-20' : 'w-14'} h-[26px] px-2 text-[11px] font-mono text-center bg-background border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none`}
         disabled={disabled}
       />
       {suffix && <span className="text-[10px] text-muted-foreground/35">{suffix}</span>}
@@ -122,11 +133,10 @@ function FontPicker({ role, label, description, activeFont, onSelect }: {
               key={opt.name}
               onClick={() => onSelect(opt.name)}
               style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
-              className={`px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150 ${
-                isActive
+              className={`px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150 ${isActive
                   ? 'border-foreground/25 bg-foreground/5 text-foreground shadow-[0_0_0_1px_var(--foreground)/5]'
                   : 'border-transparent text-muted-foreground/45 hover:text-foreground/70 hover:bg-accent/30'
-              }`}
+                }`}
             >
               {opt.name}
             </button>
@@ -192,7 +202,7 @@ export function SettingsPanel({
   })
 
   const updateMutation = useMutation({
-    mutationFn: (data: { enabledPlugins?: string[]; outputFormat?: 'plaintext' | 'markdown'; summarizationThreshold?: number; maxSteps?: number; providerId?: string | null; modelId?: string | null; librarianProviderId?: string | null; librarianModelId?: string | null; autoApplyLibrarianSuggestions?: boolean; contextOrderMode?: 'simple' | 'advanced'; fragmentOrder?: string[]; enabledBuiltinTools?: string[] }) =>
+    mutationFn: (data: { enabledPlugins?: string[]; outputFormat?: 'plaintext' | 'markdown'; summarizationThreshold?: number; maxSteps?: number; providerId?: string | null; modelId?: string | null; librarianProviderId?: string | null; librarianModelId?: string | null; autoApplyLibrarianSuggestions?: boolean; contextOrderMode?: 'simple' | 'advanced'; fragmentOrder?: string[]; enabledBuiltinTools?: string[]; contextCompact?: { type: 'proseLimit' | 'maxTokens' | 'maxCharacters'; value: number } }) =>
       api.settings.update(storyId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['story', storyId] })
@@ -208,6 +218,7 @@ export function SettingsPanel({
   }
 
   const [toolsOpen, setToolsOpen] = useState(false)
+  const { openHelp } = useHelp()
   const { theme, setTheme } = useTheme()
   const [quickSwitch, setQuickSwitch] = useQuickSwitch()
   const [fontPrefs, setFont, resetFonts] = useFontPreferences()
@@ -311,9 +322,19 @@ export function SettingsPanel({
 
       {/* Generation */}
       <div>
-        <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-2 block">Generation</label>
+        <div className="flex items-center gap-1.5 mb-2">
+          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Generation</label>
+          <button
+            type="button"
+            onClick={() => openHelp('generation#overview')}
+            className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+            title="How generation works"
+          >
+            <CircleHelp className="size-3" />
+          </button>
+        </div>
         <div className="rounded-lg border border-border/30 divide-y divide-border/20">
-          <SettingRow label="Output format">
+          <SettingRow label="Output format" helpTopic="generation#output-format">
             <SegmentedControl
               value={story.settings.outputFormat}
               options={[
@@ -324,7 +345,7 @@ export function SettingsPanel({
               disabled={updateMutation.isPending}
             />
           </SettingRow>
-          <SettingRow label="Context ordering" description="How pinned fragments are ordered">
+          <SettingRow label="Context ordering" description="How pinned fragments are ordered" helpTopic="settings#context-ordering">
             <SegmentedControl
               value={story.settings.contextOrderMode ?? 'simple'}
               options={[
@@ -335,7 +356,7 @@ export function SettingsPanel({
               disabled={updateMutation.isPending}
             />
           </SettingRow>
-          <SettingRow label="Summarization" description="Positions back before summarizing">
+          <SettingRow label="Summarization" description="Positions back before summarizing" helpTopic="generation#summarization">
             <NumberStepper
               value={story.settings.summarizationThreshold ?? 4}
               min={0}
@@ -344,7 +365,45 @@ export function SettingsPanel({
               disabled={updateMutation.isPending}
             />
           </SettingRow>
-          <SettingRow label="Auto-apply suggestions" description="Librarian auto creates and updates suggested fragments">
+          {/* Context limit — stacked layout for breathing room */}
+          <div className="px-3 py-2.5">
+            <div className="flex items-center gap-1">
+              <p className="text-[12px] font-medium text-foreground/80">Context limit</p>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); openHelp('generation#context-limit') }}
+                className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+                title="Learn more"
+              >
+                <CircleHelp className="size-3" />
+              </button>
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 mt-0.5 leading-snug">How much recent prose to include</p>
+            <div className="flex items-center justify-between gap-2 mt-2.5">
+              <SegmentedControl
+                value={(story.settings.contextCompact?.type ?? 'proseLimit') as 'proseLimit' | 'maxTokens' | 'maxCharacters'}
+                options={[
+                  { value: 'proseLimit' as const, label: 'Fragments' },
+                  { value: 'maxTokens' as const, label: 'Tokens' },
+                  { value: 'maxCharacters' as const, label: 'Characters' },
+                ]}
+                onChange={(v) => {
+                  const defaults = { proseLimit: 10, maxTokens: 40000, maxCharacters: 160000 } as const
+                  updateMutation.mutate({ contextCompact: { type: v, value: defaults[v] } })
+                }}
+                disabled={updateMutation.isPending}
+              />
+              <NumberStepper
+                value={story.settings.contextCompact?.value ?? 10}
+                min={(story.settings.contextCompact?.type ?? 'proseLimit') === 'proseLimit' ? 1 : (story.settings.contextCompact?.type ?? 'proseLimit') === 'maxTokens' ? 100 : 500}
+                max={(story.settings.contextCompact?.type ?? 'proseLimit') === 'proseLimit' ? 100 : (story.settings.contextCompact?.type ?? 'proseLimit') === 'maxTokens' ? 100000 : 500000}
+                onChange={(v) => updateMutation.mutate({ contextCompact: { type: story.settings.contextCompact?.type ?? 'proseLimit', value: v } })}
+                disabled={updateMutation.isPending}
+                wide={(story.settings.contextCompact?.type ?? 'proseLimit') !== 'proseLimit'}
+              />
+            </div>
+          </div>
+          <SettingRow label="Auto-apply suggestions" description="Librarian auto creates and updates suggested fragments" helpTopic="librarian#auto-suggestions">
             <ToggleSwitch
               on={story.settings.autoApplyLibrarianSuggestions ?? false}
               onToggle={() => updateMutation.mutate({ autoApplyLibrarianSuggestions: !(story.settings.autoApplyLibrarianSuggestions ?? false) })}
@@ -352,7 +411,7 @@ export function SettingsPanel({
               label="Toggle auto-apply suggestions"
             />
           </SettingRow>
-          <SettingRow label="Max steps" description="Tool-use rounds per generation">
+          <SettingRow label="Max steps" description="Tool-use rounds per generation" helpTopic="generation#max-steps">
             <NumberStepper
               value={story.settings.maxSteps ?? 10}
               min={1}
@@ -385,7 +444,21 @@ export function SettingsPanel({
 
         {toolsOpen && (
           <div className="mt-2 rounded-lg border border-border/30 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-            <div className="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border/20">
+            <div className="px-4 py-2.5 bg-muted/30 border-b border-border/20 space-y-1.5">
+              <p className="text-[10.5px] text-muted-foreground/50 leading-snug">
+                Tools let the model look up fragment details during generation. It can search, list, and read your characters, guidelines, and knowledge before writing.
+                These are disabled by default — sticky fragments are already included in full, and non-sticky ones appear as shortlists the model can reference. Enable tools when you want the model to dynamically search or retrieve fragments on its own.
+              </p>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); openHelp('generation#built-in-tools') }}
+                className="flex items-center gap-1 text-[10px] text-primary/60 hover:text-primary/90 transition-colors"
+              >
+                <CircleHelp className="size-2.5" />
+                Learn more about tools
+              </button>
+            </div>
+            <div className="flex items-center justify-between px-4 py-1.5 border-b border-border/20">
               <p className="text-[10px] text-muted-foreground/40">Available during generation</p>
               <button
                 type="button"
@@ -400,14 +473,19 @@ export function SettingsPanel({
               {builtinToolOptions.map((tool) => {
                 const enabled = enabledBuiltinTools.includes(tool.name)
                 return (
-                  <div key={tool.name} className="flex items-center justify-between gap-3 px-3 py-2">
-                    <p className="text-[11px] font-mono text-foreground/70 truncate min-w-0">{tool.name}</p>
-                    <ToggleSwitch
-                      on={enabled}
-                      onToggle={() => toggleBuiltinTool(tool.name)}
-                      disabled={updateMutation.isPending}
-                      label={`Toggle ${tool.name}`}
-                    />
+                  <div key={tool.name} className="flex items-start justify-between gap-3 px-4 py-2">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-mono text-foreground/70 truncate">{tool.name}</p>
+                      <p className="text-[10px] text-muted-foreground/35 mt-0.5 leading-snug">{tool.description}</p>
+                    </div>
+                    <div className="shrink-0 mt-0.5">
+                      <ToggleSwitch
+                        on={enabled}
+                        onToggle={() => toggleBuiltinTool(tool.name)}
+                        disabled={updateMutation.isPending}
+                        label={`Toggle ${tool.name}`}
+                      />
+                    </div>
                   </div>
                 )
               })}
@@ -420,7 +498,7 @@ export function SettingsPanel({
       <div>
         <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-2 block">LLM</label>
         <div className="rounded-lg border border-border/30 divide-y divide-border/20">
-          <SettingRow label="Generation" description="Provider for prose output">
+          <SettingRow label="Generation" description="Provider for prose output" helpTopic="settings#providers">
             <ProviderSelect
               value={story.settings.providerId ?? null}
               globalConfig={globalConfig ?? null}
@@ -428,7 +506,7 @@ export function SettingsPanel({
               disabled={updateMutation.isPending}
             />
           </SettingRow>
-          <SettingRow label="Librarian" description="Provider for background analysis">
+          <SettingRow label="Librarian" description="Provider for background analysis" helpTopic="librarian#overview">
             <ProviderSelect
               value={story.settings.librarianProviderId ?? null}
               globalConfig={globalConfig ?? null}
@@ -452,7 +530,17 @@ export function SettingsPanel({
 
       {/* Plugins */}
       <div>
-        <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-3 block">Plugins</label>
+        <div className="flex items-center gap-1.5 mb-3">
+          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Plugins</label>
+          <button
+            type="button"
+            onClick={() => openHelp('settings#plugins')}
+            className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+            title="About plugins"
+          >
+            <CircleHelp className="size-3" />
+          </button>
+        </div>
         {plugins && plugins.length > 0 ? (
           <div className="space-y-2">
             {plugins.map((plugin) => {
@@ -461,37 +549,33 @@ export function SettingsPanel({
               return (
                 <div
                   key={plugin.name}
-                  className={`rounded-lg border transition-colors ${
-                    isEnabled
+                  className={`rounded-lg border transition-colors ${isEnabled
                       ? 'border-border/60 bg-accent/20'
                       : 'border-border/30 bg-transparent'
-                  }`}
+                    }`}
                 >
                   {/* Main row: toggle + info */}
                   <div className="flex items-start gap-3 px-3 py-2.5">
                     <button
                       onClick={() => togglePlugin(plugin.name)}
                       disabled={updateMutation.isPending}
-                      className={`mt-0.5 relative shrink-0 h-[18px] w-[32px] rounded-full transition-colors ${
-                        isEnabled
+                      className={`mt-0.5 relative shrink-0 h-[18px] w-[32px] rounded-full transition-colors ${isEnabled
                           ? 'bg-foreground'
                           : 'bg-muted-foreground/20'
-                      }`}
+                        }`}
                       aria-label={`${isEnabled ? 'Disable' : 'Enable'} ${plugin.name}`}
                     >
                       <span
-                        className={`absolute top-[2px] h-[14px] w-[14px] rounded-full bg-background transition-[left] duration-150 ${
-                          isEnabled ? 'left-[16px]' : 'left-[2px]'
-                        }`}
+                        className={`absolute top-[2px] h-[14px] w-[14px] rounded-full bg-background transition-[left] duration-150 ${isEnabled ? 'left-[16px]' : 'left-[2px]'
+                          }`}
                       />
                     </button>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium leading-tight text-foreground/85">{plugin.name}</p>
                       <p className="text-[11px] text-muted-foreground/45 mt-0.5 leading-snug">{plugin.description}</p>
                     </div>
-                    <span className={`text-[9px] uppercase tracking-widest mt-1 shrink-0 ${
-                      isEnabled ? 'text-foreground/50' : 'text-muted-foreground/25'
-                    }`}>
+                    <span className={`text-[9px] uppercase tracking-widest mt-1 shrink-0 ${isEnabled ? 'text-foreground/50' : 'text-muted-foreground/25'
+                      }`}>
                       v{plugin.version}
                     </span>
                   </div>

@@ -514,4 +514,111 @@ describe('context-builder', () => {
     expect(user.content).toContain('Summary A Summary B')
     expect(user.content).not.toContain('Summary C2')
   })
+
+  it('limits prose by maxCharacters', async () => {
+    const story = makeStory()
+    await createStory(dataDir, story)
+
+    // Create 3 prose fragments with known content lengths
+    // 'A'.repeat(100) = 100 chars, 'B'.repeat(100) = 100 chars, 'C'.repeat(100) = 100 chars
+    for (let i = 0; i < 3; i++) {
+      const letter = String.fromCharCode(65 + i) // A, B, C
+      await createFragment(dataDir, story.id, makeFragment({
+        id: `pr-000${i + 1}`,
+        type: 'prose',
+        name: `Prose ${letter}`,
+        content: letter.repeat(100),
+        order: i + 1,
+      }))
+    }
+
+    // Budget of 150 chars should only fit 1 fragment (the last one = C)
+    const state = await buildContextState(dataDir, story.id, 'Continue', {
+      contextCompact: { type: 'maxCharacters', value: 150 },
+    })
+
+    expect(state.proseFragments.length).toBe(1)
+    expect(state.proseFragments[0].id).toBe('pr-0003')
+  })
+
+  it('limits prose by maxTokens (chars / 4)', async () => {
+    const story = makeStory()
+    await createStory(dataDir, story)
+
+    // 3 fragments, each 400 chars = 100 tokens each
+    for (let i = 0; i < 3; i++) {
+      const letter = String.fromCharCode(65 + i)
+      await createFragment(dataDir, story.id, makeFragment({
+        id: `pr-000${i + 1}`,
+        type: 'prose',
+        name: `Prose ${letter}`,
+        content: letter.repeat(400),
+        order: i + 1,
+      }))
+    }
+
+    // Budget of 250 tokens should fit 2 fragments (B and C, 100+100=200, next would be 300 > 250)
+    const state = await buildContextState(dataDir, story.id, 'Continue', {
+      contextCompact: { type: 'maxTokens', value: 250 },
+    })
+
+    expect(state.proseFragments.length).toBe(2)
+    expect(state.proseFragments[0].id).toBe('pr-0002')
+    expect(state.proseFragments[1].id).toBe('pr-0003')
+  })
+
+  it('maxCharacters always includes at least one fragment even if over budget', async () => {
+    const story = makeStory()
+    await createStory(dataDir, story)
+
+    await createFragment(dataDir, story.id, makeFragment({
+      id: 'pr-0001',
+      type: 'prose',
+      name: 'Big',
+      content: 'X'.repeat(10000),
+      order: 1,
+    }))
+
+    // Budget is tiny but should still include the last fragment
+    const state = await buildContextState(dataDir, story.id, 'Continue', {
+      contextCompact: { type: 'maxCharacters', value: 1 },
+    })
+
+    expect(state.proseFragments.length).toBe(1)
+    expect(state.proseFragments[0].id).toBe('pr-0001')
+  })
+
+  it('reads contextCompact from story settings when not passed via opts', async () => {
+    const story = makeStory({
+      settings: {
+        outputFormat: 'markdown',
+        enabledPlugins: [],
+        summarizationThreshold: 4,
+        maxSteps: 10,
+        providerId: null,
+        modelId: null,
+        contextOrderMode: 'simple' as const,
+        fragmentOrder: [],
+        contextCompact: { type: 'maxCharacters', value: 150 },
+      },
+    })
+    await createStory(dataDir, story)
+
+    for (let i = 0; i < 3; i++) {
+      const letter = String.fromCharCode(65 + i)
+      await createFragment(dataDir, story.id, makeFragment({
+        id: `pr-000${i + 1}`,
+        type: 'prose',
+        name: `Prose ${letter}`,
+        content: letter.repeat(100),
+        order: i + 1,
+      }))
+    }
+
+    // Story setting says maxCharacters:150, should only fit 1 fragment
+    const state = await buildContextState(dataDir, story.id, 'Continue')
+
+    expect(state.proseFragments.length).toBe(1)
+    expect(state.proseFragments[0].id).toBe('pr-0003')
+  })
 })
