@@ -3,21 +3,27 @@ import { dirname, join } from 'node:path'
 
 const originalReadFile = fsPromises.readFile.bind(fsPromises)
 
+const VIRTUAL_MARKERS = ['/~bun/public/', '/$bunfs/public/']
+
 function remapVirtualPublicPath(inputPath) {
   if (typeof inputPath !== 'string') return null
 
   const normalized = inputPath.replace(/\\/g, '/').toLowerCase()
-  const marker = '/~bun/public/'
-  const markerIndex = normalized.indexOf(marker)
-  if (markerIndex === -1) return null
 
-  const relativePart = inputPath
-    .replace(/\\/g, '/')
-    .slice(markerIndex + marker.length)
+  for (const marker of VIRTUAL_MARKERS) {
+    const markerIndex = normalized.indexOf(marker)
+    if (markerIndex === -1) continue
 
-  if (!relativePart) return null
+    const relativePart = inputPath
+      .replace(/\\/g, '/')
+      .slice(markerIndex + marker.length)
 
-  return join(dirname(process.execPath), 'public', relativePart)
+    if (!relativePart) return null
+
+    return join(dirname(process.execPath), 'public', relativePart)
+  }
+
+  return null
 }
 
 fsPromises.readFile = async (path, ...args) => {
