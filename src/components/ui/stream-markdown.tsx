@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react'
 import Markdown from 'react-markdown'
 
 type StreamMarkdownVariant = 'default' | 'prose'
@@ -23,6 +24,8 @@ const variantStyles: Record<StreamMarkdownVariant, {
   blockquote: string
   hr: string
   cursor: string
+  /** Plain text paragraph style used during streaming to avoid costly markdown parsing */
+  streamingP: string
 }> = {
   default: {
     root: '',
@@ -38,6 +41,7 @@ const variantStyles: Record<StreamMarkdownVariant, {
     blockquote: 'border-l-2 border-border/50 pl-2 my-1.5 text-muted-foreground/70',
     hr: 'border-border/30 my-2',
     cursor: 'inline-block w-0.5 h-[1em] bg-primary/60 animate-pulse ml-px align-text-bottom',
+    streamingP: 'mb-2 last:mb-0',
   },
   prose: {
     root: 'prose-content',
@@ -53,11 +57,50 @@ const variantStyles: Record<StreamMarkdownVariant, {
     blockquote: 'border-l-2 border-primary/20 pl-4 my-4 italic text-foreground/70',
     hr: 'border-border/20 my-6',
     cursor: 'inline-block w-[2px] h-[1.1em] bg-primary/50 animate-pulse ml-0.5 align-text-bottom rounded-full',
+    streamingP: 'mb-[0.85em] last:mb-0',
   },
 }
 
-export function StreamMarkdown({ content, streaming, variant = 'default' }: StreamMarkdownProps) {
+/** Split text into paragraphs on double-newlines for lightweight streaming render */
+function StreamingText({ content, className }: { content: string; className: string }) {
+  const paragraphs = useMemo(() => content.split(/\n\n+/), [content])
+  return (
+    <>
+      {paragraphs.map((p, i) => (
+        <p key={i} className={className}>
+          {p}
+        </p>
+      ))}
+    </>
+  )
+}
+
+/**
+ * Markdown renderer optimized for streaming.
+ *
+ * During streaming (`streaming=true`), renders as plain text split by paragraph
+ * breaks — no markdown parsing at all. This avoids O(n²) behavior from
+ * react-markdown re-parsing the entire accumulated text on every chunk.
+ *
+ * When streaming ends, renders the full content through react-markdown once.
+ */
+export const StreamMarkdown = memo(function StreamMarkdown({
+  content,
+  streaming,
+  variant = 'default',
+}: StreamMarkdownProps) {
   const s = variantStyles[variant]
+
+  // During streaming: render as plain text paragraphs (fast, O(n))
+  // After streaming: render through markdown parser (once, O(n))
+  if (streaming) {
+    return (
+      <span className={`stream-markdown ${s.root}`}>
+        <StreamingText content={content} className={s.streamingP} />
+        <span className={s.cursor} />
+      </span>
+    )
+  }
 
   return (
     <span className={`stream-markdown ${s.root}`}>
@@ -88,7 +131,6 @@ export function StreamMarkdown({ content, streaming, variant = 'default' }: Stre
       >
         {content}
       </Markdown>
-      {streaming && <span className={s.cursor} />}
     </span>
   )
-}
+})

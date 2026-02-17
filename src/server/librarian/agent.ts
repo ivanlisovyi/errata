@@ -3,6 +3,8 @@ import { getStory, updateStory, listFragments, getFragment } from '../fragments/
 import { getActiveProseIds } from '../fragments/prose-chain'
 import {
   saveAnalysis,
+  listAnalyses,
+  getAnalysis,
   getState,
   saveState,
   type LibrarianAnalysis,
@@ -202,18 +204,8 @@ export async function runLibrarian(
     knowledgeCount: knowledge.length,
   })
 
-  // Check prose position to determine if we should summarize
-  // Only summarize proses that are at least N positions back from the most recent
-  const proseIds = await getActiveProseIds(dataDir, storyId)
-  const proseIndex = proseIds.indexOf(fragmentId)
-  const summarizationThreshold = story.settings?.summarizationThreshold ?? 4
-  const shouldSummarize = proseIndex >= 0 && proseIndex < proseIds.length - summarizationThreshold
-
-  requestLogger.debug('Prose position check', {
-    proseIndex,
-    totalProse: proseIds.length,
-    threshold: summarizationThreshold,
-    shouldSummarize
+  requestLogger.debug('Prose position', {
+    fragmentId,
   })
 
   // Load current librarian state for context
@@ -301,27 +293,6 @@ export async function runLibrarian(
     }
   }
 
-  // Only apply summary if prose is old enough (based on threshold)
-  if (!shouldSummarize) {
-    analysis.summaryUpdate = ''
-    requestLogger.debug('Skipping summary - prose is too recent', {
-      proseIndex,
-      threshold: summarizationThreshold
-    })
-  }
-
-  // Apply updates: append summary
-  if (analysis.summaryUpdate) {
-    requestLogger.info('Updating story summary', { summaryUpdateLength: analysis.summaryUpdate.length })
-    const separator = story.summary ? ' ' : ''
-    const updatedStory = {
-      ...story,
-      summary: story.summary + separator + analysis.summaryUpdate,
-      updatedAt: new Date().toISOString(),
-    }
-    await updateStory(dataDir, updatedStory)
-  }
-
   // Update librarian state
   requestLogger.debug('Updating librarian state...')
   const updatedMentions = { ...state.recentMentions }
@@ -339,14 +310,116 @@ export async function runLibrarian(
 
   const updatedState = {
     lastAnalyzedFragmentId: fragmentId,
+    summarizedUpTo: state.summarizedUpTo ?? null,
     recentMentions: updatedMentions,
     timeline: updatedTimeline,
   }
 
-  // Save everything
+  // Save analysis first (with summaryUpdate preserved for deferred application)
   await saveAnalysis(dataDir, storyId, analysis)
   await saveState(dataDir, storyId, updatedState)
   requestLogger.info('Analysis saved', { analysisId })
 
+  // Deferred summary application: apply summaries for fragments that have
+  // aged past the threshold. This lets the author refine/reiterate recent
+  // prose without those edits being baked into the rolling summary yet.
+  await applyDeferredSummaries(dataDir, storyId, story, updatedState, requestLogger)
+
   return analysis
+}
+
+/**
+ * Apply summaries from analyses whose fragments are now old enough
+ * (past the summarization threshold from the end of the prose chain).
+ *
+ * Summaries are applied in prose-chain order, and `state.summarizedUpTo`
+ * tracks progress so each summary is only applied once.
+ */
+async function applyDeferredSummaries(
+  dataDir: string,
+  storyId: string,
+  story: Awaited<ReturnType<typeof getStory>> & {},
+  state: { summarizedUpTo: string | null } & Record<string, unknown>,
+  requestLogger: ReturnType<typeof logger.child>,
+) {
+  const proseIds = await getActiveProseIds(dataDir, storyId)
+  const threshold = (story.settings?.summarizationThreshold as number | undefined) ?? 4
+  const cutoffIndex = proseIds.length - threshold
+
+  if (cutoffIndex <= 0) {
+    requestLogger.debug('Not enough prose for deferred summarization', {
+      proseCount: proseIds.length,
+      threshold,
+    })
+    return
+  }
+
+  // Find where we left off
+  const summarizedUpToIndex = state.summarizedUpTo
+    ? proseIds.indexOf(state.summarizedUpTo)
+    : -1
+  const startIndex = summarizedUpToIndex + 1
+
+  if (startIndex >= cutoffIndex) {
+    requestLogger.debug('No new fragments to summarize', {
+      summarizedUpTo: state.summarizedUpTo,
+      cutoffIndex,
+    })
+    return
+  }
+
+  // Get the fragment IDs that need summarizing
+  const toSummarize = proseIds.slice(startIndex, cutoffIndex)
+
+  // Load all analyses and build a fragmentId -> analysis map
+  const analysisSummaries = await listAnalyses(dataDir, storyId)
+  const analysisByFragment = new Map<string, string>()
+  for (const s of analysisSummaries) {
+    analysisByFragment.set(s.fragmentId, s.id)
+  }
+
+  // Collect summaries in prose-chain order
+  const summaryParts: string[] = []
+  let lastAppliedId: string | null = state.summarizedUpTo
+
+  for (const proseId of toSummarize) {
+    const analysisId = analysisByFragment.get(proseId)
+    if (!analysisId) continue
+
+    const analysis = await getAnalysis(dataDir, storyId, analysisId)
+    if (!analysis?.summaryUpdate) continue
+
+    summaryParts.push(analysis.summaryUpdate)
+    lastAppliedId = proseId
+  }
+
+  if (summaryParts.length === 0) {
+    requestLogger.debug('No summaries to apply from deferred batch')
+    return
+  }
+
+  // Apply all collected summaries at once
+  const currentStory = await getStory(dataDir, storyId)
+  if (!currentStory) return
+
+  const separator = currentStory.summary ? ' ' : ''
+  const updatedStory = {
+    ...currentStory,
+    summary: currentStory.summary + separator + summaryParts.join(' '),
+    updatedAt: new Date().toISOString(),
+  }
+  await updateStory(dataDir, updatedStory)
+
+  // Update state with new watermark
+  const currentState = await getState(dataDir, storyId)
+  await saveState(dataDir, storyId, {
+    ...currentState,
+    summarizedUpTo: lastAppliedId,
+  })
+
+  requestLogger.info('Deferred summaries applied', {
+    count: summaryParts.length,
+    summarizedUpTo: lastAppliedId,
+    totalSummaryLength: summaryParts.join(' ').length,
+  })
 }

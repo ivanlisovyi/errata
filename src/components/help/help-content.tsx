@@ -50,7 +50,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'generation',
     title: 'Generation',
-    description: 'How Errata generates prose continuations using your fragments and LLM tools.',
+    description: 'How Errata generates prose continuations using your fragments and model tools.',
     subsections: [
       {
         id: 'overview',
@@ -59,15 +59,15 @@ export const HELP_SECTIONS: HelpSection[] = [
           <>
             <P>
               When you generate, Errata assembles your story context — prose history, sticky fragments,
-              and shortlists — into a prompt, then streams a continuation from the LLM.
+              and shortlists — into a prompt, then streams a continuation from the model.
             </P>
             <P>
               The pipeline follows this sequence: your author input is combined with the story context,
-              plugin hooks run (if any), the LLM generates text using available tools, and the output
+              plugin hooks run (if any), the model generates text using available tools, and the output
               is streamed back to you in real time.
             </P>
             <Tip>
-              The LLM sees your sticky fragments in full and non-sticky fragments as one-line shortlists.
+              The model sees your sticky fragments in full and non-sticky fragments as one-line shortlists.
               Use the <Mono>sticky</Mono> toggle on fragments to control what the model always sees.
             </Tip>
           </>
@@ -80,7 +80,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           <>
             <P>
               When you hit Generate, Errata assembles a prompt from your story's fragments and sends
-              it to the LLM. This happens in a specific sequence — understanding it helps you control
+              it to the model. This happens in a specific sequence — understanding it helps you control
               what the model sees and how it writes.
             </P>
 
@@ -94,7 +94,7 @@ export const HELP_SECTIONS: HelpSection[] = [
                   ['4', 'Plugin beforeContext hooks', 'Enabled plugins can modify the context state — adding, removing, or reordering fragments before they\'re rendered.'],
                   ['5', 'Assemble messages', 'Everything is rendered into a system message and a user message.'],
                   ['6', 'Plugin beforeGeneration hooks', 'Plugins get a final chance to modify the assembled messages before they\'re sent.'],
-                  ['7', 'Stream to LLM', 'The prompt is sent. The model can call tools (if enabled) to look up fragments, then writes prose.'],
+                  ['7', 'Stream to model', 'The prompt is sent. The model can call tools (if enabled) to look up fragments, then writes prose.'],
                   ['8', 'Save & analyze', 'Output is saved as a new prose fragment, plugin afterGeneration/afterSave hooks run, and the librarian is triggered.'],
                 ].map(([num, label, desc]) => (
                   <div key={num} className="flex gap-2.5 items-start">
@@ -145,7 +145,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         content: (
           <>
             <P>
-              The LLM can call tools during generation to look up fragment details before writing prose.
+              The model can call tools during generation to look up fragment details before writing prose.
               Enable or disable individual tools in <strong className="text-foreground/75">Settings</strong>.
             </P>
 
@@ -368,7 +368,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'blocks',
     title: 'Block Editor',
-    description: 'Control the LLM context structure — disable, reorder, override, and create blocks.',
+    description: 'Control the model context structure — disable, reorder, override, and create blocks.',
     subsections: [
       {
         id: 'overview',
@@ -379,7 +379,7 @@ export const HELP_SECTIONS: HelpSection[] = [
               Every generation prompt is built from <strong className="text-foreground/75">blocks</strong> — discrete
               sections like writing instructions, the tool listing, story info, prose history, and your author input.
               Blocks are assembled automatically from your story data, then compiled into the system and user messages
-              that the LLM sees.
+              that the model sees.
             </P>
             <P>
               The <strong className="text-foreground/75">Block Editor</strong> lets you see and control these blocks
@@ -449,7 +449,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           <>
             <P>
               Click the <strong className="text-foreground/75">toggle button</strong> on any block row to
-              disable it. Disabled blocks are excluded from the prompt entirely — the LLM won't see them.
+              disable it. Disabled blocks are excluded from the prompt entirely — the model won't see them.
             </P>
             <P>
               Common uses: disable the <Mono>tools</Mono> block if you don't want the model to call tools,
@@ -519,7 +519,7 @@ export const HELP_SECTIONS: HelpSection[] = [
               system blocks, and user blocks among user blocks.
             </P>
             <P>
-              Reordering affects what the model pays attention to. LLMs tend to focus more on content at
+              Reordering affects what the model pays attention to. Models tend to focus more on content at
               the beginning and end of a message. Place your most important context accordingly.
             </P>
           </>
@@ -532,7 +532,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           <>
             <P>
               Click <strong className="text-foreground/75">Add Custom Block</strong> at the bottom of the
-              Block Editor to inject your own content into the LLM prompt. Custom blocks sit alongside
+              Block Editor to inject your own content into the model prompt. Custom blocks sit alongside
               builtin blocks and can be reordered, enabled, or disabled the same way.
             </P>
             <P>
@@ -763,11 +763,11 @@ return ''`}</div>
     subsections: [
       {
         id: 'providers',
-        title: 'LLM providers',
+        title: 'model providers',
         content: (
           <>
             <P>
-              Errata supports multiple LLM providers. Each provider has an API endpoint and key.
+              Errata supports multiple model providers. Each provider has an API endpoint and key.
               You can set different providers for generation (prose output) and the librarian
               (background analysis).
             </P>
@@ -820,7 +820,7 @@ return ''`}</div>
         content: (
           <>
             <P>
-              Plugins extend Errata with new fragment types, LLM tools, API routes, and sidebar
+              Plugins extend Errata with new fragment types, model tools, API routes, and sidebar
               panels. Enable or disable them per-story in Settings.
             </P>
             <P>
@@ -839,14 +839,14 @@ return ''`}</div>
                 <p className="text-[11.5px] font-medium text-foreground/65">beforeGeneration</p>
                 <p className="text-[11px] text-muted-foreground/50 leading-snug">
                   Runs after messages are assembled. Plugins can modify the final system and user
-                  messages before they're sent to the LLM.
+                  messages before they're sent to the model.
                 </p>
               </div>
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">afterGeneration</p>
                 <p className="text-[11px] text-muted-foreground/50 leading-snug">
-                  Runs after the LLM responds. Plugins can transform the generated text before
+                  Runs after the model responds. Plugins can transform the generated text before
                   it's saved as a fragment.
                 </p>
               </div>
@@ -860,7 +860,7 @@ return ''`}</div>
               </div>
             </div>
             <P>
-              Plugins can also register custom LLM tools that the model can call during generation,
+              Plugins can also register custom model tools that the model can call during generation,
               alongside the built-in fragment tools.
             </P>
           </>

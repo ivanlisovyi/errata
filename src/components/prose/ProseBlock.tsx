@@ -145,14 +145,23 @@ export function ProseBlock({
       const stream = await api.generation.regenerate(storyId, fragment.id, quickRegenerateInput)
       const reader = stream.getReader()
       let accumulated = ''
+      let rafScheduled = false
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += value
-        setStreamedActionText(accumulated)
+        if (!rafScheduled) {
+          rafScheduled = true
+          const snapshot = accumulated
+          requestAnimationFrame(() => {
+            setStreamedActionText(snapshot)
+            rafScheduled = false
+          })
+        }
       }
 
+      setStreamedActionText(accumulated)
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
       await queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
       handleActionComplete()
@@ -178,14 +187,23 @@ export function ProseBlock({
 
       const reader = stream.getReader()
       let accumulated = ''
+      let rafScheduled = false
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += value
-        setStreamedActionText(accumulated)
+        if (!rafScheduled) {
+          rafScheduled = true
+          const snapshot = accumulated
+          requestAnimationFrame(() => {
+            setStreamedActionText(snapshot)
+            rafScheduled = false
+          })
+        }
       }
 
+      setStreamedActionText(accumulated)
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
       await queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
       handleActionComplete()

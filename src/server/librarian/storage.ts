@@ -43,6 +43,8 @@ export interface LibrarianAnalysisSummary {
 
 export interface LibrarianState {
   lastAnalyzedFragmentId: string | null
+  /** Fragment ID up to which summaries have been applied to the story summary */
+  summarizedUpTo: string | null
   recentMentions: Record<string, string[]>
   timeline: Array<{ event: string; fragmentId: string }>
 }
@@ -130,6 +132,7 @@ export async function getState(
   if (!existsSync(path)) {
     return {
       lastAnalyzedFragmentId: null,
+      summarizedUpTo: null,
       recentMentions: {},
       timeline: [],
     }

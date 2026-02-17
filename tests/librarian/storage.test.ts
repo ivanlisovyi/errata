@@ -112,6 +112,7 @@ describe('librarian storage', () => {
       const state = await getState(dataDir, storyId)
       expect(state).toEqual({
         lastAnalyzedFragmentId: null,
+        summarizedUpTo: null,
         recentMentions: {},
         timeline: [],
       })
@@ -120,6 +121,7 @@ describe('librarian storage', () => {
     it('saves and loads state', async () => {
       const state: LibrarianState = {
         lastAnalyzedFragmentId: 'pr-0001',
+        summarizedUpTo: null,
         recentMentions: {
           'ch-0001': ['pr-0001', 'pr-0002'],
         },
@@ -136,12 +138,14 @@ describe('librarian storage', () => {
     it('overwrites previous state on save', async () => {
       await saveState(dataDir, storyId, {
         lastAnalyzedFragmentId: 'pr-0001',
+        summarizedUpTo: null,
         recentMentions: {},
         timeline: [],
       })
 
       await saveState(dataDir, storyId, {
         lastAnalyzedFragmentId: 'pr-0002',
+        summarizedUpTo: null,
         recentMentions: { 'ch-0001': ['pr-0002'] },
         timeline: [{ event: 'Battle', fragmentId: 'pr-0002' }],
       })

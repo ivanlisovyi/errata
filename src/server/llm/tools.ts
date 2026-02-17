@@ -3,6 +3,8 @@ import { z } from 'zod/v4'
 import {
   createFragment as createFragmentInStorage,
   getFragment,
+  getStory,
+  updateStory,
   listFragments,
   updateFragment,
   updateFragmentVersioned,
@@ -383,6 +385,33 @@ export function createFragmentTools(
           return { error: `Text not found in any active prose fragment: "${oldText.slice(0, 80)}"` }
         }
         return { ok: true, editedFragments: edited, count: edited.length }
+      }),
+    })
+
+    tools.getStorySummary = tool({
+      description: 'Get the current rolling story summary',
+      inputSchema: z.object({}),
+      execute: withToolLogging('getStorySummary', storyId, async () => {
+        const story = await getStory(dataDir, storyId)
+        if (!story) return { error: 'Story not found' }
+        return { summary: story.summary || '(No summary yet)' }
+      }),
+    })
+
+    tools.updateStorySummary = tool({
+      description: 'Replace the story\'s rolling summary with a new version. Use this to rewrite, condense, or correct the summary.',
+      inputSchema: z.object({
+        summary: z.string().describe('The new story summary text'),
+      }),
+      execute: withToolLogging('updateStorySummary', storyId, async ({ summary }: { summary: string }) => {
+        const story = await getStory(dataDir, storyId)
+        if (!story) return { error: 'Story not found' }
+        await updateStory(dataDir, {
+          ...story,
+          summary,
+          updatedAt: new Date().toISOString(),
+        })
+        return { ok: true, summaryLength: summary.length }
       }),
     })
   }

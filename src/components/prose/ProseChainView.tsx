@@ -124,13 +124,17 @@ export function ProseChainView({
     restoredRef.current = true
   }, [orderedFragments, SCROLL_POS_KEY])
 
-  // Scroll to bottom when streaming new content
+  // Scroll to bottom when streaming new content (throttled to RAF)
+  const scrollRafRef = useRef(0)
   useEffect(() => {
     if (followGeneration && isGenerating && streamedText && scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight
-      }
+      cancelAnimationFrame(scrollRafRef.current)
+      scrollRafRef.current = requestAnimationFrame(() => {
+        const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]')
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight
+        }
+      })
     }
   }, [streamedText, followGeneration, isGenerating])
 

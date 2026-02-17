@@ -356,7 +356,7 @@ function ConceptStep({
         {showProviderPicker && globalConfig && (
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wider">
-              AI Provider
+              Model Provider
             </label>
             <div className="flex items-center gap-2 p-2.5 rounded-lg border border-border/50 bg-card/30">
               <Bot className="size-4 text-muted-foreground/40 shrink-0" />

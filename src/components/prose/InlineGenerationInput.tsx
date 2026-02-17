@@ -3,7 +3,8 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { PenLine } from 'lucide-react'
+import { PenLine, ChevronsDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface InlineGenerationInputProps {
   storyId: string
@@ -68,13 +69,27 @@ export function InlineGenerationInput({
 
       const reader = stream.getReader()
       let accumulated = ''
+      let rafScheduled = false
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += value
-        onGenerationStream(accumulated)
+
+        // Throttle state updates to animation frames (~60fps max)
+        // instead of firing on every chunk (could be 100+)
+        if (!rafScheduled) {
+          rafScheduled = true
+          const snapshot = accumulated
+          requestAnimationFrame(() => {
+            onGenerationStream(snapshot)
+            rafScheduled = false
+          })
+        }
       }
+
+      // Final flush with complete text
+      onGenerationStream(accumulated)
 
       // Invalidate queries to refresh the prose view
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
@@ -190,21 +205,24 @@ export function InlineGenerationInput({
             )}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <button
                   type="button"
-                  variant={followGeneration ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="h-7 text-xs rounded-lg"
+                  className={cn(
+                    'size-6 flex items-center justify-center rounded-md transition-colors duration-150',
+                    followGeneration
+                      ? 'text-foreground/60 bg-muted/50'
+                      : 'text-muted-foreground/30 hover:text-muted-foreground/50',
+                  )}
                   onClick={onToggleFollowGeneration}
                   data-component-id="inline-generation-follow-toggle"
                 >
-                  {followGeneration ? 'Follow' : 'Fixed'}
-                </Button>
+                  <ChevronsDown className="size-3.5" />
+                </button>
               </TooltipTrigger>
               <TooltipContent side="top">
                 {followGeneration
-                  ? 'Auto-scrolls to follow new text as it generates'
-                  : 'Scroll stays in place during generation'}
+                  ? 'Auto-scroll on — click to pin scroll position'
+                  : 'Auto-scroll off — click to follow generation'}
               </TooltipContent>
             </Tooltip>
           </div>

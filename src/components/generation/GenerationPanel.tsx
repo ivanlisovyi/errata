@@ -36,17 +36,28 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
 
       const reader = stream.getReader()
       let accumulated = ''
+      let rafScheduled = false
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += value
-        setStreamedText(accumulated)
 
-        if (outputRef.current) {
-          outputRef.current.scrollTop = outputRef.current.scrollHeight
+        if (!rafScheduled) {
+          rafScheduled = true
+          const snapshot = accumulated
+          requestAnimationFrame(() => {
+            setStreamedText(snapshot)
+            if (outputRef.current) {
+              outputRef.current.scrollTop = outputRef.current.scrollHeight
+            }
+            rafScheduled = false
+          })
         }
       }
+
+      // Final flush
+      setStreamedText(accumulated)
 
       if (saveResult) {
         await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
