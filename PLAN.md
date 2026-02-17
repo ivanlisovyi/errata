@@ -22,7 +22,7 @@
 
 ## Overview
 
-Errata is an AI-assisted writing application built around a **fragment system** — everything (prose, characters, guidelines, knowledge) is a fragment. Fragments compose into structured LLM context via a **block system** to generate story continuations directed by the author. Supports multiple LLM providers, a plugin architecture, and a background librarian agent for continuity management.
+Errata is a model-assisted writing application built around a **fragment system** — everything (prose, characters, guidelines, knowledge) is a fragment. Fragments compose into structured LLM context via a **block system** to generate story continuations directed by the author. Supports multiple LLM providers, a plugin architecture, and a background librarian agent for continuity management.
 
 ---
 

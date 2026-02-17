@@ -118,7 +118,7 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border/30">
         <p className="text-[11px] text-muted-foreground/50 leading-snug">
-          Drag to reorder how pinned fragments appear in the AI context
+          Drag to reorder how pinned fragments appear in the model context
         </p>
       </div>
 

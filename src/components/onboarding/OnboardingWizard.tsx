@@ -24,7 +24,7 @@ const PROVIDER_CARDS = {
     name: 'DeepSeek',
     baseURL: 'https://api.deepseek.com',
     defaultModel: 'deepseek-chat',
-    description: 'Fast, affordable AI. Great default for fiction writing.',
+    description: 'Fast and affordable. Great default for fiction writing.',
     accent: 'blue',
     customHeaders: {},
   },
@@ -398,7 +398,7 @@ function WelcomeStep({
       <div className="animate-onboarding-fade-up">
         <h1 className="font-display text-5xl italic tracking-tight mb-3">Errata</h1>
         <p className="font-prose text-lg text-muted-foreground">
-          AI-assisted writing, built around fragments.
+          Model-assisted writing, built around fragments.
         </p>
       </div>
 

@@ -348,7 +348,7 @@ function ConceptStep({
             value={storyDesc}
             onChange={(e) => setStoryDesc(e.target.value)}
             className="min-h-[120px] text-sm bg-transparent font-prose resize-none"
-            placeholder="A brief description or theme — this guides AI generation in later steps..."
+            placeholder="A brief description or theme — this guides generation in later steps..."
           />
         </div>
 
@@ -394,7 +394,7 @@ function ConceptStep({
               </select>
             </div>
             <p className="text-[10px] text-muted-foreground/40 mt-1">
-              Used for AI generation throughout the wizard
+              Used for generation throughout the wizard
             </p>
           </div>
         )}

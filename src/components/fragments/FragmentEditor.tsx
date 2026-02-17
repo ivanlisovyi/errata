@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type Fragment, type FragmentVersion } from '@/lib/api'
 import { componentId, fragmentComponentId } from '@/lib/dom-ids'
@@ -48,6 +48,12 @@ export function FragmentEditor({
   const [showRefine, setShowRefine] = useState(false)
   const [previewVersion, setPreviewVersion] = useState<FragmentVersion | null>(null)
 
+  // Auto-save state for edit mode
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const savedStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const userEditedRef = useRef(false)
+
   // Fetch live fragment data so sticky/placement updates are reflected immediately
   const { data: liveFragment } = useQuery({
     queryKey: ['fragment', storyId, fragmentProp?.id],
@@ -83,12 +89,15 @@ export function FragmentEditor({
 
   // Sync local state from the source fragment (prop or live query data).
   // Uses liveFragment so that external updates (e.g. refinement agent) are reflected.
+  // Skips sync when the user has unsaved edits to prevent overwriting their work.
   const sourceFragment = liveFragment ?? fragmentProp
   useEffect(() => {
     if (sourceFragment) {
-      setName(sourceFragment.name)
-      setDescription(sourceFragment.description)
-      setContent(sourceFragment.content)
+      if (!userEditedRef.current) {
+        setName(sourceFragment.name)
+        setDescription(sourceFragment.description)
+        setContent(sourceFragment.content)
+      }
       setType(sourceFragment.type)
     } else {
       setName(prefill?.name ?? '')
@@ -97,6 +106,12 @@ export function FragmentEditor({
       setType(createType ?? 'prose')
     }
   }, [sourceFragment, createType, prefill])
+
+  // Reset dirty tracking when switching to a different fragment
+  useEffect(() => {
+    userEditedRef.current = false
+    setSaveStatus('idle')
+  }, [fragmentProp?.id])
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
@@ -164,6 +179,57 @@ export function FragmentEditor({
     },
   })
 
+  // Auto-save mutation — only invalidates list queries, not the individual fragment,
+  // so the sync effect doesn't overwrite the user's in-progress edits.
+  const autoSaveMutation = useMutation({
+    mutationFn: (data: { name: string; description: string; content: string }) =>
+      api.fragments.update(storyId, fragment!.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
+      queryClient.invalidateQueries({ queryKey: ['fragments-archived', storyId] })
+      queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
+      setSaveStatus('saved')
+      if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current)
+      savedStatusTimerRef.current = setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 2000)
+    },
+    onError: () => {
+      setSaveStatus('idle')
+    },
+  })
+
+  // Debounced auto-save for edit mode
+  useEffect(() => {
+    if (mode !== 'edit' || !fragment || !userEditedRef.current) return
+    if (!name.trim()) return
+
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+    autoSaveTimerRef.current = setTimeout(() => {
+      setSaveStatus('saving')
+      autoSaveMutation.mutate({ name, description, content })
+    }, 800)
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+    }
+  }, [name, description, content, mode, fragment?.id])
+
+  // Flush pending auto-save on close
+  const handleClose = useCallback(() => {
+    if (autoSaveTimerRef.current && userEditedRef.current && mode === 'edit' && fragment && name.trim()) {
+      clearTimeout(autoSaveTimerRef.current)
+      autoSaveMutation.mutate({ name, description, content })
+    }
+    onClose()
+  }, [onClose, mode, fragment, name, description, content])
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+      if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current)
+    }
+  }, [])
+
   const revertVersionMutation = useMutation({
     mutationFn: (version: number) => api.fragments.revertToVersion(storyId, fragment!.id, version),
     onSuccess: () => {
@@ -199,9 +265,8 @@ export function FragmentEditor({
     e.preventDefault()
     if (mode === 'create') {
       createMutation.mutate({ type, name, description, content })
-    } else {
-      updateMutation.mutate({ name, description, content })
     }
+    // In edit mode, auto-save handles persistence
   }
 
   const isEditing = mode === 'edit' || mode === 'create'
@@ -397,7 +462,7 @@ export function FragmentEditor({
           )}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={onClose} data-component-id="fragment-editor-close">
+              <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={handleClose} data-component-id="fragment-editor-close">
                 <X className="size-4" />
               </Button>
             </TooltipTrigger>
@@ -445,7 +510,7 @@ export function FragmentEditor({
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wider">Name</label>
             <Input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { userEditedRef.current = true; setName(e.target.value) }}
               disabled={!isEditing}
               className="bg-transparent"
               required
@@ -458,7 +523,7 @@ export function FragmentEditor({
             </label>
             <Input
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { userEditedRef.current = true; setDescription(e.target.value) }}
               maxLength={50}
               disabled={!isEditing}
               className="bg-transparent"
@@ -559,7 +624,7 @@ export function FragmentEditor({
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wider">Content</label>
               <Textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => { userEditedRef.current = true; setContent(e.target.value) }}
                 disabled={!isEditing}
                 className="min-h-[200px] h-full resize-none font-mono text-sm bg-transparent"
                 required
@@ -654,12 +719,27 @@ export function FragmentEditor({
 
         {isEditing && (
           <div className="flex items-center gap-2 px-6 py-4 border-t border-border/50">
-            <Button type="submit" size="sm" disabled={isPending}>
-              {isPending ? 'Saving...' : mode === 'create' ? 'Create' : 'Save'}
-            </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
+            {mode === 'create' ? (
+              <>
+                <Button type="submit" size="sm" disabled={isPending}>
+                  {isPending ? 'Creating...' : 'Create'}
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={handleClose}>
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-xs text-muted-foreground/50 transition-opacity">
+                  {saveStatus === 'saving' && 'Saving...'}
+                  {saveStatus === 'saved' && 'Saved'}
+                </span>
+                <div className="flex-1" />
+                <Button type="button" size="sm" variant="ghost" onClick={handleClose}>
+                  Close
+                </Button>
+              </>
+            )}
           </div>
         )}
       </form>

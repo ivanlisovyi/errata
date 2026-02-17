@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type Fragment } from '@/lib/api'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { StreamMarkdown } from '@/components/ui/stream-markdown'
@@ -35,6 +35,7 @@ export function ProseChainView({
   const [activeIndex, setActiveIndex] = useState(0)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [quickSwitch] = useQuickSwitch()
+  const queryClient = useQueryClient()
 
   // Co-locate both queries so they settle in the same component — prevents
   // desync after regeneration where the chain points to a fragment the stale
@@ -144,7 +145,7 @@ export function ProseChainView({
       // Check if a new fragment was added (count increased) or if the last fragment's content matches
       const currentCount = orderedFragments.length
       const lastFragment = orderedFragments[orderedFragments.length - 1]
-      
+
       // Clear if fragment count increased (new fragment added) or content matches
       if (currentCount > fragmentCountBeforeGeneration ||
           (lastFragment && lastFragment.content === streamedText)) {
@@ -155,8 +156,16 @@ export function ProseChainView({
         }, 100)
         return () => clearTimeout(timeout)
       }
+
+      // Fragment hasn't appeared yet — server save may still be in progress.
+      // Re-invalidate queries after a short delay to pick up the saved fragment.
+      const retryTimeout = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
+        queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
+      }, 500)
+      return () => clearTimeout(retryTimeout)
     }
-  }, [orderedFragments, isGenerating, streamedText, fragmentCountBeforeGeneration])
+  }, [orderedFragments, isGenerating, streamedText, fragmentCountBeforeGeneration, queryClient, storyId])
 
   // Track which prose block is currently visible
   useEffect(() => {

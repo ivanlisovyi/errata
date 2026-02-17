@@ -269,7 +269,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/30 flex items-center gap-3">
         <p className="text-[11px] text-muted-foreground/50 leading-snug flex-1">
-          Arrange and customize the AI context pipeline.{' '}
+          Arrange and customize the model context pipeline.{' '}
           <button
             className="text-muted-foreground/70 underline underline-offset-2 hover:text-foreground/70 transition-colors"
             onClick={() => openHelp('blocks')}
