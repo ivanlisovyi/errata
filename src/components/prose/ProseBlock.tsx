@@ -150,7 +150,7 @@ export function ProseBlock({
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        accumulated += value
+        if (value.type === 'text') accumulated += value.text
         if (!rafScheduled) {
           rafScheduled = true
           const snapshot = accumulated
@@ -192,7 +192,7 @@ export function ProseBlock({
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        accumulated += value
+        if (value.type === 'text') accumulated += value.text
         if (!rafScheduled) {
           rafScheduled = true
           const snapshot = accumulated

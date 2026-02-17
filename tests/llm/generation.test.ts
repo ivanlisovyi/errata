@@ -84,10 +84,19 @@ function createMockStreamResult(text: string) {
     },
   })
 
+  // fullStream: async iterable of AI SDK v6 TextStreamPart events
+  async function* generateFullStream() {
+    yield { type: 'text-delta' as const, text }
+    yield { type: 'finish' as const, finishReason: 'stop' }
+  }
+  const fullStream = generateFullStream()
+
   return {
     textStream,
+    fullStream,
     text: Promise.resolve(text),
     usage: Promise.resolve({ promptTokens: 10, completionTokens: 20, totalTokens: 30 }),
+    totalUsage: Promise.resolve({ inputTokens: 10, outputTokens: 20 }),
     finishReason: Promise.resolve('stop' as const),
     steps: Promise.resolve([]),
     toTextStreamResponse: () => new Response(stream, {

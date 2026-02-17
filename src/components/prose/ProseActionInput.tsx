@@ -45,8 +45,10 @@ export function ProseActionInput({
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        accumulated += value
-        onStream(accumulated)
+        if (value.type === 'text') {
+          accumulated += value.text
+          onStream(accumulated)
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })

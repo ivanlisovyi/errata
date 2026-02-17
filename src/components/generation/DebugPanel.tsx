@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { StreamMarkdown } from '@/components/ui/stream-markdown'
 import { BlockContentView } from '@/components/blocks/BlockContentView'
-import { X, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react'
+import { X, ChevronDown, ChevronRight, Copy, Check, Brain } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface DebugPanelProps {
@@ -469,22 +469,51 @@ function ToolsTab({ log }: { log: GenerationLog }) {
 }
 
 function OutputTab({ log }: { log: GenerationLog }) {
-  return (
-    <div className="rounded-lg border border-border/20 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/10 border-b border-border/10">
-        <span className="text-[10px] font-medium text-muted-foreground/50 truncate">
-          Generated text
-        </span>
-        <span className="text-[9px] text-muted-foreground/45 tabular-nums ml-auto shrink-0">
-          {log.generatedText.length.toLocaleString()} chars
-        </span>
-      </div>
+  const [reasoningExpanded, setReasoningExpanded] = useState(false)
 
-      {/* Content */}
-      <div className="p-3 max-h-[500px] overflow-y-auto">
-        <div className="text-[11px] text-muted-foreground/70 leading-relaxed prose prose-sm prose-muted max-w-none [&_p]:text-[11px] [&_p]:text-muted-foreground/70 [&_p]:leading-relaxed">
-          <StreamMarkdown content={log.generatedText} />
+  return (
+    <div className="space-y-2">
+      {log.reasoning && (
+        <div className="rounded-lg border border-border/20 overflow-hidden">
+          <button
+            onClick={() => setReasoningExpanded(!reasoningExpanded)}
+            className="w-full flex items-center gap-2 px-3 py-1.5 bg-muted/10 border-b border-border/10 hover:bg-muted/20 transition-colors"
+          >
+            {reasoningExpanded ? <ChevronDown className="size-3 text-muted-foreground/50" /> : <ChevronRight className="size-3 text-muted-foreground/50" />}
+            <Brain className="size-3 text-muted-foreground/50" />
+            <span className="text-[10px] font-medium text-muted-foreground/50">
+              Reasoning
+            </span>
+            <span className="text-[9px] text-muted-foreground/45 tabular-nums ml-auto shrink-0">
+              {log.reasoning.length.toLocaleString()} chars
+            </span>
+          </button>
+          {reasoningExpanded && (
+            <div className="p-3 max-h-[300px] overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-[11px] font-mono text-muted-foreground/50 italic leading-relaxed">
+                {log.reasoning}
+              </pre>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="rounded-lg border border-border/20 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/10 border-b border-border/10">
+          <span className="text-[10px] font-medium text-muted-foreground/50 truncate">
+            Generated text
+          </span>
+          <span className="text-[9px] text-muted-foreground/45 tabular-nums ml-auto shrink-0">
+            {log.generatedText.length.toLocaleString()} chars
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className="p-3 max-h-[500px] overflow-y-auto">
+          <div className="text-[11px] text-muted-foreground/70 leading-relaxed prose prose-sm prose-muted max-w-none [&_p]:text-[11px] [&_p]:text-muted-foreground/70 [&_p]:leading-relaxed">
+            <StreamMarkdown content={log.generatedText} />
+          </div>
         </div>
       </div>
     </div>

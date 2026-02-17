@@ -27,6 +27,7 @@ export interface GenerationLog {
   finishReason: string
   stepsExceeded: boolean
   totalUsage?: TokenUsage
+  reasoning?: string
 }
 
 export interface GenerationLogSummary {

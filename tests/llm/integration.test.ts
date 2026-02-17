@@ -84,10 +84,19 @@ function createMockStreamResult(text: string) {
     },
   })
 
+  // fullStream: async iterable of AI SDK v6 TextStreamPart events
+  async function* generateFullStream() {
+    yield { type: 'text-delta' as const, text }
+    yield { type: 'finish' as const, finishReason: 'stop' }
+  }
+  const fullStream = generateFullStream()
+
   return {
     textStream,
+    fullStream,
     text: Promise.resolve(text),
     usage: Promise.resolve({ promptTokens: 10, completionTokens: 20, totalTokens: 30 }),
+    totalUsage: Promise.resolve({ inputTokens: 10, outputTokens: 20 }),
     finishReason: Promise.resolve('stop' as const),
     steps: Promise.resolve([]),
     toTextStreamResponse: () =>
@@ -195,9 +204,16 @@ describe('end-to-end generation integration', () => {
     })
     expect(genRes.status).toBe(200)
 
-    // Consume the response
+    // Consume the NDJSON response and extract text events
     const responseText = await genRes.text()
-    expect(responseText).toBe(generatedText)
+    const textContent = responseText
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line))
+      .filter((e: { type: string }) => e.type === 'text')
+      .map((e: { text: string }) => e.text)
+      .join('')
+    expect(textContent).toBe(generatedText)
 
     // Wait for async save
     await new Promise((r) => setTimeout(r, 100))

@@ -41,7 +41,7 @@ function useGenerate(storyId: string) {
   const [text, setText] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const readerRef = useRef<ReadableStreamDefaultReader<string> | null>(null)
+  const readerRef = useRef<ReadableStreamDefaultReader<import('@/lib/api/types').ChatEvent> | null>(null)
 
   const generate = useCallback(async (input: string) => {
     setIsStreaming(true)
@@ -57,8 +57,10 @@ function useGenerate(storyId: string) {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        accumulated += value
-        setText(accumulated)
+        if (value.type === 'text') {
+          accumulated += value.text
+          setText(accumulated)
+        }
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {

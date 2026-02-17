@@ -1,19 +1,19 @@
-import { fetchStream } from './client'
-import type { GenerationLogSummary, GenerationLog } from './types'
+import { fetchEventStream } from './client'
+import type { GenerationLogSummary, GenerationLog, ChatEvent } from './types'
 
 export const generation = {
-  /** Stream prose generation (returns ReadableStream of text chunks) */
+  /** Stream prose generation (returns ReadableStream of ChatEvent) */
   stream: (storyId: string, input: string) =>
-    fetchStream(`/stories/${storyId}/generate`, { input, saveResult: false }),
+    fetchEventStream(`/stories/${storyId}/generate`, { input, saveResult: false }),
   /** Generate and save as a new prose fragment */
   generateAndSave: (storyId: string, input: string) =>
-    fetchStream(`/stories/${storyId}/generate`, { input, saveResult: true }),
+    fetchEventStream(`/stories/${storyId}/generate`, { input, saveResult: true }),
   /** Regenerate an existing fragment with a new prompt */
   regenerate: (storyId: string, fragmentId: string, input: string) =>
-    fetchStream(`/stories/${storyId}/generate`, { input, saveResult: true, mode: 'regenerate', fragmentId }),
+    fetchEventStream(`/stories/${storyId}/generate`, { input, saveResult: true, mode: 'regenerate', fragmentId }),
   /** Refine an existing fragment with instructions */
   refine: (storyId: string, fragmentId: string, input: string) =>
-    fetchStream(`/stories/${storyId}/generate`, { input, saveResult: true, mode: 'refine', fragmentId }),
+    fetchEventStream(`/stories/${storyId}/generate`, { input, saveResult: true, mode: 'refine', fragmentId }),
   /** List generation log summaries (newest first) */
   listLogs: (storyId: string) =>
     apiFetch<GenerationLogSummary[]>(`/stories/${storyId}/generation-logs`),

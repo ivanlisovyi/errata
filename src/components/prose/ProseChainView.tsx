@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type Fragment } from '@/lib/api'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { StreamMarkdown } from '@/components/ui/stream-markdown'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Brain, ChevronDown, ChevronRight } from 'lucide-react'
 import { useQuickSwitch, useProseWidth, PROSE_WIDTH_VALUES } from '@/lib/theme'
 import { ProseBlock } from './ProseBlock'
 import { InlineGenerationInput } from './InlineGenerationInput'
@@ -24,6 +24,7 @@ export function ProseChainView({
   // State for streaming generation
   const [isGenerating, setIsGenerating] = useState(false)
   const [streamedText, setStreamedText] = useState('')
+  const [streamedReasoning, setStreamedReasoning] = useState('')
   const [fragmentCountBeforeGeneration, setFragmentCountBeforeGeneration] = useState<number | null>(null)
   const [followGeneration, setFollowGeneration] = useState(() => {
     if (typeof window === 'undefined') return true
@@ -129,7 +130,7 @@ export function ProseChainView({
   // Scroll to bottom when streaming new content (throttled to RAF)
   const scrollRafRef = useRef(0)
   useEffect(() => {
-    if (followGeneration && isGenerating && streamedText && scrollAreaRef.current) {
+    if (followGeneration && isGenerating && (streamedText || streamedReasoning) && scrollAreaRef.current) {
       cancelAnimationFrame(scrollRafRef.current)
       scrollRafRef.current = requestAnimationFrame(() => {
         const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]')
@@ -138,7 +139,7 @@ export function ProseChainView({
         }
       })
     }
-  }, [streamedText, followGeneration, isGenerating])
+  }, [streamedText, streamedReasoning, followGeneration, isGenerating])
 
   // Clear streamed text once fragments update (new prose was saved)
   useEffect(() => {
@@ -153,6 +154,7 @@ export function ProseChainView({
         // Give a small delay so the transition is smooth
         const timeout = setTimeout(() => {
           setStreamedText('')
+          setStreamedReasoning('')
           setFragmentCountBeforeGeneration(null)
         }, 100)
         return () => clearTimeout(timeout)
@@ -239,6 +241,9 @@ export function ProseChainView({
             <div className="relative mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300" data-component-id="prose-streaming-block">
               {/* Match prose block styling - no border, minimal background */}
               <div className="rounded-lg p-4 -mx-4 bg-card/30">
+                {streamedReasoning && (
+                  <ReasoningStream reasoning={streamedReasoning} streaming={isGenerating && !streamedText} />
+                )}
                 <StreamMarkdown content={streamedText} streaming={isGenerating} variant="prose" />
 
                 {/* Minimal generating indicator matching prose metadata bar style */}
@@ -260,9 +265,11 @@ export function ProseChainView({
             onGenerationStart={() => {
               setIsGenerating(true)
               setStreamedText('')
+              setStreamedReasoning('')
               setFragmentCountBeforeGeneration(orderedFragments.length)
             }}
             onGenerationStream={(text) => setStreamedText(text)}
+            onGenerationReasoning={(reasoning) => setStreamedReasoning(reasoning)}
             onGenerationComplete={() => {
               setIsGenerating(false)
               // Note: streamedText is NOT cleared here - it will be cleared after
@@ -286,6 +293,31 @@ export function ProseChainView({
             onJump={scrollToIndex}
             onScrollToBottom={scrollToBottom}
           />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ReasoningStream({ reasoning, streaming }: { reasoning: string; streaming: boolean }) {
+  const [expanded, setExpanded] = useState(true)
+
+  return (
+    <div className="mb-3">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground/70 transition-colors"
+      >
+        {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        <Brain className="size-3" />
+        <span className="italic">
+          {streaming ? 'Thinking...' : 'Reasoning'}
+        </span>
+        {streaming && <Loader2 className="size-3 animate-spin" />}
+      </button>
+      {expanded && (
+        <div className="mt-1 pl-5 text-[10px] text-muted-foreground/40 italic font-mono whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto">
+          {reasoning}
         </div>
       )}
     </div>

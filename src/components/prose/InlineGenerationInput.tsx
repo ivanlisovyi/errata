@@ -13,6 +13,7 @@ interface InlineGenerationInputProps {
   onToggleFollowGeneration: () => void
   onGenerationStart: () => void
   onGenerationStream: (text: string) => void
+  onGenerationReasoning?: (reasoning: string) => void
   onGenerationComplete: () => void
   onGenerationError: () => void
 }
@@ -24,6 +25,7 @@ export function InlineGenerationInput({
   onToggleFollowGeneration,
   onGenerationStart,
   onGenerationStream,
+  onGenerationReasoning,
   onGenerationComplete,
   onGenerationError,
 }: InlineGenerationInputProps) {
@@ -68,28 +70,36 @@ export function InlineGenerationInput({
       const stream = await api.generation.generateAndSave(storyId, input)
 
       const reader = stream.getReader()
-      let accumulated = ''
+      let accumulatedText = ''
+      let accumulatedReasoning = ''
       let rafScheduled = false
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        accumulated += value
+
+        if (value.type === 'text') {
+          accumulatedText += value.text
+        } else if (value.type === 'reasoning') {
+          accumulatedReasoning += value.text
+        }
 
         // Throttle state updates to animation frames (~60fps max)
-        // instead of firing on every chunk (could be 100+)
         if (!rafScheduled) {
           rafScheduled = true
-          const snapshot = accumulated
+          const textSnapshot = accumulatedText
+          const reasoningSnapshot = accumulatedReasoning
           requestAnimationFrame(() => {
-            onGenerationStream(snapshot)
+            onGenerationStream(textSnapshot)
+            if (reasoningSnapshot) onGenerationReasoning?.(reasoningSnapshot)
             rafScheduled = false
           })
         }
       }
 
       // Final flush with complete text
-      onGenerationStream(accumulated)
+      onGenerationStream(accumulatedText)
+      if (accumulatedReasoning) onGenerationReasoning?.(accumulatedReasoning)
 
       // Invalidate queries to refresh the prose view
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })

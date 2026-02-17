@@ -199,6 +199,7 @@ export interface GenerationLog {
   finishReason: string
   stepsExceeded: boolean
   totalUsage?: { inputTokens: number; outputTokens: number }
+  reasoning?: string
 }
 
 export interface PluginManifestInfo {

@@ -17,10 +17,18 @@ vi.mock('ai', async () => {
             controller.close()
           },
         })
+        async function* generateFullStream() {
+          yield { type: 'text-delta' as const, text }
+          yield { type: 'tool-call' as const, toolCallId: 'tc1', toolName: 'fragmentList', input: { type: 'character' } }
+          yield { type: 'tool-result' as const, toolCallId: 'tc1', toolName: 'fragmentList', output: [{ id: 'ch-test', name: 'Alice' }] }
+          yield { type: 'finish' as const, finishReason: 'stop' }
+        }
         return {
           textStream,
+          fullStream: generateFullStream(),
           text: Promise.resolve(text),
           usage: Promise.resolve({ promptTokens: 10, completionTokens: 20, totalTokens: 30 }),
+          totalUsage: Promise.resolve({ inputTokens: 10, outputTokens: 20 }),
           finishReason: Promise.resolve('stop'),
           steps: Promise.resolve([
             {
@@ -170,8 +178,11 @@ describe('generation-logs API routes', () => {
     )
     expect(res.status).toBe(200)
 
+    // Drain the NDJSON stream so the save operation completes
+    await res.text()
+
     // Wait for async background save to complete
-    await new Promise((r) => setTimeout(r, 100))
+    await new Promise((r) => setTimeout(r, 200))
 
     // Check that a generation log was saved
     const logsRes = await app.fetch(
