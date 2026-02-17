@@ -362,6 +362,7 @@ function StoryEditorPage() {
           storyId={storyId}
           onSelectFragment={handleSelectFragment}
           onDebugLog={handleDebugLog}
+          onLaunchWizard={() => setShowWizard(true)}
         />
 
         {/* Overlay panels render on top */}

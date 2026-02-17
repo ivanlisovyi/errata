@@ -3,7 +3,6 @@
 import type { LucideIcon } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
 
-import { useControllableState } from "@radix-ui/react-use-controllable-state"
 import { Badge } from "@/components/ui/badge"
 import {
   Collapsible,
@@ -12,7 +11,31 @@ import {
 } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 import { BrainIcon, ChevronDownIcon, DotIcon } from "lucide-react"
-import { createContext, memo, useContext, useMemo } from "react"
+import { createContext, memo, useCallback, useContext, useMemo, useState } from "react"
+
+/** Simple controlled/uncontrolled state hook (replaces @radix-ui/react-use-controllable-state) */
+function useControllableState<T>({
+  prop,
+  defaultProp,
+  onChange,
+}: {
+  prop?: T
+  defaultProp: T
+  onChange?: (value: T) => void
+}): [T, (value: T) => void] {
+  const [internal, setInternal] = useState(defaultProp)
+  const isControlled = prop !== undefined
+  const value = isControlled ? prop : internal
+  const setValue = useCallback(
+    (next: T) => {
+      if (!isControlled) setInternal(next)
+      onChange?.(next)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isControlled, onChange],
+  )
+  return [value, setValue]
+}
 
 interface ChainOfThoughtContextValue {
   isOpen: boolean

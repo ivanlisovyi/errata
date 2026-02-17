@@ -12,6 +12,7 @@ const PRESETS = {
   kimi: { name: 'Kimi', baseURL: 'https://api.moonshot.ai/v1', defaultModel: 'kimi-k2.5' },
   'kimi-code': { name: 'Kimi Code', baseURL: 'https://api.kimi.com/coding/v1', defaultModel: 'kimi-for-coding' },
   openrouter: { name: 'OpenRouter', baseURL: 'https://openrouter.ai/api/v1', defaultModel: 'deepseek/deepseek-chat-v3-0324' },
+  zai: { name: 'Z.AI', baseURL: 'https://api.z.ai/api/paas/v4', defaultModel: 'glm-5' },
   custom: { name: '', baseURL: '', defaultModel: '' },
 } as const
 
@@ -281,6 +282,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                   <option value="kimi">Kimi</option>
                   <option value="kimi-code">Kimi Code</option>
                   <option value="openrouter">OpenRouter</option>
+                  <option value="zai">Z.AI</option>
                   <option value="custom">Custom</option>
                 </select>
               </div>

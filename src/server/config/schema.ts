@@ -21,6 +21,11 @@ export const PROVIDER_PRESETS = {
     baseURL: 'https://openrouter.ai/api/v1',
     defaultModel: 'deepseek/deepseek-chat-v3-0324',
   },
+  zai: {
+    name: 'Z.AI',
+    baseURL: 'https://api.z.ai/api/paas/v4',
+    defaultModel: 'glm-5',
+  },
   custom: {
     name: 'Custom',
     baseURL: '',

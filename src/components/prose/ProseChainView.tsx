@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type Fragment } from '@/lib/api'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { StreamMarkdown } from '@/components/ui/stream-markdown'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Wand2 } from 'lucide-react'
 import { useQuickSwitch, useProseWidth, PROSE_WIDTH_VALUES } from '@/lib/theme'
 import { ProseBlock } from './ProseBlock'
 import { InlineGenerationInput, type ThoughtStep } from './InlineGenerationInput'
@@ -14,12 +14,14 @@ interface ProseChainViewProps {
   storyId: string
   onSelectFragment: (fragment: Fragment) => void
   onDebugLog?: (logId: string) => void
+  onLaunchWizard?: () => void
 }
 
 export function ProseChainView({
   storyId,
   onSelectFragment,
   onDebugLog,
+  onLaunchWizard,
 }: ProseChainViewProps) {
   const FOLLOW_GENERATION_KEY = 'errata:follow-generation'
   // State for streaming generation
@@ -231,9 +233,18 @@ export function ProseChainView({
               <p className="font-display text-xl italic text-muted-foreground/50 mb-3">
                 The page awaits.
               </p>
-              <p className="text-sm text-muted-foreground/70">
+              <p className="text-sm text-muted-foreground/70 mb-6">
                 Write or generate your first passage below.
               </p>
+              {onLaunchWizard && (
+                <button
+                  onClick={onLaunchWizard}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border/50 bg-card/50 text-sm text-muted-foreground/60 hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
+                >
+                  <Wand2 className="size-3.5" />
+                  <span>Use the story wizard to get started</span>
+                </button>
+              )}
             </div>
           )}
 

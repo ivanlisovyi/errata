@@ -12,7 +12,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -446,9 +445,11 @@ export function BundlePreview({
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(index) } }}
               >
-                <Checkbox
+                <input
+                  type="checkbox"
                   checked={selectedIndices.has(index)}
-                  className="size-3.5 shrink-0"
+                  readOnly
+                  className="size-3.5 shrink-0 accent-primary"
                   tabIndex={-1}
                 />
                 <div className="flex-1 min-w-0">
