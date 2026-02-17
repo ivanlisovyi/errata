@@ -151,7 +151,14 @@ export function FragmentList({
     dragOverItem.current = index
   }, [])
 
-  const handleDragEnd = useCallback(() => {
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    // If an external drop target (e.g. archive) accepted the drop, skip reorder
+    if (e.dataTransfer.dropEffect !== 'none') {
+      dragItem.current = null
+      dragOverItem.current = null
+      setDragIndex(null)
+      return
+    }
     if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
       setDragIndex(null)
       return
@@ -252,7 +259,10 @@ export function FragmentList({
               key={fragment.id}
               data-component-id={fragmentComponentId(fragment, 'list-item')}
               draggable={canDrag}
-              onDragStart={() => handleDragStart(index)}
+              onDragStart={(e) => {
+                e.dataTransfer.setData('application/x-errata-fragment-id', fragment.id)
+                handleDragStart(index)
+              }}
               onDragEnter={() => handleDragEnter(index)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}

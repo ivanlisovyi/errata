@@ -73,6 +73,42 @@ export function useQuickSwitch() {
   return useBoolPref('errata-quick-switch', false)
 }
 
+// --- Prose width preference ---
+
+export type ProseWidth = 'narrow' | 'medium' | 'wide' | 'full'
+
+export const PROSE_WIDTH_VALUES: Record<ProseWidth, string> = {
+  narrow: '38rem',
+  medium: '52rem',
+  wide: '68rem',
+  full: '100%',
+}
+
+const PROSE_WIDTH_EVENT = 'errata-prose-width-change'
+
+export function useProseWidth(): [ProseWidth, (v: ProseWidth) => void] {
+  const [value, setValue] = useState<ProseWidth>(() => {
+    if (typeof window === 'undefined') return 'narrow'
+    const stored = localStorage.getItem('errata-prose-width')
+    if (stored && stored in PROSE_WIDTH_VALUES) return stored as ProseWidth
+    return 'narrow'
+  })
+
+  useEffect(() => {
+    const handler = (e: Event) => setValue((e as CustomEvent<ProseWidth>).detail)
+    window.addEventListener(PROSE_WIDTH_EVENT, handler)
+    return () => window.removeEventListener(PROSE_WIDTH_EVENT, handler)
+  }, [])
+
+  const set = useCallback((v: ProseWidth) => {
+    setValue(v)
+    localStorage.setItem('errata-prose-width', v)
+    window.dispatchEvent(new CustomEvent(PROSE_WIDTH_EVENT, { detail: v }))
+  }, [])
+
+  return [value, set]
+}
+
 // --- Font preferences ---
 
 export type FontRole = 'display' | 'prose' | 'sans' | 'mono'

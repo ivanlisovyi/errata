@@ -1,5 +1,7 @@
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import type { StoryMeta } from '@/lib/api'
+import { api, type StoryMeta } from '@/lib/api'
 import {
   Sidebar,
   SidebarContent,
@@ -95,12 +97,24 @@ const FRAGMENT_SECTIONS = [
 ]
 
 export function StorySidebar({
+  storyId,
   story,
   activeSection,
   onSectionChange,
   enabledPanelPlugins,
 }: StorySidebarProps) {
   const { openHelp } = useHelp()
+  const queryClient = useQueryClient()
+  const [isDragOverArchive, setIsDragOverArchive] = useState(false)
+
+  const archiveMutation = useMutation({
+    mutationFn: (fragmentId: string) => api.fragments.archive(storyId, fragmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
+      queryClient.invalidateQueries({ queryKey: ['fragments-archived', storyId] })
+      queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
+    },
+  })
 
   const handleToggle = (section: SidebarSection) => {
     onSectionChange(activeSection === section ? null : section)
@@ -236,6 +250,29 @@ export function StorySidebar({
                   onClick={() => handleToggle('archive')}
                   tooltip="Archive"
                   data-component-id="sidebar-section-archive"
+                  className={isDragOverArchive ? 'ring-1 ring-primary/50 bg-accent' : undefined}
+                  onDragOver={(e: React.DragEvent) => {
+                    if (e.dataTransfer.types.includes('application/x-errata-fragment-id')) {
+                      e.preventDefault()
+                      e.dataTransfer.dropEffect = 'move'
+                    }
+                  }}
+                  onDragEnter={(e: React.DragEvent) => {
+                    if (e.dataTransfer.types.includes('application/x-errata-fragment-id')) {
+                      setIsDragOverArchive(true)
+                    }
+                  }}
+                  onDragLeave={(e: React.DragEvent) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setIsDragOverArchive(false)
+                    }
+                  }}
+                  onDrop={(e: React.DragEvent) => {
+                    e.preventDefault()
+                    setIsDragOverArchive(false)
+                    const fragmentId = e.dataTransfer.getData('application/x-errata-fragment-id')
+                    if (fragmentId) archiveMutation.mutate(fragmentId)
+                  }}
                 >
                   <Archive className="size-4" />
                   <span>Archive</span>

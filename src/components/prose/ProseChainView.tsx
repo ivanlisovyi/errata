@@ -4,7 +4,7 @@ import { api, type Fragment } from '@/lib/api'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { StreamMarkdown } from '@/components/ui/stream-markdown'
 import { Loader2 } from 'lucide-react'
-import { useQuickSwitch } from '@/lib/theme'
+import { useQuickSwitch, useProseWidth, PROSE_WIDTH_VALUES } from '@/lib/theme'
 import { ProseBlock } from './ProseBlock'
 import { InlineGenerationInput } from './InlineGenerationInput'
 import { ProseOutlinePanel } from './ProseOutlinePanel'
@@ -35,6 +35,7 @@ export function ProseChainView({
   const [activeIndex, setActiveIndex] = useState(0)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [quickSwitch] = useQuickSwitch()
+  const [proseWidth] = useProseWidth()
   const queryClient = useQueryClient()
 
   // Co-locate both queries so they settle in the same component — prevents
@@ -205,7 +206,7 @@ export function ProseChainView({
   return (
     <div className="flex flex-1 min-h-0 relative" data-component-id="prose-chain-root">
       <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0" data-component-id="prose-chain-scroll">
-        <div className="max-w-[38rem] mx-auto py-6 px-4 sm:py-12 sm:px-8">
+        <div className="mx-auto py-6 px-4 sm:py-12 sm:px-8" style={{ maxWidth: PROSE_WIDTH_VALUES[proseWidth] }}>
           {orderedFragments.length > 0 ? (
             orderedFragments.map((fragment, idx) => (
               <ProseBlock

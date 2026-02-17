@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type StoryMeta, type GlobalConfigSafe } from '@/lib/api'
-import { useTheme, useQuickSwitch, useFontPreferences, getActiveFont, FONT_CATALOGUE, type FontRole } from '@/lib/theme'
+import { useTheme, useQuickSwitch, useProseWidth, useFontPreferences, getActiveFont, FONT_CATALOGUE, type FontRole, type ProseWidth } from '@/lib/theme'
 import { Settings2, ChevronRight, ChevronDown, ExternalLink, Eye, EyeOff, Puzzle, Wrench, RotateCcw, CircleHelp } from 'lucide-react'
 import { useHelp } from '@/hooks/use-help'
 
@@ -221,6 +221,7 @@ export function SettingsPanel({
   const { openHelp } = useHelp()
   const { theme, setTheme } = useTheme()
   const [quickSwitch, setQuickSwitch] = useQuickSwitch()
+  const [proseWidth, setProseWidth] = useProseWidth()
   const [fontPrefs, setFont, resetFonts] = useFontPreferences()
   const hasCustomFonts = Object.keys(fontPrefs).length > 0
   const enabledBuiltinTools = story.settings.enabledBuiltinTools ?? []
@@ -270,6 +271,18 @@ export function SettingsPanel({
           </SettingRow>
           <SettingRow label="Quick switch" description="Show chevrons to swap between variations">
             <ToggleSwitch on={quickSwitch} onToggle={() => setQuickSwitch(!quickSwitch)} label="Toggle quick switch" />
+          </SettingRow>
+          <SettingRow label="Prose width" description="Reading column width">
+            <SegmentedControl<ProseWidth>
+              value={proseWidth}
+              options={[
+                { value: 'narrow', label: 'Narrow' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'wide', label: 'Wide' },
+                { value: 'full', label: 'Full' },
+              ]}
+              onChange={setProseWidth}
+            />
           </SettingRow>
         </div>
       </div>

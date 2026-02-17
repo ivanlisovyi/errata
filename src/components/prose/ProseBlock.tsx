@@ -279,7 +279,7 @@ export function ProseBlock({
       {fragment.description && (
         <div className="flex items-center gap-3 mb-2 -mt-3 -mx-4 px-4">
           <div className="h-px flex-1 bg-border/30" />
-          <span className="text-[10px] text-muted-foreground/30 italic shrink-0">{fragment.description}</span>
+          <span className="text-[10px] text-muted-foreground/30 italic">{fragment.description}</span>
           {hasMultiple && (
             <span className="text-[10px] font-mono text-muted-foreground/20 shrink-0">{variationIndex + 1}/{variationCount}</span>
           )}
