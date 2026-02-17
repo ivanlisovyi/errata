@@ -54,7 +54,7 @@ powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 Or run it directly from the web without cloning first:
 
 ```powershell
-irm https://raw.githubusercontent.com/tealios/errata/main/scripts/setup.ps1 | iex
+irm https://raw.githubusercontent.com/tealios/errata/master/scripts/setup.ps1 | iex
 ```
 
 ## Download
