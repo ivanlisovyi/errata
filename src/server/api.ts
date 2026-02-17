@@ -1127,206 +1127,240 @@ export function createApp(dataDir: string = DATA_DIR) {
         messages,
       })
 
-      // If saveResult is true, we need to stream AND save
-      if (body.saveResult) {
-        requestLogger.info('Streaming with save enabled')
-        
-        // Get the text stream
-        const textStream = result.textStream
-        
-        // Tee the stream so we can both stream to client and collect for saving
-        const [clientStream, saveStream] = textStream.tee()
-        
-        // Start the async save operation
-        const saveOperation = async () => {
+      // Build NDJSON event stream from fullStream (same pattern as librarian chat)
+      const fullStream = result.fullStream
+
+      let fullText = ''
+      let fullReasoning = ''
+      const toolCalls: ToolCallLog[] = []
+      let lastFinishReason = 'unknown'
+      let stepCount = 0
+
+      // Completion promise resolved when the stream ends — used by save path
+      let completionResolve: ((val: void) => void) | null = null
+      const completion = body.saveResult
+        ? new Promise<void>((resolve) => { completionResolve = resolve })
+        : null
+
+      const eventStream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          const encoder = new TextEncoder()
           try {
-            // Collect text from the save stream
-            let fullText = ''
-            const reader = saveStream.getReader()
-            while (true) {
-              const { done, value } = await reader.read()
-              if (done) break
-              fullText += value
-            }
-            
-            const durationMs = Date.now() - startTime
-            requestLogger.info('LLM generation completed', { durationMs, textLength: fullText.length })
+            for await (const part of fullStream) {
+              let event: Record<string, unknown> | null = null
+              const p = part as Record<string, unknown>
 
-            // Extract tool calls from steps
-            const steps = await result.steps
-            const toolCalls: ToolCallLog[] = []
-            if (Array.isArray(steps)) {
-              for (const step of steps) {
-                const stepObj = step as { toolResults?: Array<{ toolName: string; input: unknown; output: unknown }> }
-                if (Array.isArray(stepObj.toolResults)) {
-                  for (const tr of stepObj.toolResults) {
-                    toolCalls.push({
-                      toolName: tr.toolName,
-                      args: (tr.input as Record<string, unknown>) ?? {},
-                      result: tr.output,
-                    })
-                  }
+              switch (part.type) {
+                case 'text-delta': {
+                  const text = (p.text ?? '') as string
+                  fullText += text
+                  event = { type: 'text', text }
+                  break
                 }
+                case 'reasoning-delta': {
+                  const text = (p.text ?? '') as string
+                  fullReasoning += text
+                  event = { type: 'reasoning', text }
+                  break
+                }
+                case 'tool-call': {
+                  const input = (p.input ?? {}) as Record<string, unknown>
+                  event = {
+                    type: 'tool-call',
+                    id: p.toolCallId as string,
+                    toolName: p.toolName as string,
+                    args: input,
+                  }
+                  break
+                }
+                case 'tool-result': {
+                  const toolName = (p.toolName as string) ?? ''
+                  toolCalls.push({
+                    toolName,
+                    args: {},
+                    result: p.output,
+                  })
+                  event = {
+                    type: 'tool-result',
+                    id: p.toolCallId as string,
+                    toolName,
+                    result: p.output,
+                  }
+                  break
+                }
+                case 'finish':
+                  lastFinishReason = (p.finishReason as string) ?? 'unknown'
+                  stepCount++
+                  break
+              }
+
+              if (event) {
+                controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'))
               }
             }
-            requestLogger.info('Tool calls extracted', { toolCallCount: toolCalls.length })
 
-            // Run afterGeneration hooks
-            let genResult = await runAfterGeneration(enabledPlugins, {
-              text: fullText,
-              fragmentId: (mode === 'regenerate' || mode === 'refine') ? body.fragmentId! : null,
-              toolCalls,
-            })
-            requestLogger.info('AfterGeneration hooks completed')
-
-            const now = new Date().toISOString()
-            let savedFragmentId: string
-
-            if ((mode === 'regenerate' || mode === 'refine') && existingFragment) {
-              // Create a NEW fragment as a variation (don't overwrite)
-              const id = generateFragmentId('prose')
-              const fragment: Fragment = {
-                id,
-                type: 'prose',
-                name: proseFragmentName,
-                description: body.input.slice(0, 250),
-                content: genResult.text,
-                tags: [...existingFragment.tags],
-                refs: [...existingFragment.refs],
-                sticky: existingFragment.sticky,
-                placement: existingFragment.placement ?? 'user',
-                createdAt: now,
-                updatedAt: now,
-                order: existingFragment.order,
-                meta: {
-                  ...existingFragment.meta,
-                  generatedFrom: body.input,
-                  generationMode: mode,
-                  previousFragmentId: existingFragment.id,
-                  variationOf: existingFragment.id,
-                },
-                version: 1,
-                versions: [],
-              }
-              await createFragment(dataDir, params.storyId, fragment)
-              savedFragmentId = id
-              requestLogger.info('Fragment variation created', { fragmentId: savedFragmentId, mode, originalId: existingFragment.id })
-
-              // Add to prose chain as a variation
-              const sectionIndex = await findSectionIndex(dataDir, params.storyId, existingFragment.id)
-              if (sectionIndex !== -1) {
-                await addProseVariation(dataDir, params.storyId, sectionIndex, id)
-                requestLogger.info('Added as variation to prose chain', { sectionIndex })
-              } else {
-                requestLogger.warn('Original fragment not found in prose chain, creating new section')
-                await addProseSection(dataDir, params.storyId, id)
-              }
-
-              // Run afterSave hooks
-              await runAfterSave(enabledPlugins, fragment, params.storyId)
-              requestLogger.info('AfterSave hooks completed')
-
-              // Trigger librarian analysis (fire-and-forget)
-              triggerLibrarian(dataDir, params.storyId, fragment)
-              requestLogger.info('Librarian analysis triggered')
-            } else {
-              // Create new fragment (default generate mode)
-              const id = generateFragmentId('prose')
-              const fragment: Fragment = {
-                id,
-                type: 'prose',
-                name: proseFragmentName,
-                description: body.input.slice(0, 250),
-                content: genResult.text,
-                tags: [],
-                refs: [],
-                sticky: false,
-                placement: 'user',
-                createdAt: now,
-                updatedAt: now,
-                order: 0,
-                meta: { generatedFrom: body.input },
-                version: 1,
-                versions: [],
-              }
-              await createFragment(dataDir, params.storyId, fragment)
-              savedFragmentId = id
-              requestLogger.info('New fragment created', { fragmentId: savedFragmentId })
-
-              // Add to prose chain as a new section
-              await addProseSection(dataDir, params.storyId, id)
-              requestLogger.info('Added as new section to prose chain')
-
-              // Run afterSave hooks
-              await runAfterSave(enabledPlugins, fragment, params.storyId)
-              requestLogger.info('AfterSave hooks completed')
-
-              // Trigger librarian analysis (fire-and-forget)
-              triggerLibrarian(dataDir, params.storyId, fragment)
-              requestLogger.info('Librarian analysis triggered')
-            }
-
-            // Capture finish reason, step count, and token usage
-            const finishReason = await result.finishReason ?? 'unknown'
-            const stepCount = Array.isArray(steps) ? steps.length : 1
-            const stepsExceeded = stepCount >= 10 && finishReason !== 'stop'
-            let totalUsage: { inputTokens: number; outputTokens: number } | undefined
-            try {
-              const rawUsage = await result.totalUsage
-              if (rawUsage && typeof rawUsage.inputTokens === 'number') {
-                totalUsage = { inputTokens: rawUsage.inputTokens, outputTokens: rawUsage.outputTokens ? rawUsage.outputTokens : 0 }
-              }
-            } catch {
-              // Some providers may not report usage
-            }
-
-            // Persist generation log
-            const logId = `gen-${Date.now().toString(36)}`
-            const log: GenerationLog = {
-              id: logId,
-              createdAt: now,
-              input: body.input,
-              messages: messages.map((m) => ({
-                role: String(m.role),
-                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-              })),
-              toolCalls,
-              generatedText: genResult.text,
-              fragmentId: savedFragmentId,
-              model: resolvedModelId,
-              durationMs,
+            // Emit a final finish event
+            controller.enqueue(encoder.encode(JSON.stringify({
+              type: 'finish',
+              finishReason: lastFinishReason,
               stepCount,
-              finishReason: String(finishReason),
-              stepsExceeded,
-              ...(totalUsage ? { totalUsage } : {}),
-            }
-            await saveGenerationLog(dataDir, params.storyId, log)
-            requestLogger.info('Generation log saved', { logId, stepCount, finishReason, stepsExceeded })
+            }) + '\n'))
+            controller.close()
           } catch (err) {
-            requestLogger.error('Error saving generation result', { error: err instanceof Error ? err.message : String(err) })
+            controller.error(err)
           }
-        }
 
-        // Start save operation in background (fire-and-forget)
-        saveOperation()
+          // Run save operation after stream completes
+          if (body.saveResult) {
+            try {
+              const durationMs = Date.now() - startTime
+              requestLogger.info('LLM generation completed', { durationMs, textLength: fullText.length })
 
-        // Encode the string stream to bytes for the response
-        const encoder = new TextEncoder()
-        const encodedStream = clientStream.pipeThrough(new TransformStream<string, Uint8Array>({
-          transform(chunk, controller) {
-            controller.enqueue(encoder.encode(chunk))
+              requestLogger.info('Tool calls extracted', { toolCallCount: toolCalls.length })
+
+              // Run afterGeneration hooks
+              let genResult = await runAfterGeneration(enabledPlugins, {
+                text: fullText,
+                fragmentId: (mode === 'regenerate' || mode === 'refine') ? body.fragmentId! : null,
+                toolCalls,
+              })
+              requestLogger.info('AfterGeneration hooks completed')
+
+              const now = new Date().toISOString()
+              let savedFragmentId: string
+
+              if ((mode === 'regenerate' || mode === 'refine') && existingFragment) {
+                // Create a NEW fragment as a variation (don't overwrite)
+                const id = generateFragmentId('prose')
+                const fragment: Fragment = {
+                  id,
+                  type: 'prose',
+                  name: proseFragmentName,
+                  description: body.input.slice(0, 250),
+                  content: genResult.text,
+                  tags: [...existingFragment.tags],
+                  refs: [...existingFragment.refs],
+                  sticky: existingFragment.sticky,
+                  placement: existingFragment.placement ?? 'user',
+                  createdAt: now,
+                  updatedAt: now,
+                  order: existingFragment.order,
+                  meta: {
+                    ...existingFragment.meta,
+                    generatedFrom: body.input,
+                    generationMode: mode,
+                    previousFragmentId: existingFragment.id,
+                    variationOf: existingFragment.id,
+                  },
+                  version: 1,
+                  versions: [],
+                }
+                await createFragment(dataDir, params.storyId, fragment)
+                savedFragmentId = id
+                requestLogger.info('Fragment variation created', { fragmentId: savedFragmentId, mode, originalId: existingFragment.id })
+
+                // Add to prose chain as a variation
+                const sectionIndex = await findSectionIndex(dataDir, params.storyId, existingFragment.id)
+                if (sectionIndex !== -1) {
+                  await addProseVariation(dataDir, params.storyId, sectionIndex, id)
+                  requestLogger.info('Added as variation to prose chain', { sectionIndex })
+                } else {
+                  requestLogger.warn('Original fragment not found in prose chain, creating new section')
+                  await addProseSection(dataDir, params.storyId, id)
+                }
+
+                // Run afterSave hooks
+                await runAfterSave(enabledPlugins, fragment, params.storyId)
+                requestLogger.info('AfterSave hooks completed')
+
+                // Trigger librarian analysis (fire-and-forget)
+                triggerLibrarian(dataDir, params.storyId, fragment)
+                requestLogger.info('Librarian analysis triggered')
+              } else {
+                // Create new fragment (default generate mode)
+                const id = generateFragmentId('prose')
+                const fragment: Fragment = {
+                  id,
+                  type: 'prose',
+                  name: proseFragmentName,
+                  description: body.input.slice(0, 250),
+                  content: genResult.text,
+                  tags: [],
+                  refs: [],
+                  sticky: false,
+                  placement: 'user',
+                  createdAt: now,
+                  updatedAt: now,
+                  order: 0,
+                  meta: { generatedFrom: body.input },
+                  version: 1,
+                  versions: [],
+                }
+                await createFragment(dataDir, params.storyId, fragment)
+                savedFragmentId = id
+                requestLogger.info('New fragment created', { fragmentId: savedFragmentId })
+
+                // Add to prose chain as a new section
+                await addProseSection(dataDir, params.storyId, id)
+                requestLogger.info('Added as new section to prose chain')
+
+                // Run afterSave hooks
+                await runAfterSave(enabledPlugins, fragment, params.storyId)
+                requestLogger.info('AfterSave hooks completed')
+
+                // Trigger librarian analysis (fire-and-forget)
+                triggerLibrarian(dataDir, params.storyId, fragment)
+                requestLogger.info('Librarian analysis triggered')
+              }
+
+              // Capture finish reason, step count, and token usage
+              const finishReason = lastFinishReason
+              const stepsExceeded = stepCount >= 10 && finishReason !== 'stop'
+              let totalUsage: { inputTokens: number; outputTokens: number } | undefined
+              try {
+                const rawUsage = await result.totalUsage
+                if (rawUsage && typeof rawUsage.inputTokens === 'number') {
+                  totalUsage = { inputTokens: rawUsage.inputTokens, outputTokens: rawUsage.outputTokens ? rawUsage.outputTokens : 0 }
+                }
+              } catch {
+                // Some providers may not report usage
+              }
+
+              // Persist generation log
+              const logId = `gen-${Date.now().toString(36)}`
+              const log: GenerationLog = {
+                id: logId,
+                createdAt: now,
+                input: body.input,
+                messages: messages.map((m) => ({
+                  role: String(m.role),
+                  content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+                })),
+                toolCalls,
+                generatedText: genResult.text,
+                fragmentId: savedFragmentId,
+                model: resolvedModelId,
+                durationMs,
+                stepCount,
+                finishReason: String(finishReason),
+                stepsExceeded,
+                ...(totalUsage ? { totalUsage } : {}),
+                ...(fullReasoning ? { reasoning: fullReasoning } : {}),
+              }
+              await saveGenerationLog(dataDir, params.storyId, log)
+              requestLogger.info('Generation log saved', { logId, stepCount, finishReason, stepsExceeded })
+            } catch (err) {
+              requestLogger.error('Error saving generation result', { error: err instanceof Error ? err.message : String(err) })
+            }
+            completionResolve?.()
           }
-        }))
+        },
+      })
 
-        // Return the encoded stream immediately
-        return new Response(encodedStream, {
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-        })
-      }
-
-      // Stream the response (no log for streaming-only requests)
-      requestLogger.info('Streaming response (no persistence)')
-      return result.toTextStreamResponse()
+      requestLogger.info('Streaming NDJSON response', { saveResult: body.saveResult ?? false })
+      return new Response(eventStream, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      })
     }, {
       body: t.Object({
         input: t.String(),
@@ -1557,7 +1591,7 @@ export function createApp(dataDir: string = DATA_DIR) {
       }
       try {
         const base = provider.baseURL.replace(/\/+$/, '')
-        const url = base.endsWith('/v1') ? `${base}/models` : `${base}/v1/models`
+        const url = /\/v\d+$/.test(base) ? `${base}/models` : `${base}/v1/models`
         const res = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${provider.apiKey}`,
@@ -1584,7 +1618,7 @@ export function createApp(dataDir: string = DATA_DIR) {
     .post('/config/test-models', async ({ body }) => {
       try {
         const base = body.baseURL.replace(/\/+$/, '')
-        const url = base.endsWith('/v1') ? `${base}/models` : `${base}/v1/models`
+        const url = /\/v\d+$/.test(base) ? `${base}/models` : `${base}/v1/models`
         const res = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${body.apiKey}`,
@@ -1636,7 +1670,7 @@ export function createApp(dataDir: string = DATA_DIR) {
 
       try {
         const base = baseURL.replace(/\/+$/, '')
-        const url = base.endsWith('/v1') ? `${base}/chat/completions` : `${base}/v1/chat/completions`
+        const url = /\/v\d+$/.test(base) ? `${base}/chat/completions` : `${base}/v1/chat/completions`
         const res = await fetch(url, {
           method: 'POST',
           headers: {

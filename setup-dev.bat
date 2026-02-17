@@ -34,6 +34,16 @@ if %errorlevel% neq 0 (
   echo Bun is already installed.
 )
 
+where git >nul 2>nul
+if %errorlevel% equ 0 (
+  if exist ".git" (
+    set /p PULL="Pull latest changes from git? [Y/n] "
+    if /i "!PULL!" neq "n" (
+      git pull --ff-only
+    )
+  )
+)
+
 echo [3/4] Installing dependencies...
 bun install
 if %errorlevel% neq 0 (
