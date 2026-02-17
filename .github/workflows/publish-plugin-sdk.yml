@@ -6,11 +6,16 @@ on:
     tags:
       - 'sdk-v*'
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -34,6 +39,4 @@ jobs:
 
       - name: Publish @tealios/errata-plugin-sdk
         working-directory: packages/errata-plugin-sdk
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
