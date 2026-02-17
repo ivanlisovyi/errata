@@ -10,6 +10,11 @@
       "default": "./index.js"
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tealios/errata",
+    "directory": "packages/errata-plugin-sdk"
+  },
   "publishConfig": {
     "access": "public"
   },
