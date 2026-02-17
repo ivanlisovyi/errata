@@ -1,4 +1,4 @@
-import { apiFetch, fetchStream, fetchEventStream } from './client'
+import { apiFetch, fetchStream, fetchEventStream, fetchGetEventStream } from './client'
 import type {
   LibrarianState,
   LibrarianAnalysisSummary,
@@ -27,4 +27,6 @@ export const librarian = {
     apiFetch<ChatHistory>(`/stories/${storyId}/librarian/chat`),
   clearChatHistory: (storyId: string) =>
     apiFetch<{ ok: boolean }>(`/stories/${storyId}/librarian/chat`, { method: 'DELETE' }),
+  getAnalysisStream: (storyId: string) =>
+    fetchGetEventStream(`/stories/${storyId}/librarian/analysis-stream`),
 }

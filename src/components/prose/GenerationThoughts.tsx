@@ -51,7 +51,7 @@ export function GenerationThoughts({
       }`
 
   return (
-    <div className="mb-4">
+    <div className="mb-4" data-component-id="generation-thoughts-root">
       <ChainOfThought defaultOpen={true}>
         <ChainOfThoughtHeader className="text-xs text-muted-foreground/60 hover:text-muted-foreground/80">
           {isThinking && <Loader2 className="size-3 animate-spin" />}

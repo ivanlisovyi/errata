@@ -939,7 +939,7 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
 
       {/* Available media — click to instantly link */}
       {unlinkedMedia.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2">
+        <div className="flex flex-wrap gap-1.5 mb-2">
           {unlinkedMedia.map((m) => {
             const url = readImageUrl(m)
             return (
@@ -948,26 +948,26 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
                 type="button"
                 onClick={() => handleQuickLink(m.id, m.type as 'icon' | 'image')}
                 disabled={saveMutation.isPending}
-                className="relative rounded-md border border-border/40 overflow-hidden aspect-square transition-all hover:border-primary/50 hover:ring-1 hover:ring-primary/20 group/tile"
+                className="relative size-12 rounded-md border border-border/40 overflow-hidden transition-all hover:border-primary/50 hover:ring-1 hover:ring-primary/20 group/tile shrink-0"
                 title={`Click to link ${m.name}`}
               >
                 {url ? (
                   <img src={url} alt={m.name} className="size-full object-cover bg-muted/20" />
                 ) : (
                   <div className="size-full bg-muted/30 flex items-center justify-center">
-                    <ImagePlus className="size-4 text-muted-foreground/30" />
+                    <ImagePlus className="size-3.5 text-muted-foreground/30" />
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/tile:bg-black/40 transition-colors">
-                  <Link2 className="size-3.5 text-white opacity-0 group-hover/tile:opacity-100 transition-opacity" />
+                  <Link2 className="size-3 text-white opacity-0 group-hover/tile:opacity-100 transition-opacity" />
                 </div>
               </button>
             )
           })}
           {/* Upload tile */}
-          <label className={`rounded-md border-2 border-dashed border-border/40 aspect-square flex flex-col items-center justify-center gap-0.5 transition-colors ${uploading ? 'opacity-50' : 'hover:border-primary/40 hover:bg-accent/30 cursor-pointer'}`}>
-            <Upload className="size-4 text-muted-foreground/40" />
-            <span className="text-[9px] text-muted-foreground/40">{uploading ? 'Uploading' : 'Upload'}</span>
+          <label className={`size-12 rounded-md border-2 border-dashed border-border/40 flex flex-col items-center justify-center gap-0.5 shrink-0 transition-colors ${uploading ? 'opacity-50' : 'hover:border-primary/40 hover:bg-accent/30 cursor-pointer'}`}>
+            <Upload className="size-3.5 text-muted-foreground/40" />
+            <span className="text-[8px] text-muted-foreground/40">{uploading ? '...' : 'Upload'}</span>
             <input
               type="file"
               accept="image/*"

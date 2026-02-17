@@ -72,6 +72,7 @@ import {
 } from './plugins/hooks'
 import { collectPluginToolsWithOrigin } from './plugins/tools'
 import { triggerLibrarian, getLibrarianRuntimeStatus } from './librarian/scheduler'
+import { createSSEStream } from './librarian/analysis-stream'
 import { invokeAgent, listAgentRuns } from './agents'
 import { exportStoryAsZip, importStoryFromZip } from './story-archive'
 import type { RefineResult } from './librarian/refine'
@@ -765,6 +766,23 @@ export function createApp(dataDir: string = DATA_DIR) {
         ...state,
         ...runtime,
       }
+    })
+
+    .get('/stories/:storyId/librarian/analysis-stream', async ({ params, set }) => {
+      const stream = createSSEStream(params.storyId)
+      if (!stream) {
+        set.status = 404
+        return { error: 'No active analysis' }
+      }
+      const encoder = new TextEncoder()
+      const encodedStream = stream.pipeThrough(new TransformStream<string, Uint8Array>({
+        transform(chunk, controller) {
+          controller.enqueue(encoder.encode(chunk))
+        },
+      }))
+      return new Response(encodedStream, {
+        headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8' },
+      })
     })
 
     .get('/stories/:storyId/librarian/analyses', async ({ params }) => {

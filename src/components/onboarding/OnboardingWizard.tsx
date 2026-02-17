@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useTheme, useFontPreferences, getActiveFont, FONT_CATALOGUE } from '@/lib/theme'
+import { componentId } from '@/lib/dom-ids'
 import { Button } from '@/components/ui/button'
 import {
   Sun,
@@ -109,7 +110,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [selectedPreset, setSelectedPreset] = useState<PresetKey | null>(null)
 
   return (
-    <div className="fixed inset-0 bg-background z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-background z-50 flex items-center justify-center" data-component-id="onboarding-root">
       {step === 'theme' && (
         <ThemeStep
           onNext={() => setStep('typography')}
@@ -175,6 +176,7 @@ function ThemeStep({
               ? 'border-primary/40 bg-primary/5 shadow-sm'
               : 'border-border/30 hover:border-border/60 hover:bg-card/50'
           }`}
+          data-component-id="onboarding-theme-light"
         >
           <div
             className={`size-12 rounded-full flex items-center justify-center transition-colors ${
@@ -200,6 +202,7 @@ function ThemeStep({
               ? 'border-primary/40 bg-primary/5 shadow-sm'
               : 'border-border/30 hover:border-border/60 hover:bg-card/50'
           }`}
+          data-component-id="onboarding-theme-dark"
         >
           <div
             className={`size-12 rounded-full flex items-center justify-center transition-colors ${
@@ -223,7 +226,7 @@ function ThemeStep({
         className="animate-onboarding-fade-up"
         style={{ animationDelay: '300ms' }}
       >
-        <Button onClick={onNext} className="px-8">
+        <Button onClick={onNext} className="px-8" data-component-id="onboarding-theme-continue">
           Continue
         </Button>
       </div>
@@ -424,7 +427,7 @@ function WelcomeStep({
         className="mt-10 animate-onboarding-fade-up"
         style={{ animationDelay: '550ms' }}
       >
-        <Button onClick={onNext} className="px-8">
+        <Button onClick={onNext} className="px-8" data-component-id="onboarding-welcome-start">
           Get Started
         </Button>
       </div>

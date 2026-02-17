@@ -73,6 +73,10 @@ export function useQuickSwitch() {
   return useBoolPref('errata-quick-switch', false)
 }
 
+export function useCharacterMentions() {
+  return useBoolPref('errata-character-mentions', false)
+}
+
 // --- Prose width preference ---
 
 export type ProseWidth = 'narrow' | 'medium' | 'wide' | 'full'

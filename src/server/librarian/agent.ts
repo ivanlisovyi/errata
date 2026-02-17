@@ -1,5 +1,5 @@
 import { getModel } from '../llm/client'
-import { getStory, updateStory, listFragments, getFragment } from '../fragments/storage'
+import { getStory, updateStory, listFragments, getFragment, updateFragment } from '../fragments/storage'
 import { getActiveProseIds } from '../fragments/prose-chain'
 import {
   saveAnalysis,
@@ -11,134 +11,34 @@ import {
 } from './storage'
 import { applyKnowledgeSuggestion } from './suggestions'
 import { createLogger } from '../logging'
-import { z } from 'zod/v4'
+import { createLibrarianAnalyzeToolAgent } from './llm-agents'
+import { createEmptyCollector, createAnalysisTools } from './analysis-tools'
 import {
-  createLibrarianAnalyzeJsonAgent,
-  createLibrarianAnalyzeStructuredAgent,
-} from './llm-agents'
+  createAnalysisBuffer,
+  pushEvent,
+  finishBuffer,
+  clearBuffer,
+} from './analysis-stream'
 
 const logger = createLogger('librarian-agent')
 
-const SYSTEM_PROMPT = `You are a librarian agent for a collaborative writing app. 
+const SYSTEM_PROMPT = `You are a librarian agent for a collaborative writing app.
 Your job is to analyze new prose fragments and maintain story continuity.
 
-Rules:
-- mentionedCharacters: only include character IDs from the provided list that are actually referenced in the new prose (by name or clear reference).
-- contradictions: flag when the new prose contradicts established facts in the summary, character descriptions, or knowledge. Only flag clear contradictions, not ambiguities.
-- knowledgeSuggestions: suggest creates or updates for character/knowledge fragments.
-- If an existing fragment should be refined, set targetFragmentId to that existing ID and provide the updated name/description/content.
-- If this is truly new information, omit targetFragmentId and suggest creating a new fragment.
-- Set type to "character" for characters or "knowledge" for world-building details, locations, items, or facts.
-- timelineEvents: note significant events. "position" is relative to the previous prose: "before" if it's a flashback, "during" if concurrent, "after" if it follows sequentially.
-- If there are no contradictions, suggestions, or timeline events, use empty arrays.
-- If updating a character or knowledge fragment, make sure to retain any important established facts from the existing description in the updated content, so the writer doesn't lose continuity by accepting the suggestion.
-- Return JSON only`
+You have five reporting tools. Use them to report your findings:
 
-const LibrarianAnalysisSchema = z.object({
-  summaryUpdate: z.string(),
-  mentionedCharacters: z.array(z.string()),
-  contradictions: z.array(z.object({
-    description: z.string(),
-    fragmentIds: z.array(z.string()),
-  })),
-  knowledgeSuggestions: z.array(z.object({
-    type: z.union([z.literal('character'), z.literal('knowledge')]),
-    targetFragmentId: z.string().optional(),
-    name: z.string(),
-    description: z.string(),
-    content: z.string(),
-  })),
-  timelineEvents: z.array(z.object({
-    event: z.string(),
-    position: z.union([z.literal('before'), z.literal('during'), z.literal('after')]),
-  })),
-})
+1. updateSummary — Provide a concise summary of what happened in the new prose.
+2. reportMentions — Report each character reference by name, nickname, or title (not pronouns). Include the character ID and the exact text used.
+3. reportContradictions — Flag when the new prose contradicts established facts in the summary, character descriptions, or knowledge. Only flag clear contradictions, not ambiguities.
+4. suggestKnowledge — Suggest creating or updating character/knowledge fragments based on new information.
+   - If an existing fragment should be refined, set targetFragmentId to that existing ID and provide the updated name/description/content.
+   - If this is truly new information, omit targetFragmentId and suggest creating a new fragment.
+   - Set type to "character" for characters or "knowledge" for world-building details, locations, items, or facts.
+   - When updating a character or knowledge fragment, retain important established facts from the existing description in the updated content.
+5. reportTimeline — Note significant events. "position" is relative to the previous prose: "before" if it's a flashback, "during" if concurrent, "after" if it follows sequentially.
 
-function isStructuredOutputUnsupportedError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error)
-  const normalized = message.toLowerCase()
-  return (
-    normalized.includes('responseformat')
-    || normalized.includes('response_format')
-    || normalized.includes('structuredoutputs')
-    || normalized.includes('json response format schema')
-    || normalized.includes("must contain the word 'json'")
-    || normalized.includes('must contain the word "json"')
-    || normalized.includes('no object generated')
-    || normalized.includes('did not match schema')
-  )
-}
-
-function extractJsonObject(text: string): string {
-  const trimmed = text.trim()
-
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
-  if (fenced?.[1]) return fenced[1].trim()
-
-  const start = trimmed.indexOf('{')
-  const end = trimmed.lastIndexOf('}')
-  if (start >= 0 && end > start) {
-    return trimmed.slice(start, end + 1)
-  }
-
-  return trimmed
-}
-
-async function generateStructuredAnalysisWithFallback(args: {
-  model: Awaited<ReturnType<typeof getModel>>['model']
-  system: string
-  prompt: string
-  headers: Record<string, string>
-  requestLogger: ReturnType<typeof logger.child>
-}) {
-  const structuredAgent = createLibrarianAnalyzeStructuredAgent({
-    model: args.model,
-    instructions: args.system,
-    schema: LibrarianAnalysisSchema,
-  })
-
-  try {
-    const result = await structuredAgent.generate({
-      prompt: args.prompt,
-      headers: args.headers,
-    })
-
-    if (result.output) {
-      return LibrarianAnalysisSchema.parse(result.output)
-    }
-
-    const rawJson = extractJsonObject(result.text ?? '')
-    const parsedJson = JSON.parse(rawJson)
-    return LibrarianAnalysisSchema.parse(parsedJson)
-  } catch (error) {
-    if (!isStructuredOutputUnsupportedError(error)) {
-      throw error
-    }
-
-    args.requestLogger.warn('Structured object generation failed; falling back to JSON text mode')
-
-    const fallbackPrompt = `${args.prompt}
-    Return ONLY valid JSON that follows this schema. Do not fence the JSON, just return the raw object text.
-    Schema:
-    ${JSON.stringify(LibrarianAnalysisSchema.toJSONSchema(), null, 2)}
-    `
-    const textAgent = createLibrarianAnalyzeJsonAgent({
-      model: args.model,
-      instructions: args.system,
-    })
-    const textResult = await textAgent.generate({
-      prompt: fallbackPrompt,
-      headers: args.headers,
-      timeoutMs: 120000, // allow more time for the model to self-correct and produce valid JSON
-    })
-
-    args.requestLogger.debug('Raw LLM output for fallback', { text: textResult.text })
-
-    const rawJson = extractJsonObject(textResult.text)
-    const parsedJson = JSON.parse(rawJson)
-    return LibrarianAnalysisSchema.parse(parsedJson)
-  }
-}
+Always call updateSummary. Only call the other tools if there are relevant findings.
+If there are no contradictions, suggestions, mentions, or timeline events, don't call those tools.`
 
 function buildUserPrompt(
   summary: string,
@@ -205,10 +105,6 @@ export async function runLibrarian(
     knowledgeCount: knowledge.length,
   })
 
-  requestLogger.debug('Prose position', {
-    fragmentId,
-  })
-
   // Load current librarian state for context
   const state = await getState(dataDir, storyId)
 
@@ -223,7 +119,14 @@ export async function runLibrarian(
   // Resolve model for this story (with request config such as custom headers/user-agent)
   const { model, modelId, providerId, config } = await getModel(dataDir, storyId, { role: 'librarian' })
 
-  // Call the LLM
+  // Create collector and analysis tools
+  const collector = createEmptyCollector()
+  const analysisTools = createAnalysisTools(collector)
+
+  // Create event buffer for live streaming
+  const buffer = createAnalysisBuffer(storyId)
+
+  // Call the LLM with tool-based analysis
   requestLogger.info('Calling LLM for analysis...')
   const llmStartTime = Date.now()
   const requestHeaders = {
@@ -231,13 +134,78 @@ export async function runLibrarian(
     'User-Agent': config.headers['User-Agent'] ?? 'errata-librarian/1.0',
   }
 
-  const parsed = await generateStructuredAnalysisWithFallback({
+  const agent = createLibrarianAnalyzeToolAgent({
     model,
-    system: SYSTEM_PROMPT,
-    prompt: userPrompt,
-    headers: requestHeaders,
-    requestLogger,
+    instructions: SYSTEM_PROMPT,
+    tools: analysisTools,
+    maxSteps: 3,
   })
+
+  let fullText = ''
+  let stepCount = 0
+  let lastFinishReason = 'unknown'
+
+  try {
+    const result = await agent.stream({
+      prompt: userPrompt,
+    })
+
+    // Iterate fullStream, mapping events to buffer (same pattern as chat.ts)
+    for await (const part of result.fullStream) {
+      const p = part as Record<string, unknown>
+
+      switch (part.type) {
+        case 'text-delta': {
+          const text = (p.text ?? '') as string
+          fullText += text
+          pushEvent(buffer, { type: 'text', text })
+          break
+        }
+        case 'reasoning-delta': {
+          const text = (p.text ?? '') as string
+          pushEvent(buffer, { type: 'reasoning', text })
+          break
+        }
+        case 'tool-call': {
+          const input = (p.input ?? {}) as Record<string, unknown>
+          pushEvent(buffer, {
+            type: 'tool-call',
+            id: p.toolCallId as string,
+            toolName: p.toolName as string,
+            args: input,
+          })
+          break
+        }
+        case 'tool-result': {
+          pushEvent(buffer, {
+            type: 'tool-result',
+            id: p.toolCallId as string,
+            toolName: (p.toolName as string) ?? '',
+            result: p.output,
+          })
+          break
+        }
+        case 'finish':
+          lastFinishReason = (p.finishReason as string) ?? 'unknown'
+          stepCount++
+          break
+      }
+    }
+
+    // Emit final finish event
+    pushEvent(buffer, {
+      type: 'finish',
+      finishReason: lastFinishReason,
+      stepCount,
+    })
+    finishBuffer(buffer)
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err)
+    pushEvent(buffer, { type: 'error', error: errorMsg })
+    finishBuffer(buffer, errorMsg)
+    throw err
+  }
+
   const llmDurationMs = Date.now() - llmStartTime
   requestLogger.info('LLM analysis completed', {
     durationMs: llmDurationMs,
@@ -248,11 +216,20 @@ export async function runLibrarian(
     headers: Object.keys(requestHeaders),
   })
 
+  // Fallback: if collector.summaryUpdate is empty but the LLM produced text, use it
+  if (!collector.summaryUpdate && fullText.trim()) {
+    collector.summaryUpdate = fullText.trim()
+  }
+
+  // Derive mentionedCharacters from mentions
+  const mentionedCharacterIds = [...new Set(collector.mentions.map(m => m.characterId))]
+
   requestLogger.debug('Analysis parsed', {
-    mentionedCharacters: parsed.mentionedCharacters.length,
-    contradictions: parsed.contradictions.length,
-    knowledgeSuggestions: parsed.knowledgeSuggestions.length,
-    timelineEvents: parsed.timelineEvents.length,
+    mentions: collector.mentions.length,
+    mentionedCharacters: mentionedCharacterIds.length,
+    contradictions: collector.contradictions.length,
+    knowledgeSuggestions: collector.knowledgeSuggestions.length,
+    timelineEvents: collector.timelineEvents.length,
   })
 
   // Build the analysis
@@ -261,11 +238,16 @@ export async function runLibrarian(
     id: analysisId,
     createdAt: new Date().toISOString(),
     fragmentId,
-    ...parsed,
-    knowledgeSuggestions: parsed.knowledgeSuggestions.map((suggestion) => ({
+    summaryUpdate: collector.summaryUpdate,
+    mentionedCharacters: mentionedCharacterIds,
+    mentions: collector.mentions,
+    contradictions: collector.contradictions,
+    timelineEvents: collector.timelineEvents,
+    knowledgeSuggestions: collector.knowledgeSuggestions.map((suggestion) => ({
       ...suggestion,
       sourceFragmentId: fragmentId,
     })),
+    trace: buffer.events as LibrarianAnalysis['trace'],
   }
 
   const autoApplySuggestions = story.settings?.autoApplyLibrarianSuggestions === true
@@ -294,10 +276,30 @@ export async function runLibrarian(
     }
   }
 
+  // Save mention annotations to the prose fragment's meta
+  if (collector.mentions.length > 0) {
+    const proseFragment = await getFragment(dataDir, storyId, fragmentId)
+    if (proseFragment) {
+      const annotations = collector.mentions.map(m => ({
+        type: 'mention' as const,
+        fragmentId: m.characterId,
+        text: m.text,
+      }))
+      await updateFragment(dataDir, storyId, {
+        ...proseFragment,
+        meta: { ...proseFragment.meta, annotations },
+      })
+      requestLogger.debug('Saved mention annotations to prose fragment', {
+        fragmentId,
+        annotationCount: annotations.length,
+      })
+    }
+  }
+
   // Update librarian state
   requestLogger.debug('Updating librarian state...')
   const updatedMentions = { ...state.recentMentions }
-  for (const charId of analysis.mentionedCharacters) {
+  for (const charId of mentionedCharacterIds) {
     if (!updatedMentions[charId]) {
       updatedMentions[charId] = []
     }
@@ -325,6 +327,9 @@ export async function runLibrarian(
   // aged past the threshold. This lets the author refine/reiterate recent
   // prose without those edits being baked into the rolling summary yet.
   await applyDeferredSummaries(dataDir, storyId, story, updatedState, requestLogger)
+
+  // Clean up buffer after analysis is saved
+  clearBuffer(storyId)
 
   return analysis
 }

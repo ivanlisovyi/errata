@@ -20,6 +20,7 @@ import { BlockCreateDialog } from './BlockCreateDialog'
 import { BlockPreviewDialog } from './BlockPreviewDialog'
 import { cn } from '@/lib/utils'
 import { useHelp } from '@/hooks/use-help'
+import { componentId } from '@/lib/dom-ids'
 
 interface BlockEditorPanelProps {
   storyId: string
@@ -265,7 +266,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-component-id="block-editor-root">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/30 flex items-center gap-3">
         <p className="text-[11px] text-muted-foreground/50 leading-snug flex-1">
@@ -273,6 +274,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
           <button
             className="text-muted-foreground/70 underline underline-offset-2 hover:text-foreground/70 transition-colors"
             onClick={() => openHelp('blocks')}
+            data-component-id="block-editor-help"
           >
             Learn more
           </button>
@@ -282,13 +284,14 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
           variant="outline"
           className="h-7 text-xs gap-1.5 shrink-0"
           onClick={() => setShowPreview(true)}
+          data-component-id="block-editor-preview"
         >
           <Eye className="size-3" />
           Preview
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 [&>[data-slot=scroll-area-viewport]>div]:!block">
+      <ScrollArea className="flex-1 [&>[data-slot=scroll-area-viewport]>div]:!block" data-component-id="block-editor-scroll">
         <div className="px-2 py-3 space-y-1">
           {mergedBlocks.map((block, index) => {
             const isExpanded = expandedId === block.id
@@ -317,6 +320,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                     isExpanded && 'bg-accent/15 border-border/50 shadow-sm',
                     isCustom && !isExpanded && 'border-dashed',
                   )}
+                  data-component-id={componentId('block', block.id, 'card')}
                 >
                   {/* Block header row */}
                   <div
@@ -381,6 +385,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                         handleToggleEnabled(block.id, block.enabled)
                       }}
                       title={block.enabled ? 'Disable block' : 'Enable block'}
+                      data-component-id={componentId('block', block.id, 'toggle')}
                     >
                       {block.enabled && <Check className="size-2.5" strokeWidth={3} />}
                     </button>
@@ -429,6 +434,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                               )}
                               rows={4}
                               placeholder={isScript ? 'return `...`' : 'Block content...'}
+                              data-component-id={componentId('block', block.id, 'content')}
                             />
 
                             {/* Delete button */}
@@ -438,6 +444,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                                 variant="ghost"
                                 className="h-7 text-xs gap-1.5 text-destructive/60 hover:text-destructive hover:bg-destructive/5"
                                 onClick={() => deleteCustomMutation.mutate(block.id)}
+                                data-component-id={componentId('block', block.id, 'delete')}
                               >
                                 <Trash2 className="size-3" />
                                 Delete
@@ -490,6 +497,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                                 placeholder={`Content to ${block.override.contentMode}...`}
                                 className="font-mono text-xs min-h-[60px] resize-y border-border/30 focus:border-border/60 bg-muted/10"
                                 rows={3}
+                                data-component-id={componentId('block', block.id, 'override')}
                               />
                             )}
                           </>
@@ -505,6 +513,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
           <button
             className="w-full mt-3 py-3.5 rounded-lg border-2 border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-200 flex items-center justify-center gap-2 text-[11px] text-muted-foreground/50 hover:text-primary/60 group"
             onClick={() => setShowCreateDialog(true)}
+            data-component-id="block-editor-add"
           >
             <Plus className="size-3.5 transition-transform duration-200 group-hover:scale-110" />
             <span className="font-medium">Add Custom Block</span>

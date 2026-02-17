@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Undo2, Trash2, Archive } from 'lucide-react'
+import { componentId } from '@/lib/dom-ids'
 
 interface ArchivePanelProps {
   storyId: string
@@ -43,24 +44,25 @@ export function ArchivePanel({ storyId }: ArchivePanelProps) {
   })
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-component-id="archive-panel-root">
       <div className="px-3 py-3">
         <Input
           placeholder="Search archive..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="h-8 text-xs bg-transparent"
+          data-component-id="archive-search"
         />
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" data-component-id="archive-scroll">
         <div className="px-3 pb-3 space-y-1">
           {isLoading && (
             <p className="text-xs text-muted-foreground/50 text-center py-8">Loading...</p>
           )}
 
           {!isLoading && filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/40">
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/40" data-component-id="archive-empty">
               <Archive className="size-8 mb-2" />
               <p className="text-xs">No archived fragments</p>
             </div>
@@ -70,6 +72,7 @@ export function ArchivePanel({ storyId }: ArchivePanelProps) {
             <div
               key={fragment.id}
               className="flex items-center gap-2 rounded-md border border-border/30 px-3 py-2 group hover:border-border/50 transition-colors"
+              data-component-id={componentId('archive', fragment.id, 'item')}
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{fragment.name}</p>
@@ -86,6 +89,7 @@ export function ArchivePanel({ storyId }: ArchivePanelProps) {
                   onClick={() => restoreMutation.mutate(fragment.id)}
                   disabled={restoreMutation.isPending}
                   title="Restore"
+                  data-component-id={componentId('archive', fragment.id, 'restore')}
                 >
                   <Undo2 className="size-3.5" />
                 </Button>
@@ -100,6 +104,7 @@ export function ArchivePanel({ storyId }: ArchivePanelProps) {
                   }}
                   disabled={deleteMutation.isPending}
                   title="Delete permanently"
+                  data-component-id={componentId('archive', fragment.id, 'delete')}
                 >
                   <Trash2 className="size-3.5" />
                 </Button>

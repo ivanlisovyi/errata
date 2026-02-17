@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   api,
   type AgentRunTraceRecord,
+  type ChatEvent,
   type LibrarianAnalysis,
   type LibrarianAnalysisSummary,
   type LibrarianState,
@@ -14,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   AlertTriangle,
+  Brain,
   Lightbulb,
   Clock,
   Users,
@@ -94,19 +96,20 @@ export function LibrarianPanel({ storyId }: LibrarianPanelProps) {
       value={activeTab}
       onValueChange={(v) => setActiveTab(v as TabValue)}
       className="h-full flex flex-col gap-0"
+      data-component-id="librarian-panel-root"
     >
       {/* Tab bar */}
       <div className="shrink-0 px-4 pt-3">
         <TabsList variant="line" className="w-full h-8 gap-0">
-          <TabsTrigger value="chat" className="text-[11px] gap-1.5 flex-1 px-1">
+          <TabsTrigger value="chat" className="text-[11px] gap-1.5 flex-1 px-1" data-component-id="librarian-tab-chat">
             <MessageSquare className="size-3" />
             Chat
           </TabsTrigger>
-          <TabsTrigger value="story" className="text-[11px] gap-1.5 flex-1 px-1">
+          <TabsTrigger value="story" className="text-[11px] gap-1.5 flex-1 px-1" data-component-id="librarian-tab-story">
             <BookOpen className="size-3" />
             Story
           </TabsTrigger>
-          <TabsTrigger value="activity" className="text-[11px] gap-1.5 flex-1 px-1">
+          <TabsTrigger value="activity" className="text-[11px] gap-1.5 flex-1 px-1" data-component-id="librarian-tab-activity">
             <Radio className="size-3" />
             Activity
           </TabsTrigger>
@@ -115,6 +118,11 @@ export function LibrarianPanel({ storyId }: LibrarianPanelProps) {
 
       {/* Status strip — always visible */}
       <StatusStrip status={status} runStatus={runStatus} />
+
+      {/* Live analysis trace */}
+      {runStatus === 'running' && (
+        <LiveAnalysisTrace storyId={storyId} />
+      )}
 
       {/* Auto-apply toggle */}
       <div className="shrink-0 mx-4 mb-1">
@@ -137,6 +145,7 @@ export function LibrarianPanel({ storyId }: LibrarianPanelProps) {
               autoApply ? 'bg-foreground' : 'bg-muted-foreground/20'
             }`}
             aria-label="Toggle auto-apply suggestions"
+            data-component-id="librarian-auto-apply"
           >
             <span
               className={`absolute top-[2px] h-[10px] w-[10px] rounded-full bg-background transition-[left] duration-150 ${
@@ -768,8 +777,272 @@ function AnalysisItem({
               ))}
             </div>
           )}
+
+          {/* Stored analysis trace */}
+          {analysis.trace && analysis.trace.length > 0 && (
+            <StoredTraceViewer trace={analysis.trace} />
+          )}
         </div>
       )}
     </div>
   )
+}
+
+// ─── Stored Trace Viewer ────────────────────────────────────
+
+function StoredTraceViewer({ trace }: { trace: LibrarianAnalysis['trace'] }) {
+  const [expanded, setExpanded] = useState(false)
+  if (!trace || trace.length === 0) return null
+
+  // Collapse reasoning deltas into blocks
+  const items = collapseTraceEvents(trace)
+
+  return (
+    <div>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors"
+      >
+        {expanded ? <ChevronDown className="size-2.5" /> : <ChevronRight className="size-2.5" />}
+        Analysis trace
+        <span className="text-muted-foreground/25">({items.length})</span>
+      </button>
+      {expanded && (
+        <div className="mt-1.5 space-y-1">
+          {items.map((item, i) => (
+            <TraceItem key={i} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type CollapsedTraceItem =
+  | { kind: 'reasoning'; text: string }
+  | { kind: 'text'; text: string }
+  | { kind: 'tool-call'; toolName: string; args: Record<string, unknown> }
+  | { kind: 'tool-result'; toolName: string; result: unknown }
+
+function collapseTraceEvents(trace: LibrarianAnalysis['trace']): CollapsedTraceItem[] {
+  if (!trace) return []
+  const items: CollapsedTraceItem[] = []
+  let reasoningBuf = ''
+  let textBuf = ''
+
+  for (const ev of trace) {
+    if (ev.type === 'reasoning') {
+      if (textBuf) { items.push({ kind: 'text', text: textBuf }); textBuf = '' }
+      reasoningBuf += (ev as { text?: string }).text ?? ''
+    } else if (ev.type === 'text') {
+      if (reasoningBuf) { items.push({ kind: 'reasoning', text: reasoningBuf }); reasoningBuf = '' }
+      textBuf += (ev as { text?: string }).text ?? ''
+    } else {
+      if (reasoningBuf) { items.push({ kind: 'reasoning', text: reasoningBuf }); reasoningBuf = '' }
+      if (textBuf) { items.push({ kind: 'text', text: textBuf }); textBuf = '' }
+      if (ev.type === 'tool-call') {
+        const tc = ev as { toolName?: string; args?: Record<string, unknown> }
+        items.push({ kind: 'tool-call', toolName: tc.toolName ?? '', args: tc.args ?? {} })
+      } else if (ev.type === 'tool-result') {
+        const tr = ev as { toolName?: string; result?: unknown }
+        items.push({ kind: 'tool-result', toolName: tr.toolName ?? '', result: tr.result })
+      }
+    }
+  }
+  if (reasoningBuf) items.push({ kind: 'reasoning', text: reasoningBuf })
+  if (textBuf) items.push({ kind: 'text', text: textBuf })
+  return items
+}
+
+function TraceItem({ item }: { item: CollapsedTraceItem }) {
+  const [expanded, setExpanded] = useState(false)
+
+  if (item.kind === 'reasoning') {
+    return (
+      <div className="rounded-md border border-border/15 overflow-hidden">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] hover:bg-accent/20 transition-colors"
+        >
+          <Brain className="size-3 text-purple-400/60 shrink-0" />
+          <span className="text-muted-foreground/50">Reasoning</span>
+          <span className="text-muted-foreground/25 ml-auto">{item.text.length} chars</span>
+        </button>
+        {expanded && (
+          <div className="border-t border-border/10 px-2 py-1.5">
+            <p className="text-[10px] text-muted-foreground/50 leading-relaxed whitespace-pre-wrap break-words">
+              {item.text}
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (item.kind === 'text') {
+    return (
+      <div className="px-2 py-0.5">
+        <p className="text-[10px] text-foreground/50 leading-relaxed">{item.text}</p>
+      </div>
+    )
+  }
+
+  if (item.kind === 'tool-call') {
+    return (
+      <div className="rounded-md border border-border/15 overflow-hidden">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] hover:bg-accent/20 transition-colors"
+        >
+          <Wrench className="size-3 text-blue-400/60 shrink-0" />
+          <Badge variant="outline" className="text-[9px] h-3.5 px-1">{item.toolName}</Badge>
+        </button>
+        {expanded && (
+          <div className="border-t border-border/10 px-2 py-1.5">
+            <pre className="text-[9px] text-muted-foreground/50 leading-relaxed whitespace-pre-wrap break-all">
+              {JSON.stringify(item.args, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (item.kind === 'tool-result') {
+    return (
+      <div className="px-2 py-0.5 flex items-center gap-1">
+        <Check className="size-2.5 text-emerald-500/50" />
+        <span className="text-[9px] text-muted-foreground/35">{item.toolName} completed</span>
+      </div>
+    )
+  }
+
+  return null
+}
+
+// ─── Live Analysis Trace ────────────────────────────────────
+
+function LiveAnalysisTrace({ storyId }: { storyId: string }) {
+  const [events, setEvents] = useState<ChatEvent[]>([])
+  const [connected, setConnected] = useState(false)
+  const readerRef = useRef<ReadableStreamDefaultReader<ChatEvent> | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function connect() {
+      try {
+        const stream = await api.librarian.getAnalysisStream(storyId)
+        if (cancelled) return
+        setConnected(true)
+        const reader = stream.getReader()
+        readerRef.current = reader
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done || cancelled) break
+          setEvents((prev) => [...prev, value])
+        }
+      } catch {
+        // Stream ended or error
+      } finally {
+        if (!cancelled) {
+          setConnected(false)
+        }
+      }
+    }
+
+    connect()
+
+    return () => {
+      cancelled = true
+      readerRef.current?.cancel().catch(() => {})
+    }
+  }, [storyId])
+
+  // Collapse live events into display items
+  const items = useMemo(() => {
+    const collapsed: CollapsedTraceItem[] = []
+    let reasoningBuf = ''
+    let textBuf = ''
+
+    for (const ev of events) {
+      if (ev.type === 'reasoning') {
+        if (textBuf) { collapsed.push({ kind: 'text', text: textBuf }); textBuf = '' }
+        reasoningBuf += ev.text
+      } else if (ev.type === 'text') {
+        if (reasoningBuf) { collapsed.push({ kind: 'reasoning', text: reasoningBuf }); reasoningBuf = '' }
+        textBuf += ev.text
+      } else {
+        if (reasoningBuf) { collapsed.push({ kind: 'reasoning', text: reasoningBuf }); reasoningBuf = '' }
+        if (textBuf) { collapsed.push({ kind: 'text', text: textBuf }); textBuf = '' }
+        if (ev.type === 'tool-call') {
+          collapsed.push({ kind: 'tool-call', toolName: ev.toolName, args: ev.args })
+        } else if (ev.type === 'tool-result') {
+          collapsed.push({ kind: 'tool-result', toolName: ev.toolName, result: ev.result })
+        }
+      }
+    }
+    if (reasoningBuf) collapsed.push({ kind: 'reasoning', text: reasoningBuf })
+    if (textBuf) collapsed.push({ kind: 'text', text: textBuf })
+    return collapsed
+  }, [events])
+
+  if (!connected && events.length === 0) return null
+
+  return (
+    <div className="shrink-0 mx-4 mb-1">
+      <div className="rounded-md border border-border/20 bg-muted/20 p-2 space-y-1">
+        <div className="flex items-center gap-1.5">
+          <span className="relative flex size-1.5">
+            {connected && (
+              <span className="absolute inset-0 rounded-full bg-blue-400 animate-ping" style={{ animationDuration: '2s' }} />
+            )}
+            <span className={`relative inline-flex size-1.5 rounded-full ${connected ? 'bg-blue-400' : 'bg-muted-foreground/30'}`} />
+          </span>
+          <span className="text-[9px] text-muted-foreground/40 uppercase tracking-wider">Live Trace</span>
+        </div>
+        <div className="space-y-0.5 max-h-32 overflow-y-auto">
+          {items.map((item, i) => (
+            <LiveTraceItem key={i} item={item} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LiveTraceItem({ item }: { item: CollapsedTraceItem }) {
+  if (item.kind === 'reasoning') {
+    return (
+      <div className="flex items-start gap-1 px-1">
+        <Brain className="size-2.5 text-purple-400/50 shrink-0 mt-0.5" />
+        <p className="text-[9px] text-muted-foreground/40 leading-snug truncate">{item.text.slice(0, 120)}{item.text.length > 120 ? '\u2026' : ''}</p>
+      </div>
+    )
+  }
+  if (item.kind === 'text') {
+    return (
+      <div className="px-1">
+        <p className="text-[9px] text-foreground/40 leading-snug truncate">{item.text.slice(0, 120)}{item.text.length > 120 ? '\u2026' : ''}</p>
+      </div>
+    )
+  }
+  if (item.kind === 'tool-call') {
+    return (
+      <div className="flex items-center gap-1 px-1">
+        <Wrench className="size-2.5 text-blue-400/50 shrink-0" />
+        <Badge variant="outline" className="text-[8px] h-3 px-1">{item.toolName}</Badge>
+      </div>
+    )
+  }
+  if (item.kind === 'tool-result') {
+    return (
+      <div className="flex items-center gap-1 px-1">
+        <Check className="size-2 text-emerald-500/40" />
+        <span className="text-[8px] text-muted-foreground/30">{item.toolName}</span>
+      </div>
+    )
+  }
+  return null
 }

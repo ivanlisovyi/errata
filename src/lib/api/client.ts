@@ -51,6 +51,58 @@ export async function fetchStream(
 }
 
 /**
+ * Fetches an NDJSON event stream via GET and returns a ReadableStream of parsed ChatEvent objects.
+ */
+export async function fetchGetEventStream(path: string): Promise<ReadableStream<ChatEvent>> {
+  const res = await fetch(`${API_BASE}${path}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error(err.error ?? `API error: ${res.status}`)
+  }
+  if (!res.body) {
+    throw new Error('No response body')
+  }
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  return new ReadableStream<ChatEvent>({
+    async pull(controller) {
+      while (true) {
+        const newlineIdx = buffer.indexOf('\n')
+        if (newlineIdx !== -1) {
+          const line = buffer.slice(0, newlineIdx).trim()
+          buffer = buffer.slice(newlineIdx + 1)
+          if (line) {
+            try {
+              controller.enqueue(JSON.parse(line) as ChatEvent)
+            } catch {
+              // Skip malformed lines
+            }
+          }
+          return
+        }
+
+        const { done, value } = await reader.read()
+        if (done) {
+          const remaining = buffer.trim()
+          if (remaining) {
+            try {
+              controller.enqueue(JSON.parse(remaining) as ChatEvent)
+            } catch {
+              // Skip malformed
+            }
+          }
+          controller.close()
+          return
+        }
+        buffer += decoder.decode(value, { stream: true })
+      }
+    },
+  })
+}
+
+/**
  * Fetches an NDJSON event stream and returns a ReadableStream of parsed ChatEvent objects.
  */
 export async function fetchEventStream(

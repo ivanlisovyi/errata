@@ -43,13 +43,14 @@ export function VariationSwitcher({ storyId, sectionIndex, entry }: VariationSwi
           variant="ghost"
           size="sm"
           className="h-5 px-1.5 text-[10px] gap-1 text-muted-foreground/60 hover:text-muted-foreground"
+          data-component-id="variation-switcher-trigger"
         >
           <History className="size-3" />
           <span>{variationNumber}/{variationCount}</span>
           <ChevronDown className="size-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
+      <DropdownMenuContent align="start" className="w-64" data-component-id="variation-switcher-menu">
         <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-b border-border/50 mb-1">
           Variations
         </div>

@@ -10,6 +10,7 @@ export interface LibrarianAnalysis {
   fragmentId: string
   summaryUpdate: string
   mentionedCharacters: string[]
+  mentions?: Array<{ characterId: string; text: string }>
   contradictions: Array<{
     description: string
     fragmentIds: string[]
@@ -29,6 +30,10 @@ export interface LibrarianAnalysis {
     event: string
     position: 'before' | 'during' | 'after'
   }>
+  trace?: Array<{
+    type: string
+    [key: string]: unknown
+  }>
 }
 
 export interface LibrarianAnalysisSummary {
@@ -39,6 +44,7 @@ export interface LibrarianAnalysisSummary {
   suggestionCount: number
   pendingSuggestionCount: number
   timelineEventCount: number
+  hasTrace?: boolean
 }
 
 export interface LibrarianState {
@@ -116,6 +122,7 @@ export async function listAnalyses(
       suggestionCount: analysis.knowledgeSuggestions.length,
       pendingSuggestionCount: analysis.knowledgeSuggestions.filter((s) => !s.accepted).length,
       timelineEventCount: analysis.timelineEvents.length,
+      hasTrace: !!analysis.trace?.length,
     })
   }
 

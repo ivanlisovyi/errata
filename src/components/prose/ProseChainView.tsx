@@ -4,7 +4,7 @@ import { api, type Fragment } from '@/lib/api'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { StreamMarkdown } from '@/components/ui/stream-markdown'
 import { Loader2, Wand2 } from 'lucide-react'
-import { useQuickSwitch, useProseWidth, PROSE_WIDTH_VALUES } from '@/lib/theme'
+import { useQuickSwitch, useProseWidth, PROSE_WIDTH_VALUES, useCharacterMentions } from '@/lib/theme'
 import { ProseBlock } from './ProseBlock'
 import { InlineGenerationInput, type ThoughtStep } from './InlineGenerationInput'
 import { GenerationThoughts } from './GenerationThoughts'
@@ -40,6 +40,7 @@ export function ProseChainView({
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [quickSwitch] = useQuickSwitch()
   const [proseWidth] = useProseWidth()
+  const [mentionsEnabled] = useCharacterMentions()
   const queryClient = useQueryClient()
 
   // Co-locate both queries so they settle in the same component — prevents
@@ -202,6 +203,16 @@ export function ProseChainView({
     el?.scrollIntoView({ behavior: 'instant', block: 'start' })
   }, [])
 
+  const handleMentionClick = useCallback((fragmentId: string) => {
+    // Find the character fragment from the already-fetched prose fragments won't work;
+    // we need to fetch the character fragment directly
+    api.fragments.get(storyId, fragmentId).then(fragment => {
+      if (fragment) onSelectFragment(fragment)
+    }).catch(() => {
+      // Fragment may have been deleted
+    })
+  }, [storyId, onSelectFragment])
+
   const scrollToBottom = useCallback(() => {
     const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]')
     if (!viewport) return
@@ -226,23 +237,25 @@ export function ProseChainView({
                 onSelect={() => onSelectFragment(fragment)}
                 onDebugLog={onDebugLog}
                 quickSwitch={quickSwitch}
+                mentionsEnabled={mentionsEnabled}
+                onClickMention={handleMentionClick}
               />
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-center" data-component-id="prose-empty-state">
-              <p className="font-display text-xl italic text-muted-foreground/50 mb-3">
+            <div className="flex flex-col items-center justify-center py-20 text-center" data-component-id="prose-empty-state">
+              <p className="font-display text-2xl italic text-muted-foreground/40 mb-2">
                 The page awaits.
               </p>
-              <p className="text-sm text-muted-foreground/70 mb-6">
-                Write or generate your first passage below.
+              <p className="text-sm text-muted-foreground/50 mb-8 max-w-xs leading-relaxed">
+                Write your first passage below, or let the wizard help you set up your story.
               </p>
               {onLaunchWizard && (
                 <button
                   onClick={onLaunchWizard}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border/50 bg-card/50 text-sm text-muted-foreground/60 hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
+                  className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl border-2 border-primary/20 bg-primary/[0.04] text-sm font-medium text-primary/80 hover:text-primary hover:border-primary/40 hover:bg-primary/[0.08] transition-all duration-200"
                 >
-                  <Wand2 className="size-3.5" />
-                  <span>Use the story wizard to get started</span>
+                  <Wand2 className="size-4" />
+                  <span>Story Setup Wizard</span>
                 </button>
               )}
             </div>

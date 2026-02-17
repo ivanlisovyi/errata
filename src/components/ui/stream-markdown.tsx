@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, type ReactNode, Children, isValidElement, cloneElement } from 'react'
 import Markdown from 'react-markdown'
 
 type StreamMarkdownVariant = 'default' | 'prose'
@@ -8,6 +8,8 @@ interface StreamMarkdownProps {
   streaming?: boolean
   /** Typography variant. "prose" uses serif fonts for the reading experience. */
   variant?: StreamMarkdownVariant
+  /** Optional transform applied to text nodes (e.g. for character mention highlighting) */
+  textTransform?: (text: string) => ReactNode
 }
 
 const variantStyles: Record<StreamMarkdownVariant, {
@@ -61,14 +63,27 @@ const variantStyles: Record<StreamMarkdownVariant, {
   },
 }
 
+/** Recursively apply textTransform to string children in a React node tree */
+function processChildren(children: ReactNode, textTransform: (text: string) => ReactNode): ReactNode {
+  return Children.map(children, child => {
+    if (typeof child === 'string') {
+      return textTransform(child)
+    }
+    if (isValidElement(child) && child.props.children) {
+      return cloneElement(child, {}, processChildren(child.props.children, textTransform))
+    }
+    return child
+  })
+}
+
 /** Split text into paragraphs on double-newlines for lightweight streaming render */
-function StreamingText({ content, className }: { content: string; className: string }) {
+function StreamingText({ content, className, textTransform }: { content: string; className: string; textTransform?: (text: string) => ReactNode }) {
   const paragraphs = useMemo(() => content.split(/\n\n+/), [content])
   return (
     <>
       {paragraphs.map((p, i) => (
         <p key={i} className={className}>
-          {p}
+          {textTransform ? textTransform(p) : p}
         </p>
       ))}
     </>
@@ -88,15 +103,19 @@ export const StreamMarkdown = memo(function StreamMarkdown({
   content,
   streaming,
   variant = 'default',
+  textTransform,
 }: StreamMarkdownProps) {
   const s = variantStyles[variant]
+  const tx = textTransform
+    ? (children: ReactNode) => processChildren(children, textTransform)
+    : (children: ReactNode) => children
 
   // During streaming: render as plain text paragraphs (fast, O(n))
   // After streaming: render through markdown parser (once, O(n))
   if (streaming) {
     return (
       <span className={`stream-markdown ${s.root}`}>
-        <StreamingText content={content} className={s.streamingP} />
+        <StreamingText content={content} className={s.streamingP} textTransform={textTransform} />
         <span className={s.cursor} />
       </span>
     )
@@ -106,12 +125,12 @@ export const StreamMarkdown = memo(function StreamMarkdown({
     <span className={`stream-markdown ${s.root}`}>
       <Markdown
         components={{
-          p: ({ children }) => <p className={s.p}>{children}</p>,
-          strong: ({ children }) => <strong className={s.strong}>{children}</strong>,
-          em: ({ children }) => <em className={s.em}>{children}</em>,
+          p: ({ children }) => <p className={s.p}>{tx(children)}</p>,
+          strong: ({ children }) => <strong className={s.strong}>{tx(children)}</strong>,
+          em: ({ children }) => <em className={s.em}>{tx(children)}</em>,
           ul: ({ children }) => <ul className={s.ul}>{children}</ul>,
           ol: ({ children }) => <ol className={s.ol}>{children}</ol>,
-          li: ({ children }) => <li className={s.li}>{children}</li>,
+          li: ({ children }) => <li className={s.li}>{tx(children)}</li>,
           code: ({ className, children }) => {
             const isBlock = className?.includes('language-')
             if (isBlock) {
@@ -120,11 +139,11 @@ export const StreamMarkdown = memo(function StreamMarkdown({
             return <code className={s.codeInline}>{children}</code>
           },
           pre: ({ children }) => <>{children}</>,
-          h1: ({ children }) => <p className={s.heading}>{children}</p>,
-          h2: ({ children }) => <p className={s.heading}>{children}</p>,
-          h3: ({ children }) => <p className={s.heading}>{children}</p>,
+          h1: ({ children }) => <p className={s.heading}>{tx(children)}</p>,
+          h2: ({ children }) => <p className={s.heading}>{tx(children)}</p>,
+          h3: ({ children }) => <p className={s.heading}>{tx(children)}</p>,
           blockquote: ({ children }) => (
-            <blockquote className={s.blockquote}>{children}</blockquote>
+            <blockquote className={s.blockquote}>{tx(children)}</blockquote>
           ),
           hr: () => <hr className={s.hr} />,
         }}

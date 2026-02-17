@@ -10,18 +10,22 @@ import { getState, getAnalysis, listAnalyses } from '@/server/librarian/storage'
 import { initProseChain, addProseSection } from '@/server/fragments/prose-chain'
 import type { StoryMeta, Fragment } from '@/server/fragments/schema'
 
-const { mockAgentGenerate } = vi.hoisted(() => ({
-  mockAgentGenerate: vi.fn(),
+const { mockAgentStream } = vi.hoisted(() => ({
+  mockAgentStream: vi.fn(),
 }))
 
-// Mock the AI SDK ToolLoopAgent
+// Mock the AI SDK ToolLoopAgent — now uses stream() instead of generate()
 vi.mock('ai', async () => {
   const actual = await vi.importActual('ai')
   return {
     ...actual,
     ToolLoopAgent: class {
-      generate(args: unknown) {
-        return mockAgentGenerate(args)
+      tools: Record<string, { execute: (args: unknown) => Promise<unknown> }>
+      constructor(opts: { tools?: Record<string, unknown> } = {}) {
+        this.tools = (opts.tools ?? {}) as Record<string, { execute: (args: unknown) => Promise<unknown> }>
+      }
+      async stream(args: unknown) {
+        return mockAgentStream(args, this.tools)
       }
     },
   }
@@ -93,21 +97,30 @@ function makeFragment(
   }
 }
 
-function mockGenerateTextResponse(json: Record<string, unknown>) {
-  mockAgentGenerate.mockResolvedValue({
-    output: json,
-    text: JSON.stringify(json),
-    finishReason: 'stop',
-    usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150 },
-    response: { id: 'test', modelId: 'test', timestamp: new Date(), headers: {} },
-    request: {},
-    warnings: [],
-    files: [],
-    sources: [],
-    steps: [],
-    toolCalls: [],
-    toolResults: [],
-  } as any)
+/**
+ * Creates a mock stream response that yields tool-call events.
+ * The tool execute functions from the real analysis tools will run.
+ */
+function mockStreamWithToolCalls(toolCalls: Array<{ toolName: string; args: Record<string, unknown> }>) {
+  mockAgentStream.mockImplementation(async (_args: unknown, tools: Record<string, { execute: (args: unknown) => Promise<unknown> }>) => {
+    return {
+      fullStream: (async function* () {
+        let callId = 0
+        for (const tc of toolCalls) {
+          const id = `call-${callId++}`
+          yield { type: 'tool-call' as const, toolCallId: id, toolName: tc.toolName, input: tc.args }
+          // Actually execute the tool so the collector gets populated
+          const toolDef = tools[tc.toolName]
+          let output: unknown = { ok: true }
+          if (toolDef?.execute) {
+            output = await toolDef.execute(tc.args)
+          }
+          yield { type: 'tool-result' as const, toolCallId: id, toolName: tc.toolName, output }
+        }
+        yield { type: 'finish' as const, finishReason: 'stop' }
+      })(),
+    }
+  })
 }
 
 // Helper to set up prose chain for tests
@@ -144,13 +157,9 @@ describe('librarian agent', () => {
     }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'The hero ventured into the dark forest.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    })
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'The hero ventured into the dark forest.' } },
+    ])
 
     await runLibrarian(dataDir, storyId, 'pr-0001')
 
@@ -165,13 +174,9 @@ describe('librarian agent', () => {
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'The story begins.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    })
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'The story begins.' } },
+    ])
 
     await runLibrarian(dataDir, storyId, 'pr-0001')
 
@@ -193,13 +198,10 @@ describe('librarian agent', () => {
     }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'Alice confronted a dragon.',
-      mentionedCharacters: ['ch-0001'],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    })
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Alice confronted a dragon.' } },
+      { toolName: 'reportMentions', args: { mentions: [{ characterId: 'ch-0001', text: 'Alice' }] } },
+    ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.mentionedCharacters).toEqual(['ch-0001'])
@@ -228,23 +230,17 @@ describe('librarian agent', () => {
     await setupProseChain(dataDir, storyId, ['pr-0001', 'pr-0002'])
 
     // First run
-    mockGenerateTextResponse({
-      summaryUpdate: 'Alice entered the castle.',
-      mentionedCharacters: ['ch-0001'],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    })
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Alice entered the castle.' } },
+      { toolName: 'reportMentions', args: { mentions: [{ characterId: 'ch-0001', text: 'Alice' }] } },
+    ])
     await runLibrarian(dataDir, storyId, 'pr-0001')
 
     // Second run
-    mockGenerateTextResponse({
-      summaryUpdate: 'Alice found the treasure room.',
-      mentionedCharacters: ['ch-0001'],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    })
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Alice found the treasure room.' } },
+      { toolName: 'reportMentions', args: { mentions: [{ characterId: 'ch-0001', text: 'Alice' }] } },
+    ])
     await runLibrarian(dataDir, storyId, 'pr-0002')
 
     const state = await getState(dataDir, storyId)
@@ -260,18 +256,18 @@ describe('librarian agent', () => {
     }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'Alice stared at the stranger.',
-      mentionedCharacters: [],
-      contradictions: [
-        {
-          description: 'Alice was described as having blue eyes, but new prose says green eyes.',
-          fragmentIds: ['pr-0001'],
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Alice stared at the stranger.' } },
+      {
+        toolName: 'reportContradictions',
+        args: {
+          contradictions: [{
+            description: 'Alice was described as having blue eyes, but new prose says green eyes.',
+            fragmentIds: ['pr-0001'],
+          }],
         },
-      ],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    })
+      },
+    ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.contradictions).toHaveLength(1)
@@ -286,20 +282,20 @@ describe('librarian agent', () => {
     }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'An ancient city called Valdris was revealed.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [
-        {
-          type: 'knowledge',
-          name: 'Valdris',
-          description: 'Ancient mountain city',
-          content: 'Valdris is an ancient city located atop a mountain.',
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'An ancient city called Valdris was revealed.' } },
+      {
+        toolName: 'suggestKnowledge',
+        args: {
+          suggestions: [{
+            type: 'knowledge',
+            name: 'Valdris',
+            description: 'Ancient mountain city',
+            content: 'Valdris is an ancient city located atop a mountain.',
+          }],
         },
-      ],
-      timelineEvents: [],
-    })
+      },
+    ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.knowledgeSuggestions).toHaveLength(1)
@@ -324,20 +320,20 @@ describe('librarian agent', () => {
     }))
     await setupProseChain(dataDir, storyId, ['pr-0001', 'pr-0002'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'Valdris appears in old records.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [
-        {
-          type: 'knowledge',
-          name: 'Valdris',
-          description: 'Ancient city',
-          content: 'Valdris is an ancient mountain city.',
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Valdris appears in old records.' } },
+      {
+        toolName: 'suggestKnowledge',
+        args: {
+          suggestions: [{
+            type: 'knowledge',
+            name: 'Valdris',
+            description: 'Ancient city',
+            content: 'Valdris is an ancient mountain city.',
+          }],
         },
-      ],
-      timelineEvents: [],
-    })
+      },
+    ])
 
     const first = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(first.knowledgeSuggestions[0].accepted).toBe(true)
@@ -345,20 +341,20 @@ describe('librarian agent', () => {
     const createdId = first.knowledgeSuggestions[0].createdFragmentId
     expect(createdId).toBeTruthy()
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'Valdris defenses were revealed.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [
-        {
-          type: 'knowledge',
-          name: 'Valdris',
-          description: 'Ancient defended city',
-          content: 'Valdris is an ancient mountain city guarded by stone sentinels.',
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Valdris defenses were revealed.' } },
+      {
+        toolName: 'suggestKnowledge',
+        args: {
+          suggestions: [{
+            type: 'knowledge',
+            name: 'Valdris',
+            description: 'Ancient defended city',
+            content: 'Valdris is an ancient mountain city guarded by stone sentinels.',
+          }],
         },
-      ],
-      timelineEvents: [],
-    })
+      },
+    ])
 
     const second = await runLibrarian(dataDir, storyId, 'pr-0002')
     expect(second.knowledgeSuggestions[0].accepted).toBe(true)
@@ -392,21 +388,21 @@ describe('librarian agent', () => {
     }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'Valdris defenses were revealed.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [
-        {
-          type: 'knowledge',
-          targetFragmentId: 'kn-0001',
-          name: 'Valdris',
-          description: 'Ancient defended city',
-          content: 'Valdris is an ancient city defended by stone sentinels.',
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Valdris defenses were revealed.' } },
+      {
+        toolName: 'suggestKnowledge',
+        args: {
+          suggestions: [{
+            type: 'knowledge',
+            targetFragmentId: 'kn-0001',
+            name: 'Valdris',
+            description: 'Ancient defended city',
+            content: 'Valdris is an ancient city defended by stone sentinels.',
+          }],
         },
-      ],
-      timelineEvents: [],
-    })
+      },
+    ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.knowledgeSuggestions[0].accepted).toBe(true)
@@ -427,16 +423,18 @@ describe('librarian agent', () => {
     }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'The hero defeated the dragon and the village celebrated.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [
-        { event: 'Hero defeated the dragon', position: 'during' },
-        { event: 'Village celebration', position: 'after' },
-      ],
-    })
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'The hero defeated the dragon and the village celebrated.' } },
+      {
+        toolName: 'reportTimeline',
+        args: {
+          events: [
+            { event: 'Hero defeated the dragon', position: 'during' },
+            { event: 'Village celebration', position: 'after' },
+          ],
+        },
+      },
+    ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.timelineEvents).toHaveLength(2)
@@ -447,18 +445,14 @@ describe('librarian agent', () => {
     expect(state.timeline[0].fragmentId).toBe('pr-0001')
   })
 
-  it('saves the analysis result', async () => {
+  it('saves the analysis result with trace', async () => {
     await createStory(dataDir, makeStory())
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockGenerateTextResponse({
-      summaryUpdate: 'Something happened.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    })
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Something happened.' } },
+    ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
 
@@ -467,64 +461,30 @@ describe('librarian agent', () => {
     expect(loaded).toBeDefined()
     expect(loaded!.fragmentId).toBe('pr-0001')
     expect(loaded!.summaryUpdate).toBe('Something happened.')
+    expect(loaded!.trace).toBeDefined()
+    expect(loaded!.trace!.length).toBeGreaterThan(0)
 
-    // Verify it appears in list
+    // Verify it appears in list with hasTrace
     const summaries = await listAnalyses(dataDir, storyId)
     expect(summaries).toHaveLength(1)
     expect(summaries[0].id).toBe(analysis.id)
+    expect(summaries[0].hasTrace).toBe(true)
   })
 
-  it('handles malformed LLM JSON gracefully', async () => {
+  it('handles LLM stream error gracefully', async () => {
     await createStory(dataDir, makeStory())
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockAgentGenerate.mockResolvedValue({
-      text: 'this is not json',
-      finishReason: 'stop',
-      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
-      response: { id: 'test', modelId: 'test', timestamp: new Date(), headers: {} },
-      request: {},
-      warnings: [],
-      files: [],
-      sources: [],
-      steps: [],
-      toolCalls: [],
-      toolResults: [],
-    } as any)
+    mockAgentStream.mockImplementation(async () => {
+      return {
+        fullStream: (async function* () {
+          throw new Error('LLM connection failed')
+        })(),
+      }
+    })
 
-    await expect(runLibrarian(dataDir, storyId, 'pr-0001')).rejects.toThrow()
-  })
-
-  it('handles JSON wrapped in markdown fences', async () => {
-    await createStory(dataDir, makeStory())
-    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
-    await setupProseChain(dataDir, storyId, ['pr-0001'])
-
-    const parsed = {
-      summaryUpdate: 'Fenced response.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
-    }
-
-    mockAgentGenerate.mockResolvedValue({
-      text: `\`\`\`json\n${JSON.stringify(parsed)}\n\`\`\``,
-      finishReason: 'stop',
-      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
-      response: { id: 'test', modelId: 'test', timestamp: new Date(), headers: {} },
-      request: {},
-      warnings: [],
-      files: [],
-      sources: [],
-      steps: [],
-      toolCalls: [],
-      toolResults: [],
-    } as any)
-
-    const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
-    expect(analysis.summaryUpdate).toBe('Fenced response.')
+    await expect(runLibrarian(dataDir, storyId, 'pr-0001')).rejects.toThrow('LLM connection failed')
   })
 
   it('throws when story does not exist', async () => {
@@ -541,81 +501,37 @@ describe('librarian agent', () => {
     )
   })
 
-  it('parses JSON when response includes extra surrounding text', async () => {
+  it('falls back to text when no updateSummary tool is called', async () => {
     await createStory(dataDir, makeStory())
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
     await setupProseChain(dataDir, storyId, ['pr-0001'])
 
-    mockAgentGenerate.mockResolvedValue({
-      text: `Here is the analysis:\n${JSON.stringify({
-        summaryUpdate: 'Fallback worked.',
-        mentionedCharacters: [],
-        contradictions: [],
-        knowledgeSuggestions: [],
-        timelineEvents: [],
-      })}\nDone.`,
-      finishReason: 'stop',
-      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
-      response: { id: 'test', modelId: 'test', timestamp: new Date(), headers: {} },
-      request: {},
-      warnings: [],
-      files: [],
-      sources: [],
-      steps: [],
-      toolCalls: [],
-      toolResults: [],
-    } as any)
-
-    const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
-    expect(analysis.summaryUpdate).toBe('Fallback worked.')
-    expect(mockAgentGenerate).toHaveBeenCalledTimes(1)
-  })
-
-  it('throws when generated JSON does not match schema', async () => {
-    await createStory(dataDir, makeStory())
-    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
-    await setupProseChain(dataDir, storyId, ['pr-0001'])
-
-    mockAgentGenerate.mockResolvedValue({
-      text: JSON.stringify({
-        summaryUpdate: 123,
-        mentionedCharacters: [],
-        contradictions: [],
-        knowledgeSuggestions: [],
-        timelineEvents: [],
-      }),
-      finishReason: 'stop',
-      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
-      response: { id: 'test', modelId: 'test', timestamp: new Date(), headers: {} },
-      request: {},
-      warnings: [],
-      files: [],
-      sources: [],
-      steps: [],
-      toolCalls: [],
-      toolResults: [],
-    } as any)
-
-    await expect(runLibrarian(dataDir, storyId, 'pr-0001')).rejects.toThrow()
-  })
-
-  it('includes json instruction in prompt', async () => {
-    await createStory(dataDir, makeStory())
-    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
-    await setupProseChain(dataDir, storyId, ['pr-0001'])
-
-    mockGenerateTextResponse({
-      summaryUpdate: 'Keyword prompt worked.',
-      mentionedCharacters: [],
-      contradictions: [],
-      knowledgeSuggestions: [],
-      timelineEvents: [],
+    // Simulate LLM producing text instead of calling tools
+    mockAgentStream.mockImplementation(async () => {
+      return {
+        fullStream: (async function* () {
+          yield { type: 'text-delta' as const, text: 'This is the summary from text.' }
+          yield { type: 'finish' as const, finishReason: 'stop' }
+        })(),
+      }
     })
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
-    expect(analysis.summaryUpdate).toBe('Keyword prompt worked.')
-    expect(mockAgentGenerate).toHaveBeenCalledTimes(1)
-    const call = mockAgentGenerate.mock.calls[0]?.[0] as { prompt?: string } | undefined
+    expect(analysis.summaryUpdate).toBe('This is the summary from text.')
+  })
+
+  it('uses prompt with correct structure', async () => {
+    await createStory(dataDir, makeStory())
+    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
+    await setupProseChain(dataDir, storyId, ['pr-0001'])
+
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Prompt check.' } },
+    ])
+
+    await runLibrarian(dataDir, storyId, 'pr-0001')
+    expect(mockAgentStream).toHaveBeenCalledTimes(1)
+    const call = mockAgentStream.mock.calls[0]?.[0] as { prompt?: string } | undefined
     expect(typeof call?.prompt).toBe('string')
   })
 })

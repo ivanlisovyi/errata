@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api, type Fragment, type ProseChainEntry } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,7 @@ import { StreamMarkdown } from '@/components/ui/stream-markdown'
 import { ChevronRail } from './ChevronRail'
 import { GenerationThoughts } from './GenerationThoughts'
 import { type ThoughtStep } from './InlineGenerationInput'
+import { buildAnnotationHighlighter, type Annotation } from '@/lib/character-mentions'
 import { RefreshCw, Sparkles, Undo2, PenLine, Bug, Trash2 } from 'lucide-react'
 
 interface ProseBlockProps {
@@ -20,6 +21,8 @@ interface ProseBlockProps {
   onSelect: () => void
   onDebugLog?: (logId: string) => void
   quickSwitch: boolean
+  mentionsEnabled?: boolean
+  onClickMention?: (fragmentId: string) => void
 }
 
 export function ProseBlock({
@@ -33,6 +36,8 @@ export function ProseBlock({
   onSelect,
   onDebugLog,
   quickSwitch,
+  mentionsEnabled,
+  onClickMention,
 }: ProseBlockProps) {
   // isFirst/isLast are part of the interface for future use
   void isFirst
@@ -280,6 +285,13 @@ export function ProseBlock({
     undoTimerRef.current = setTimeout(() => setShowUndo(false), 10000)
   }
 
+  // Build mention highlighter from annotations
+  const annotations = fragment.meta?.annotations as Annotation[] | undefined
+  const textTransform = useMemo(() => {
+    if (!mentionsEnabled || !annotations || !onClickMention) return undefined
+    return buildAnnotationHighlighter(annotations, onClickMention) ?? undefined
+  }, [mentionsEnabled, annotations, onClickMention])
+
   if (editing) {
     return (
       <div className="mb-6">
@@ -398,13 +410,14 @@ export function ProseBlock({
           }
           streaming={isStreamingAction}
           variant="prose"
+          textTransform={!isStreamingAction && !streamedActionText ? textTransform : undefined}
         />
 
       </div>
 
       {/* Action panel — sticky to bottom of scroll area, contained to prose column */}
       {(showActions || actionMode) && !isStreamingAction && (
-        <div className="sticky bottom-4 z-10 flex justify-center py-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="sticky bottom-4 z-10 flex justify-center py-2 animate-in fade-in slide-in-from-bottom-2 duration-200" data-component-id="prose-block-actions">
           <div className="flex flex-col items-center rounded-2xl border border-border/50 bg-popover/95 backdrop-blur-md shadow-2xl shadow-black/10 overflow-hidden min-w-0">
             {/* Info row — ID, prompt (clickable to re-run), variation, debug */}
             <div className="flex items-center gap-2 px-3 py-1.5 min-w-0 w-full">

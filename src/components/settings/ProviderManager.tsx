@@ -4,6 +4,7 @@ import { api, type ProviderConfigSafe } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Plus, Trash2, Star, Pencil, RefreshCw, Loader2, X, ArrowLeft, Minus, Zap, Copy } from 'lucide-react'
+import { componentId } from '@/lib/dom-ids'
 
 const PRESETS = {
   deepseek: { name: 'DeepSeek', baseURL: 'https://api.deepseek.com', defaultModel: 'deepseek-chat' },
@@ -57,7 +58,7 @@ export function ProviderList({ onManage }: { onManage: () => void }) {
           </div>
         ))
       )}
-      <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 w-full" onClick={onManage}>
+      <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 w-full" onClick={onManage} data-component-id="provider-list-manage">
         Manage Providers
       </Button>
     </div>
@@ -244,12 +245,12 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
   const labelClass = "text-xs font-medium text-muted-foreground/70 mb-1.5 block"
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-component-id="provider-panel-root">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <div className="flex items-center gap-2">
           {form && (
-            <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={closeForm}>
+            <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={closeForm} data-component-id="provider-panel-back">
               <ArrowLeft className="size-4" />
             </Button>
           )}
@@ -258,14 +259,14 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
             {form ? (editingId ? 'Edit' : 'Add New') : 'LLM Configuration'}
           </span>
         </div>
-        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={onClose} data-component-id="provider-panel-close">
           <X className="size-4" />
         </Button>
       </div>
 
       {form ? (
         /* ─── Add / Edit Form ─── */
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1" data-component-id="provider-form-scroll">
           <div className="max-w-2xl mx-auto p-6 space-y-5">
             {/* Preset selector (only for new providers) */}
             {!editingId && (
@@ -275,6 +276,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                   value={form.preset}
                   onChange={(e) => handlePresetChange(e.target.value as PresetKey)}
                   className={inputClass}
+                  data-component-id="provider-form-preset"
                 >
                   <option value="deepseek">DeepSeek</option>
                   <option value="openai">OpenAI</option>
@@ -439,6 +441,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
               <Button
                 onClick={handleSubmit}
                 disabled={!canSubmit || isSaving}
+                data-component-id="provider-form-submit"
               >
                 {isSaving ? 'Saving...' : editingId ? 'Save Changes' : 'Add Provider'}
               </Button>
@@ -447,11 +450,12 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                 onClick={handleTestConnection}
                 disabled={testing || !form.defaultModel}
                 className="gap-1.5"
+                data-component-id="provider-form-test"
               >
                 {testing ? <Loader2 className="size-3 animate-spin" /> : <Zap className="size-3" />}
                 Test
               </Button>
-              <Button variant="outline" onClick={closeForm}>Cancel</Button>
+              <Button variant="outline" onClick={closeForm} data-component-id="provider-form-cancel">Cancel</Button>
             </div>
             {testResult && (
               <div className={`text-sm rounded-md p-3 mt-1 ${testResult.ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-destructive/10 text-destructive'}`}>

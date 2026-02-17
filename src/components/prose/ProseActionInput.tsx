@@ -66,7 +66,7 @@ export function ProseActionInput({
     : 'How to refine...'
 
   return (
-    <div className="mt-3 rounded-lg border border-primary/15 bg-card/30 p-4">
+    <div className="mt-3 rounded-lg border border-primary/15 bg-card/30 p-4" data-component-id="prose-action-root">
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
@@ -83,6 +83,7 @@ export function ProseActionInput({
             handleSubmit()
           }
         }}
+        data-component-id="prose-action-input"
       />
       {error && (
         <p className="text-sm text-destructive mt-2">{error}</p>
@@ -92,10 +93,10 @@ export function ProseActionInput({
           Esc to cancel &middot; Ctrl+Enter to submit
         </span>
         <div className="flex gap-1.5">
-          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onCancel} disabled={isLoading}>
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onCancel} disabled={isLoading} data-component-id="prose-action-cancel">
             Cancel
           </Button>
-          <Button size="sm" className="h-7 text-xs" onClick={handleSubmit} disabled={!input.trim() || isLoading}>
+          <Button size="sm" className="h-7 text-xs" onClick={handleSubmit} disabled={!input.trim() || isLoading} data-component-id="prose-action-submit">
             {isLoading
               ? (mode === 'regenerate' ? 'Regenerating...' : 'Refining...')
               : (mode === 'regenerate' ? 'Regenerate' : 'Refine')

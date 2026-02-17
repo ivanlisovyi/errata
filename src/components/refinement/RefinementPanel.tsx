@@ -71,14 +71,14 @@ export function RefinementPanel({
   }, [instructions, isRefining, storyId, fragmentId, queryClient, onComplete])
 
   return (
-    <div className="border border-border/40 rounded-lg bg-card/30">
+    <div className="border border-border/40 rounded-lg bg-card/30" data-component-id="refinement-root">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
         <div className="flex items-center gap-1.5 text-xs">
           <Sparkles className="size-3 text-primary/70" />
           <span className="font-medium">Refine</span>
           <span className="text-muted-foreground/50 truncate max-w-[150px]">{fragmentName}</span>
         </div>
-        <Button size="icon" variant="ghost" className="size-5 text-muted-foreground/50" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="size-5 text-muted-foreground/50" onClick={onClose} data-component-id="refinement-close">
           <X className="size-3" />
         </Button>
       </div>
@@ -98,12 +98,14 @@ export function RefinementPanel({
                   handleRefine()
                 }
               }}
+              data-component-id="refinement-input"
             />
             <div className="flex items-center justify-between">
               <Button
                 size="sm"
                 className="h-7 text-xs gap-1.5"
                 onClick={handleRefine}
+                data-component-id="refinement-submit"
               >
                 <Sparkles className="size-3" />
                 Refine
@@ -131,6 +133,7 @@ export function RefinementPanel({
             variant="outline"
             className="h-7 text-xs gap-1.5"
             onClick={onClose}
+            data-component-id="refinement-stop"
           >
             <Square className="size-3" />
             Cancel
@@ -148,7 +151,7 @@ export function RefinementPanel({
         {done && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-primary/70">Fragment updated</span>
-            <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={onClose}>
+            <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={onClose} data-component-id="refinement-done">
               Close
             </Button>
           </div>

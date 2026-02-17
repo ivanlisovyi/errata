@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type StoryMeta, type GlobalConfigSafe } from '@/lib/api'
-import { useTheme, useQuickSwitch, useProseWidth, useProseFontSize, PROSE_FONT_SIZE_LABELS, useFontPreferences, getActiveFont, FONT_CATALOGUE, type FontRole, type ProseWidth, type ProseFontSize } from '@/lib/theme'
+import { useTheme, useQuickSwitch, useCharacterMentions, useProseWidth, useProseFontSize, PROSE_FONT_SIZE_LABELS, useFontPreferences, getActiveFont, FONT_CATALOGUE, type FontRole, type ProseWidth, type ProseFontSize } from '@/lib/theme'
 import { Settings2, ChevronRight, ChevronDown, ExternalLink, Eye, EyeOff, Puzzle, Wrench, RotateCcw, CircleHelp } from 'lucide-react'
 import { useHelp } from '@/hooks/use-help'
 
@@ -221,6 +221,7 @@ export function SettingsPanel({
   const { openHelp } = useHelp()
   const { theme, setTheme } = useTheme()
   const [quickSwitch, setQuickSwitch] = useQuickSwitch()
+  const [characterMentions, setCharacterMentions] = useCharacterMentions()
   const [proseWidth, setProseWidth] = useProseWidth()
   const [proseFontSize, setProseFontSize] = useProseFontSize()
   const [fontPrefs, setFont, resetFonts] = useFontPreferences()
@@ -255,7 +256,7 @@ export function SettingsPanel({
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4" data-component-id="settings-panel-root">
       {/* Appearance */}
       <div>
         <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-2 block">Appearance</label>
@@ -272,6 +273,9 @@ export function SettingsPanel({
           </SettingRow>
           <SettingRow label="Quick switch" description="Show chevrons to swap between variations">
             <ToggleSwitch on={quickSwitch} onToggle={() => setQuickSwitch(!quickSwitch)} label="Toggle quick switch" />
+          </SettingRow>
+          <SettingRow label="Character mentions" description="Highlight character names in prose">
+            <ToggleSwitch on={characterMentions} onToggle={() => setCharacterMentions(!characterMentions)} label="Toggle character mentions" />
           </SettingRow>
           <SettingRow label="Prose width" description="Reading column width">
             <SegmentedControl<ProseWidth>
@@ -452,11 +456,12 @@ export function SettingsPanel({
 
       {/* Built-in Tools — collapsible sub-panel */}
       <div>
-        <button
-          type="button"
-          onClick={() => setToolsOpen(!toolsOpen)}
-          className="w-full flex items-center justify-between gap-2 rounded-lg border border-border/30 px-3 py-2.5 hover:bg-accent/20 transition-colors"
-        >
+          <button
+            type="button"
+            onClick={() => setToolsOpen(!toolsOpen)}
+            className="w-full flex items-center justify-between gap-2 rounded-lg border border-border/30 px-3 py-2.5 hover:bg-accent/20 transition-colors"
+            data-component-id="settings-tools-toggle"
+          >
           <div className="flex items-center gap-2 min-w-0">
             <Wrench className="size-3.5 text-muted-foreground/40 shrink-0" />
             <div className="text-left min-w-0">
@@ -492,6 +497,7 @@ export function SettingsPanel({
                 className="text-[10px] text-muted-foreground/30 hover:text-foreground/60 transition-colors"
                 onClick={() => updateMutation.mutate({ enabledBuiltinTools: [] })}
                 disabled={updateMutation.isPending || enabledBuiltinTools.length === 0}
+                data-component-id="settings-tools-disable-all"
               >
                 Disable all
               </button>
@@ -545,6 +551,7 @@ export function SettingsPanel({
             type="button"
             onClick={onManageProviders}
             className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/20 transition-colors rounded-b-lg"
+            data-component-id="settings-manage-providers"
           >
             <span className="flex items-center gap-1.5">
               <Settings2 className="size-3" />

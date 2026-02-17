@@ -100,7 +100,7 @@ function seededRng(seed: number) {
   }
 }
 
-function hashString(str: string): number {
+export function hashString(str: string): number {
   let h = 0
   for (let i = 0; i < str.length; i++) {
     h = (h << 5) - h + str.charCodeAt(i)
@@ -190,6 +190,8 @@ function diamondPoints(cx: number, cy: number, r: number): string {
 }
 
 export { hexagonPoints, diamondPoints }
+
+export const CHARACTER_MENTION_COLORS = TYPE_PALETTES.character.colors
 
 export function resolveFragmentVisual(fragment: Fragment, mediaById: Map<string, Fragment>): {
   imageUrl: string | null

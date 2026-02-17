@@ -78,6 +78,7 @@ export interface LibrarianAnalysisSummary {
   suggestionCount: number
   pendingSuggestionCount: number
   timelineEventCount: number
+  hasTrace?: boolean
 }
 
 export interface LibrarianAnalysis {
@@ -86,6 +87,7 @@ export interface LibrarianAnalysis {
   fragmentId: string
   summaryUpdate: string
   mentionedCharacters: string[]
+  mentions?: Array<{ characterId: string; text: string }>
   contradictions: Array<{
     description: string
     fragmentIds: string[]
@@ -104,6 +106,10 @@ export interface LibrarianAnalysis {
   timelineEvents: Array<{
     event: string
     position: 'before' | 'during' | 'after'
+  }>
+  trace?: Array<{
+    type: string
+    [key: string]: unknown
   }>
 }
 

@@ -24,7 +24,7 @@ export function BlockPreviewDialog({ storyId, open, onOpenChange }: BlockPreview
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[80vh] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-[900px] max-h-[80vh] flex flex-col p-0 gap-0" data-component-id="block-preview-dialog">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="font-display text-lg flex items-center gap-2.5">
             Context Preview

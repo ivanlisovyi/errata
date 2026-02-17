@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useMemo } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { componentId } from '@/lib/dom-ids'
 
 interface BlockContentViewProps {
   messages: Array<{ role: string; content: string }>
@@ -63,9 +64,9 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
   }
 
   return (
-    <div className={cn('flex flex-1 min-h-0', className)}>
+    <div className={cn('flex flex-1 min-h-0', className)} data-component-id="block-content-root">
       {/* Left nav */}
-      <div className="w-[180px] shrink-0 border-r border-border/30 overflow-y-auto py-3 px-2">
+      <div className="w-[180px] shrink-0 border-r border-border/30 overflow-y-auto py-3 px-2" data-component-id="block-content-nav">
         {navGroups.map((group) => (
           <div key={group.role} className="mb-3 last:mb-0">
             <div className="flex items-center gap-1.5 px-2 mb-1">
@@ -75,26 +76,27 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
               </span>
             </div>
             {group.blocks.map((block) => (
-              <button
-                key={block.id}
-                className={cn(
-                  'w-full text-left px-2 py-1 rounded-md text-[11px] truncate transition-colors duration-100',
-                  activeBlockId === block.id
-                    ? 'bg-accent/50 text-foreground font-medium'
-                    : 'text-muted-foreground/60 hover:text-foreground/80 hover:bg-accent/25',
-                )}
-                onClick={() => scrollToBlock(block.id)}
-                title={block.name}
-              >
-                {block.name}
-              </button>
+            <button
+              key={block.id}
+              className={cn(
+                'w-full text-left px-2 py-1 rounded-md text-[11px] truncate transition-colors duration-100',
+                activeBlockId === block.id
+                  ? 'bg-accent/50 text-foreground font-medium'
+                  : 'text-muted-foreground/60 hover:text-foreground/80 hover:bg-accent/25',
+              )}
+              onClick={() => scrollToBlock(block.id)}
+              title={block.name}
+              data-component-id={componentId('block-content-nav', block.id)}
+            >
+              {block.name}
+            </button>
             ))}
           </div>
         ))}
       </div>
 
       {/* Right content */}
-      <ScrollArea className="flex-1 min-w-0">
+      <ScrollArea className="flex-1 min-w-0" data-component-id="block-content-scroll">
         <div ref={contentRef} className="p-4 space-y-2">
           {segments.map((seg) => (
             <div

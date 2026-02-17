@@ -80,7 +80,7 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
   }, [])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-component-id="generation-panel-root">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <h2 className="font-display text-lg">Generate</h2>
         <div className="flex gap-1.5">
@@ -89,12 +89,13 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
             variant={showDebug ? 'secondary' : 'ghost'}
             className="h-7 text-xs gap-1"
             onClick={() => setShowDebug(!showDebug)}
+            data-component-id="generation-debug-toggle"
           >
             <Bug className="size-3" />
             Debug
           </Button>
           {onBack && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={onBack}>
+            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={onBack} data-component-id="generation-back">
               <ArrowLeft className="size-3" />
               Back
             </Button>
@@ -112,7 +113,7 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
           {/* Streaming output area */}
           {streamedText && (
             <>
-              <div ref={outputRef} className="flex-1 overflow-auto px-6 py-6">
+              <div ref={outputRef} className="flex-1 overflow-auto px-6 py-6" data-component-id="generation-output">
                 <div className="max-w-[38rem] mx-auto">
                   <StreamMarkdown content={streamedText} streaming={isGenerating} variant="prose" />
                 </div>
@@ -141,11 +142,12 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
                   handleGenerate(true)
                 }
               }}
+              data-component-id="generation-input"
             />
             <div className="flex items-center justify-between">
               <div className="flex gap-1.5">
                 {isGenerating ? (
-                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={handleStop}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={handleStop} data-component-id="generation-stop">
                     <Square className="size-3" />
                     Stop
                   </Button>
@@ -156,6 +158,7 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
                       className="h-7 text-xs gap-1.5"
                       onClick={() => handleGenerate(true)}
                       disabled={!input.trim()}
+                      data-component-id="generation-submit"
                     >
                       <Send className="size-3" />
                       Generate & Save
@@ -166,6 +169,7 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
                       className="h-7 text-xs gap-1.5 text-muted-foreground"
                       onClick={() => handleGenerate(false)}
                       disabled={!input.trim()}
+                      data-component-id="generation-preview"
                     >
                       <Eye className="size-3" />
                       Preview

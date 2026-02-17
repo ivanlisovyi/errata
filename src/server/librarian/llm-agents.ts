@@ -1,5 +1,4 @@
-import { Output, ToolLoopAgent, stepCountIs, type LanguageModel } from 'ai'
-import { z } from 'zod/v4'
+import { ToolLoopAgent, stepCountIs, type LanguageModel } from 'ai'
 
 export function createLibrarianChatAgent(args: {
   model: LanguageModel
@@ -31,26 +30,17 @@ export function createLibrarianRefineAgent(args: {
   })
 }
 
-export function createLibrarianAnalyzeStructuredAgent(args: {
+export function createLibrarianAnalyzeToolAgent(args: {
   model: LanguageModel
   instructions: string
-  schema: z.ZodTypeAny
+  tools: Record<string, unknown>
+  maxSteps?: number
 }) {
   return new ToolLoopAgent({
     model: args.model,
     instructions: args.instructions,
-    output: Output.object({ schema: args.schema }),
-    stopWhen: stepCountIs(1),
-  })
-}
-
-export function createLibrarianAnalyzeJsonAgent(args: {
-  model: LanguageModel
-  instructions: string
-}) {
-  return new ToolLoopAgent({
-    model: args.model,
-    instructions: args.instructions,
-    stopWhen: stepCountIs(1),
+    tools: args.tools,
+    toolChoice: 'auto',
+    stopWhen: stepCountIs(args.maxSteps ?? 3),
   })
 }

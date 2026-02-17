@@ -4,6 +4,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { HELP_SECTIONS, findSection, type HelpSection } from './help-content'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { X, BookOpen, ChevronRight, ArrowLeft } from 'lucide-react'
+import { componentId } from '@/lib/dom-ids'
 
 /** Scroll to a help anchor inside a Radix ScrollArea. Returns true if successful. */
 function scrollToHelpAnchor(container: HTMLElement, anchorId: string): boolean {
@@ -81,6 +82,7 @@ export function HelpPanel() {
         }`}
         onClick={closeHelp}
         aria-hidden
+        data-component-id="help-backdrop"
       />
 
       {/* Panel */}
@@ -93,6 +95,7 @@ export function HelpPanel() {
                 visible ? 'translate-x-0' : '-translate-x-full'
               }`
         }`}
+        data-component-id="help-panel-root"
       >
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between gap-3 px-6 py-4 border-b border-border/30">
@@ -102,6 +105,7 @@ export function HelpPanel() {
                 onClick={() => openHelp()}
                 className="shrink-0 p-1 -ml-1 rounded-md text-muted-foreground/40 hover:text-foreground/70 transition-colors"
                 title="Back to topics"
+                data-component-id="help-back"
               >
                 <ArrowLeft className="size-4" />
               </button>
@@ -114,13 +118,14 @@ export function HelpPanel() {
           <button
             onClick={closeHelp}
             className="shrink-0 p-1.5 rounded-md text-muted-foreground/35 hover:text-foreground/70 hover:bg-accent/30 transition-colors"
+            data-component-id="help-close"
           >
             <X className="size-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden" ref={scrollAreaRef}>
+        <div className="flex-1 overflow-hidden" ref={scrollAreaRef} data-component-id="help-scroll">
           <ScrollArea className="h-full">
             <div className="px-6 py-5">
               {activeSection ? (
@@ -159,6 +164,7 @@ function TopicIndex({ onSelect }: { onSelect: (sectionId: string) => void }) {
           onClick={() => onSelect(section.id)}
           className="w-full text-left rounded-lg border border-border/25 hover:border-border/50 bg-accent/10 hover:bg-accent/25 px-4 py-3.5 transition-all duration-150 group"
           style={{ animationDelay: `${idx * 40}ms` }}
+          data-component-id={componentId('help-topic', section.id)}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -209,6 +215,7 @@ function SectionView({ section, scrollAreaRef }: { section: HelpSection; scrollA
                 if (scrollAreaRef.current) scrollToHelpAnchor(scrollAreaRef.current, sub.id)
               }}
               className="block text-[11.5px] text-foreground/50 hover:text-foreground/80 transition-colors py-0.5"
+              data-component-id={componentId('help-nav', sub.id)}
             >
               {sub.title}
             </a>

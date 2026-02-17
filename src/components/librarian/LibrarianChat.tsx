@@ -286,12 +286,12 @@ export function LibrarianChat({ storyId }: LibrarianChatProps) {
   }, [handleSend])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-component-id="librarian-chat-root">
       {/* Messages area */}
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="flex-1 min-h-0" data-component-id="librarian-chat-scroll">
         <div className="p-3 space-y-3">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex flex-col items-center justify-center py-12 text-center" data-component-id="librarian-chat-empty">
               <p className="text-xs text-muted-foreground/40 italic max-w-[240px]">
                 Ask the librarian to make changes across your story — update characters, adjust guidelines, or reshape knowledge.
               </p>
@@ -341,6 +341,7 @@ export function LibrarianChat({ storyId }: LibrarianChatProps) {
               variant="ghost"
               className="h-6 text-[10px] gap-1 text-muted-foreground/50 hover:text-muted-foreground"
               onClick={handleClear}
+              data-component-id="librarian-chat-clear"
             >
               <Trash2 className="size-3" />
               Clear
@@ -358,12 +359,14 @@ export function LibrarianChat({ storyId }: LibrarianChatProps) {
             disabled={isStreaming}
             className="min-h-[40px] max-h-[120px] resize-none text-xs bg-transparent placeholder:italic placeholder:text-muted-foreground/40 flex-1"
             rows={1}
+            data-component-id="librarian-chat-input"
           />
           <Button
             size="icon"
             className="size-8 shrink-0"
             disabled={!input.trim() || isStreaming}
             onClick={handleSend}
+            data-component-id="librarian-chat-send"
           >
             {isStreaming ? (
               <Loader2 className="size-3.5 animate-spin" />

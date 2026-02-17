@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Code2, FileText, Monitor, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { componentId } from '@/lib/dom-ids'
 
 interface BlockCreateDialogProps {
   open: boolean
@@ -41,7 +42,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px]" data-component-id="block-create-dialog">
         <DialogHeader>
           <DialogTitle className="font-display text-lg">New Custom Block</DialogTitle>
         </DialogHeader>
@@ -58,6 +59,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
               placeholder="e.g. World Rules, Tone Guide..."
               autoFocus
               className="h-9"
+              data-component-id="block-create-name"
             />
           </div>
 
@@ -72,19 +74,20 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
                   { value: 'system' as const, label: 'System', Icon: Monitor },
                   { value: 'user' as const, label: 'User', Icon: User },
                 ]).map(({ value, label, Icon }) => (
-                  <button
-                    key={value}
-                    className={cn(
-                      'flex-1 flex items-center justify-center gap-1.5 px-2 py-[6px] rounded-md text-[11px] font-medium transition-all duration-150',
-                      role === value
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground/50 hover:text-muted-foreground/80',
-                    )}
-                    onClick={() => setRole(value)}
-                  >
-                    <Icon className="size-3" />
-                    {label}
-                  </button>
+                <button
+                  key={value}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-1.5 px-2 py-[6px] rounded-md text-[11px] font-medium transition-all duration-150',
+                    role === value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground/50 hover:text-muted-foreground/80',
+                  )}
+                  onClick={() => setRole(value)}
+                  data-component-id={componentId('block-create-role', value)}
+                >
+                  <Icon className="size-3" />
+                  {label}
+                </button>
                 ))}
               </div>
             </div>
@@ -98,19 +101,20 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
                   { value: 'simple' as const, label: 'Text', Icon: FileText },
                   { value: 'script' as const, label: 'Script', Icon: Code2 },
                 ]).map(({ value, label, Icon }) => (
-                  <button
-                    key={value}
-                    className={cn(
-                      'flex-1 flex items-center justify-center gap-1.5 px-2 py-[6px] rounded-md text-[11px] font-medium transition-all duration-150',
-                      type === value
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground/50 hover:text-muted-foreground/80',
-                    )}
-                    onClick={() => setType(value)}
-                  >
-                    <Icon className="size-3" />
-                    {label}
-                  </button>
+                <button
+                  key={value}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-1.5 px-2 py-[6px] rounded-md text-[11px] font-medium transition-all duration-150',
+                    type === value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground/50 hover:text-muted-foreground/80',
+                  )}
+                  onClick={() => setType(value)}
+                  data-component-id={componentId('block-create-type', value)}
+                >
+                  <Icon className="size-3" />
+                  {label}
+                </button>
                 ))}
               </div>
             </div>
@@ -140,15 +144,16 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
               }
               rows={6}
               className={cn('text-xs resize-y', type === 'script' && 'font-mono bg-muted/15')}
+              data-component-id="block-create-content"
             />
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-xs">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-xs" data-component-id="block-create-cancel">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!name.trim() || !content.trim()} className="text-xs gap-1.5">
+          <Button onClick={handleSubmit} disabled={!name.trim() || !content.trim()} className="text-xs gap-1.5" data-component-id="block-create-submit">
             Create Block
           </Button>
         </DialogFooter>

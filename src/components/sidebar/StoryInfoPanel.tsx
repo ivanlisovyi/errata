@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Pencil, Download, Package, Wand2, FileText } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { componentId } from '@/lib/dom-ids'
 
 interface StoryInfoPanelProps {
   storyId: string
@@ -130,10 +131,10 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
   // --- Edit mode ---
   if (editing) {
     return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3" data-component-id="story-info-edit">
         <div>
           <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1.5 block">Name</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-transparent" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-transparent" data-component-id="story-info-name" />
         </div>
         <div>
           <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1.5 block">Description</label>
@@ -141,6 +142,7 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="min-h-[80px] resize-none text-sm bg-transparent"
+            data-component-id="story-info-description"
           />
         </div>
         <div>
@@ -150,13 +152,14 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
             onChange={(e) => setSummary(e.target.value)}
             className="min-h-[120px] resize-none text-sm bg-transparent"
             placeholder="Story summary..."
+            data-component-id="story-info-summary"
           />
         </div>
         <div className="flex gap-1.5">
-          <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={updateMutation.isPending}>
+          <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={updateMutation.isPending} data-component-id="story-info-save">
             {updateMutation.isPending ? 'Saving...' : 'Save'}
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleCancel}>
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleCancel} data-component-id="story-info-cancel">
             Cancel
           </Button>
         </div>
@@ -166,7 +169,7 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
 
   // --- Display mode ---
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" data-component-id="story-info-root">
       {/* Title block */}
       <div className="px-5 pt-5 pb-4">
         <h2 className="text-xl font-display leading-tight tracking-tight">{story.name}</h2>
@@ -231,24 +234,28 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
           label="Edit"
           description="Name, description & summary"
           onClick={() => setEditing(true)}
+          dataComponentId="story-info-edit-action"
         />
         <ActionTile
           icon={Package}
           label="Export"
           description="Fragments as JSON"
           onClick={() => onExport?.()}
+          dataComponentId="story-info-export"
         />
         <ActionTile
           icon={Download}
           label="Download"
           description="Full story as one file"
           onClick={() => onDownloadStory?.()}
+          dataComponentId="story-info-download"
         />
         <ActionTile
           icon={FileText}
           label="Prose"
           description="Story text as .txt"
           onClick={() => onExportProse?.()}
+          dataComponentId="story-info-prose"
         />
         {onLaunchWizard && (
           <ActionTile
@@ -256,6 +263,7 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
             label="Wizard"
             description="Guided story setup"
             onClick={onLaunchWizard}
+            dataComponentId="story-info-wizard"
           />
         )}
       </div>
@@ -281,11 +289,12 @@ function MiniStat({ label, value }: { label: string; value: number }) {
   )
 }
 
-function ActionTile({ icon: Icon, label, description, onClick }: { icon: LucideIcon; label: string; description: string; onClick: () => void }) {
+function ActionTile({ icon: Icon, label, description, onClick, dataComponentId }: { icon: LucideIcon; label: string; description: string; onClick: () => void; dataComponentId?: string }) {
   return (
     <button
       onClick={onClick}
       className="flex items-start gap-2.5 rounded-md border border-border/40 px-3 py-2.5 text-left transition-colors hover:bg-accent/40 hover:border-border/60"
+      data-component-id={dataComponentId}
     >
       <Icon className="size-3.5 mt-0.5 text-muted-foreground/50 shrink-0" />
       <div className="min-w-0">
@@ -335,6 +344,7 @@ function SummarySection({ summary }: { summary: string | undefined }) {
           <button
             onClick={() => setExpanded(!expanded)}
             className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground mt-1 transition-colors"
+            data-component-id="story-info-summary-toggle"
           >
             {expanded ? 'Show less' : 'Read more'}
           </button>
