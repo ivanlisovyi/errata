@@ -31,6 +31,7 @@ Rules:
 - Set type to "character" for characters or "knowledge" for world-building details, locations, items, or facts.
 - timelineEvents: note significant events. "position" is relative to the previous prose: "before" if it's a flashback, "during" if concurrent, "after" if it follows sequentially.
 - If there are no contradictions, suggestions, or timeline events, use empty arrays.
+- If updating a character or knowledge fragment, make sure to retain any important established facts from the existing description in the updated content, so the writer doesn't lose continuity by accepting the suggestion.
 - Return JSON only`
 
 const LibrarianAnalysisSchema = z.object({

@@ -728,12 +728,126 @@ return ''`}</div>
           <>
             <P>
               The librarian is a background agent that runs automatically after each prose generation.
-              It analyzes new prose to maintain a rolling summary, detect character mentions, flag
-              contradictions, suggest knowledge fragments, and track the timeline.
+              It reads through your <strong className="text-foreground/75">entire fragment collection</strong> — prose,
+              characters, guidelines, and knowledge — to maintain a rolling summary, detect character
+              mentions, flag contradictions, suggest new knowledge, and track the timeline.
             </P>
             <P>
-              Results are stored per-story and accessible from the Librarian panel in the sidebar.
+              Every time you generate prose, the librarian analyzes it in the context of everything
+              you've written so far. It's your story's memory, catching things you might miss as
+              the narrative grows.
             </P>
+          </>
+        ),
+      },
+      {
+        id: 'chat-tab',
+        title: 'Chat',
+        content: (
+          <>
+            <P>
+              The <strong className="text-foreground/75">Chat</strong> tab lets you talk directly to
+              the librarian about your story. Ask it questions about characters, plot threads,
+              timeline, or anything else — it has full access to your fragments and its own analysis
+              history.
+            </P>
+            <Tip>
+              Use chat to ask things like "What do we know about this character?" or
+              "Are there any unresolved plot threads?" The librarian draws on everything it's analyzed.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'story-tab',
+        title: 'Story',
+        content: (
+          <>
+            <P>
+              The <strong className="text-foreground/75">Story</strong> tab shows the librarian's
+              ongoing analysis of your narrative. It's organized into several sections:
+            </P>
+            <P>
+              <strong className="text-foreground/75">Findings</strong> — a quick overview showing
+              the total number of contradictions and pending suggestions across all analyses.
+            </P>
+            <P>
+              <strong className="text-foreground/75">Analyses</strong> — each prose generation gets
+              its own analysis entry. Expand one to see the summary update, which characters appeared,
+              any contradictions found, knowledge suggestions, and timeline events detected.
+            </P>
+            <P>
+              <strong className="text-foreground/75">Characters</strong> — tracks which characters
+              are mentioned in recent prose and how often, so you can see who's active in the story.
+            </P>
+            <P>
+              <strong className="text-foreground/75">Timeline</strong> — a chronological list of
+              events the librarian has extracted from your prose, linked back to the fragments
+              they came from.
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'contradictions',
+        title: 'Contradictions',
+        content: (
+          <>
+            <P>
+              The librarian cross-references new prose against your existing fragments to catch
+              inconsistencies. When it finds one, it flags the contradiction with a description
+              and the specific fragment IDs involved.
+            </P>
+            <P>
+              Each contradiction includes a <strong className="text-foreground/75">Fix</strong> button
+              that opens the Refine tool with pre-filled instructions to resolve the issue. The
+              librarian will rewrite the fragment to fix the inconsistency while preserving the
+              rest of its content.
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'suggestions',
+        title: 'Knowledge suggestions',
+        content: (
+          <>
+            <P>
+              When the librarian detects new information in your prose — a new character, a world-building
+              detail, an important object — it creates a knowledge suggestion. Each suggestion includes
+              a name, type, and description.
+            </P>
+            <P>
+              Suggestions can either create a brand new fragment or update an existing one. Click
+              the <strong className="text-foreground/75">+</strong> button to accept a suggestion,
+              and the fragment will be created or updated immediately.
+            </P>
+            <Tip>
+              Suggestions that update existing fragments show which fragment they target, so you
+              can review before accepting.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'refine',
+        title: 'Refining fragments',
+        content: (
+          <>
+            <P>
+              The <strong className="text-foreground/75">Refine</strong> section at the bottom of
+              the Story tab lets you ask the librarian to rewrite or improve any character, guideline,
+              or knowledge fragment. Select a fragment from the dropdown, provide optional instructions,
+              and the librarian will generate an updated version.
+            </P>
+            <P>
+              Refine is also triggered automatically from contradiction Fix buttons, pre-filling the
+              instructions with what needs to be resolved.
+            </P>
+            <Tip>
+              Use refine to keep fragments up to date as your story evolves — the librarian
+              understands your full story context when rewriting.
+            </Tip>
           </>
         ),
       },
@@ -743,14 +857,46 @@ return ''`}</div>
         content: (
           <>
             <P>
-              When enabled in Settings, the librarian will automatically create and update fragments
-              based on its analysis. For example, if a new character is introduced in the prose, the
-              librarian may create a character fragment for them.
+              The toggle at the top of the Librarian panel controls whether suggestions are
+              applied automatically. When enabled, the librarian will create and update fragments
+              on its own — for example, adding a character fragment when someone new appears in the prose,
+              or updating a knowledge fragment when details change.
             </P>
             <Tip>
               This is off by default. Enable it if you want the librarian to proactively maintain
-              your story's knowledge base without manual intervention.
+              your story's knowledge base without manual intervention. Auto-applied suggestions
+              are marked with an "Auto" badge so you can review what changed.
             </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'activity-tab',
+        title: 'Activity',
+        content: (
+          <>
+            <P>
+              The <strong className="text-foreground/75">Activity</strong> tab shows a log of every
+              agent run the librarian has performed. Each entry shows the agent name, when it ran,
+              how long it took, and whether it succeeded or failed.
+            </P>
+            <P>
+              Expand a run to see the full trace tree — the librarian may invoke sub-agents
+              (analyze, refine, chat) and you can inspect each step's status and timing.
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'status',
+        title: 'Status indicator',
+        content: (
+          <>
+            <P>
+              The status strip below the tabs shows the librarian's current state:
+              a green dot means idle, amber means queued, blue with a pulse means actively analyzing,
+              and red indicates an error. The fragment ID being processed is shown alongside.
+            </P>
           </>
         ),
       },

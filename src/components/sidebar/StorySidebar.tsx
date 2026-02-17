@@ -25,7 +25,6 @@ import {
   Settings,
   ChevronRight,
   Sparkles,
-  BookMarked,
   ArrowUpDown,
   Layers,
   Archive,
@@ -159,6 +158,31 @@ export function StorySidebar({
                 >
                   <Info className="size-4" />
                   <span>Info</span>
+                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeSection === 'agent-activity'}
+                  onClick={() => handleToggle('agent-activity')}
+                  tooltip="Librarian"
+                  data-component-id="sidebar-section-agent-activity"
+                >
+                  <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" stroke="url(#librarian-grad)" />
+                    <path d="m9 9.5 2 2 4-4" stroke="url(#librarian-grad2)" />
+                    <defs>
+                      <linearGradient id="librarian-grad" x1="4" y1="2" x2="20" y2="22">
+                        <stop offset="0%" stopColor="#f59e0b" />
+                        <stop offset="100%" stopColor="#8b5cf6" />
+                      </linearGradient>
+                      <linearGradient id="librarian-grad2" x1="9" y1="7.5" x2="15" y2="11.5">
+                        <stop offset="0%" stopColor="#8b5cf6" />
+                        <stop offset="100%" stopColor="#ec4899" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <span>Librarian</span>
                   <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -313,30 +337,6 @@ export function StorySidebar({
           </>
         )}
 
-        <SidebarSeparator />
-
-        {/* Agent Activity */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
-            Helpers
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeSection === 'agent-activity'}
-                  onClick={() => handleToggle('agent-activity')}
-                  tooltip="Agent Activity"
-                  data-component-id="sidebar-section-agent-activity"
-                >
-                  <BookMarked className="size-4" />
-                  <span>Librarian</span>
-                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
