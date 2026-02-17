@@ -3,7 +3,7 @@
 - `docs/context-blocks.md`
   - Context block system: structured LLM prompt blocks, the `beforeBlocks` plugin hook, Block Editor UI, custom blocks (simple + script), and block configuration API.
 - `docs/third-party-plugins.md`
-  - How to build external plugins, use runtime iframe UI, scaffold from templates, and validate in dev.
+  - How to build external plugins, use runtime iframe UI, scaffold from templates, client-side panel hooks (`onPanelOpen`/`onPanelClose` for bundled, `postMessage` for iframe), query cache invalidation, and validate in dev.
 - `docs/runtime-plugins-and-binary-packaging.md`
   - Runtime plugin loading, binary build/package workflow, CI release automation, and deployment notes.
 - `docs/component-ids.md`

@@ -109,6 +109,16 @@ export interface WritingPlugin {
   hooks?: PluginHooks
 }
 
+export interface PluginRuntimeContext {
+  storyId: string
+}
+
+export interface PanelEvent {
+  panel: string
+  fragment?: Fragment
+  mode?: string
+}
+
 export declare function definePlugin<T extends WritingPlugin>(plugin: T): T
 export declare const createPlugin: typeof definePlugin
 

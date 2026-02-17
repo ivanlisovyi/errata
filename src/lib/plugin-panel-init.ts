@@ -3,6 +3,7 @@ import {
   registerClientPlugin,
   type PluginPanelProps,
   type PluginRuntimeContext,
+  type PanelEvent,
 } from './plugin-panels'
 
 interface ClientPluginEntryModule {
@@ -10,6 +11,8 @@ interface ClientPluginEntryModule {
   panel?: ComponentType<PluginPanelProps>
   activate?: (context: PluginRuntimeContext) => void
   deactivate?: (context: PluginRuntimeContext) => void
+  onPanelOpen?: (event: PanelEvent, context: PluginRuntimeContext) => void
+  onPanelClose?: (event: PanelEvent, context: PluginRuntimeContext) => void
 }
 
 const clientPluginEntries = import.meta.glob<ClientPluginEntryModule>(
@@ -31,5 +34,7 @@ for (const [path, mod] of Object.entries(clientPluginEntries)) {
     panel: mod.panel,
     activate: mod.activate,
     deactivate: mod.deactivate,
+    onPanelOpen: mod.onPanelOpen,
+    onPanelClose: mod.onPanelClose,
   })
 }

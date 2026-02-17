@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import type { Fragment } from '@/lib/api'
 
 export interface PluginPanelProps {
   storyId: string
@@ -8,10 +9,18 @@ export interface PluginRuntimeContext {
   storyId: string
 }
 
+export interface PanelEvent {
+  panel: string
+  fragment?: Fragment
+  mode?: string
+}
+
 export interface ClientPluginRegistration {
   panel?: ComponentType<PluginPanelProps>
   activate?: (context: PluginRuntimeContext) => void
   deactivate?: (context: PluginRuntimeContext) => void
+  onPanelOpen?: (event: PanelEvent, context: PluginRuntimeContext) => void
+  onPanelClose?: (event: PanelEvent, context: PluginRuntimeContext) => void
 }
 
 const pluginRegistry = new Map<string, ClientPluginRegistration>()
@@ -97,4 +106,29 @@ export function deactivateAllClientPluginRuntimes() {
     activeRuntimePlugins.delete(name)
     runtimeContextByPlugin.delete(name)
   }
+}
+
+function broadcastToPluginIframes(type: string, payload: Record<string, unknown>) {
+  if (typeof document === 'undefined') return
+  const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe[data-component-id*="panel-iframe"]')
+  const message = { type, ...payload }
+  for (const iframe of iframes) {
+    iframe.contentWindow?.postMessage(message, '*')
+  }
+}
+
+export function notifyPluginPanelOpen(event: PanelEvent, context: PluginRuntimeContext) {
+  for (const name of activeRuntimePlugins) {
+    const entry = pluginRegistry.get(name)
+    entry?.onPanelOpen?.(event, context)
+  }
+  broadcastToPluginIframes('errata:panel-open', { event, context })
+}
+
+export function notifyPluginPanelClose(event: PanelEvent, context: PluginRuntimeContext) {
+  for (const name of activeRuntimePlugins) {
+    const entry = pluginRegistry.get(name)
+    entry?.onPanelClose?.(event, context)
+  }
+  broadcastToPluginIframes('errata:panel-close', { event, context })
 }

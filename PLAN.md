@@ -191,6 +191,8 @@ errata/
 │   │   ├── fragment-visuals.ts       # Fragment type visual shapes/colors
 │   │   ├── fragment-clipboard.ts     # Copy/paste fragments
 │   │   ├── dom-ids.ts               # data-component-id helpers
+│   │   ├── plugin-panels.ts         # Client plugin registry, PanelEvent, notify functions
+│   │   ├── plugin-panel-init.ts     # Auto-discovers bundled entry.client.ts files
 │   │   ├── theme.tsx                # Theme provider (fonts, dark mode)
 │   │   └── utils.ts
 │   │
@@ -208,6 +210,7 @@ errata/
 │   └── fixtures/
 │
 ├── plugins/                          # Bundled plugins
+│   ├── color-picker/                # Fragment color tagging (uses panel hooks)
 │   ├── diceroll/
 │   ├── keybinds/
 │   ├── names/
@@ -522,14 +525,65 @@ Plugins implement `WritingPlugin` and can provide:
 - Custom fragment types
 - LLM tools
 - API routes under `/api/plugins/<name>/`
-- Pipeline hooks (`beforeContext`, `beforeBlocks`, `beforeGeneration`, `afterGeneration`, `afterSave`)
+- Server pipeline hooks (`beforeContext`, `beforeBlocks`, `beforeGeneration`, `afterGeneration`, `afterSave`)
+- Client-side panel hooks (`onPanelOpen`, `onPanelClose`) — react to UI panel open/close events
 - Sidebar UI panels (iframe-based for external plugins)
 
 Two plugin sources:
 1. **Bundled** — compiled into the app from `plugins/*/`
 2. **External** — loaded at runtime from `PLUGIN_DIR`
 
-Bundled plugins: `diceroll`, `keybinds`, `names`.
+Bundled plugins: `diceroll`, `keybinds`, `names`, `color-picker`.
+
+### Client-Side Plugin Hooks
+
+Panel open/close events are delivered to all plugins:
+
+- **Bundled plugins**: via `onPanelOpen`/`onPanelClose` exports in `entry.client.ts`
+- **External plugins**: via `postMessage` on the iframe window (`errata:panel-open`, `errata:panel-close`)
+
+Bundled `entry.client.ts` exports:
+
+```typescript
+export const pluginName = 'my-plugin'
+export const panel = MyPanelComponent                    // React component
+export const activate = (ctx: PluginRuntimeContext) => {} // Plugin enabled
+export const deactivate = (ctx: PluginRuntimeContext) => {} // Plugin disabled
+export const onPanelOpen = (event: PanelEvent, ctx: PluginRuntimeContext) => {}
+export const onPanelClose = (event: PanelEvent, ctx: PluginRuntimeContext) => {}
+```
+
+External iframe plugins listen via `postMessage`:
+
+```js
+window.addEventListener('message', (e) => {
+  if (e.data.type === 'errata:panel-open')  { /* e.data.event, e.data.context */ }
+  if (e.data.type === 'errata:panel-close') { /* e.data.event, e.data.context */ }
+  if (e.data.type === 'errata:data-changed') { /* e.data.queryKeys */ }
+})
+```
+
+`PanelEvent` is discriminated by `panel` field:
+
+| `event.panel` | Extra fields | Fired when |
+|---|---|---|
+| `'fragment-editor'` | `fragment?: Fragment`, `mode: 'edit' \| 'create'` | Fragment editor opens/closes |
+| `'debug'` | — | Debug panel opens/closes |
+| `'providers'` | — | Provider manager opens/closes |
+| `'export'` | — | Export panel opens/closes |
+| `'wizard'` | — | Story wizard opens/closes |
+
+### Query Cache Invalidation
+
+Plugin runtimes (vanilla JS, no React context) can invalidate TanStack Query caches by dispatching a window event:
+
+```typescript
+window.dispatchEvent(new CustomEvent('errata:plugin:invalidate', {
+  detail: { queryKeys: [['tags', storyId, fragmentId], ['fragment', storyId, fragmentId]] },
+}))
+```
+
+The story route invalidates each key and broadcasts `errata:data-changed` to all plugin iframes.
 
 Plugin SDK published as `@tealios/errata-plugin-sdk`. See `docs/third-party-plugins.md` for the development guide.
 

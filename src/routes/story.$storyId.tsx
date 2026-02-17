@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { api, type Fragment } from '@/lib/api'
 import type { FragmentPrefill } from '@/components/fragments/FragmentEditor'
@@ -17,6 +17,8 @@ import { componentId } from '@/lib/dom-ids'
 import {
   deactivateAllClientPluginRuntimes,
   syncClientPluginRuntimes,
+  notifyPluginPanelOpen,
+  notifyPluginPanelClose,
 } from '@/lib/plugin-panels'
 import { FragmentImportDialog } from '@/components/fragments/FragmentImportDialog'
 import {
@@ -36,6 +38,7 @@ export const Route = createFileRoute('/story/$storyId')({
 function StoryEditorPage() {
   const { storyId } = Route.useParams()
   const isMobile = useIsMobile()
+  const queryClient = useQueryClient()
   const pluginSidebarPrefsKey = `errata:plugin-sidebar:${storyId}`
   const [activeSection, setActiveSection] = useState<SidebarSection>(null)
   const [selectedFragment, setSelectedFragment] = useState<Fragment | null>(null)
@@ -130,6 +133,24 @@ function StoryEditorPage() {
     }
   }, [])
 
+  // Generic plugin query invalidation — plugins dispatch this event to
+  // invalidate TanStack Query caches without needing React context.
+  // Also broadcasts to plugin iframes so they can re-fetch their own data.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { queryKeys } = (e as CustomEvent).detail
+      for (const key of queryKeys) {
+        queryClient.invalidateQueries({ queryKey: key })
+      }
+      const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe[data-component-id*="panel-iframe"]')
+      for (const iframe of iframes) {
+        iframe.contentWindow?.postMessage({ type: 'errata:data-changed', queryKeys }, '*')
+      }
+    }
+    window.addEventListener('errata:plugin:invalidate', handler)
+    return () => window.removeEventListener('errata:plugin:invalidate', handler)
+  }, [queryClient])
+
   // Auto-show wizard when story has no fragments
   if (showWizard === null && allFragments !== undefined) {
     if (allFragments.length === 0) {
@@ -143,6 +164,7 @@ function StoryEditorPage() {
     setSelectedFragment(fragment)
     setEditorMode('edit')
     if (isMobile) setActiveSection(null) // Close detail panel on mobile so editor is visible
+    notifyPluginPanelOpen({ panel: 'fragment-editor', fragment, mode: 'edit' }, { storyId })
   }
 
   const handleCreateFragment = (type: string, prefill?: FragmentPrefill) => {
@@ -151,30 +173,41 @@ function StoryEditorPage() {
     setCreatePrefill(prefill ?? null)
     setEditorMode('create')
     if (isMobile) setActiveSection(null)
+    notifyPluginPanelOpen({ panel: 'fragment-editor', mode: 'create' }, { storyId })
   }
 
   const handleEditorClose = () => {
     setSelectedFragment(null)
     setCreatePrefill(null)
     setEditorMode('view')
+    notifyPluginPanelClose({ panel: 'fragment-editor' }, { storyId })
   }
 
   const handleDebugLog = (logId: string) => {
     setDebugLogId(logId || '__browse__')
     setSelectedFragment(null)
     setEditorMode('view')
+    notifyPluginPanelOpen({ panel: 'debug' }, { storyId })
   }
 
   const handleSectionChange = useCallback((section: SidebarSection) => {
     setPluginCloseReturnSection(null)
     setActiveSection(section)
     if (section === null) {
-      setSelectedFragment(null)
+      setSelectedFragment((prev) => {
+        if (prev || editorMode !== 'view') {
+          notifyPluginPanelClose({ panel: 'fragment-editor' }, { storyId })
+        }
+        return null
+      })
       setCreatePrefill(null)
       setEditorMode('view')
-      setDebugLogId(null)
+      setDebugLogId((prev) => {
+        if (prev) notifyPluginPanelClose({ panel: 'debug' }, { storyId })
+        return null
+      })
     }
-  }, [])
+  }, [editorMode, storyId])
 
   const handleOpenPluginPanelFromSettings = useCallback((pluginName: string) => {
     setPluginCloseReturnSection('settings')
@@ -338,13 +371,22 @@ function StoryEditorPage() {
         onSelectFragment={handleSelectFragment}
         onCreateFragment={handleCreateFragment}
         selectedFragmentId={selectedFragment?.id}
-        onManageProviders={() => setShowProviders(true)}
+        onManageProviders={() => {
+          setShowProviders(true)
+          notifyPluginPanelOpen({ panel: 'providers' }, { storyId })
+        }}
         onOpenPluginPanel={handleOpenPluginPanelFromSettings}
         onTogglePluginSidebar={setPluginSidebarVisible}
         pluginSidebarVisibility={pluginSidebarVisibility}
-        onLaunchWizard={() => setShowWizard(true)}
+        onLaunchWizard={() => {
+          setShowWizard(true)
+          notifyPluginPanelOpen({ panel: 'wizard' }, { storyId })
+        }}
         onImportFragment={handleOpenImport}
-        onExport={() => setShowExportPanel(true)}
+        onExport={() => {
+          setShowExportPanel(true)
+          notifyPluginPanelOpen({ panel: 'export' }, { storyId })
+        }}
         onDownloadStory={() => api.stories.exportAsZip(storyId)}
         onExportProse={handleExportProse}
         enabledPanelPlugins={enabledPanelPlugins}
@@ -362,13 +404,19 @@ function StoryEditorPage() {
           storyId={storyId}
           onSelectFragment={handleSelectFragment}
           onDebugLog={handleDebugLog}
-          onLaunchWizard={() => setShowWizard(true)}
+          onLaunchWizard={() => {
+            setShowWizard(true)
+            notifyPluginPanelOpen({ panel: 'wizard' }, { storyId })
+          }}
         />
 
         {/* Overlay panels render on top */}
         {showWizard && (
           <div className="absolute inset-0 z-30 bg-background" data-component-id="overlay-story-wizard">
-            <StoryWizard storyId={storyId} onComplete={() => setShowWizard(false)} />
+            <StoryWizard storyId={storyId} onComplete={() => {
+              setShowWizard(false)
+              notifyPluginPanelClose({ panel: 'wizard' }, { storyId })
+            }} />
           </div>
         )}
         {debugLogId && (
@@ -376,13 +424,19 @@ function StoryEditorPage() {
             <DebugPanel
               storyId={storyId}
               fragmentId={debugLogId === '__browse__' ? undefined : debugLogId}
-              onClose={() => setDebugLogId(null)}
+              onClose={() => {
+                setDebugLogId(null)
+                notifyPluginPanelClose({ panel: 'debug' }, { storyId })
+              }}
             />
           </div>
         )}
         {showProviders && (
           <div className="absolute inset-0 z-30 bg-background" data-component-id="overlay-provider-panel">
-            <ProviderPanel onClose={() => setShowProviders(false)} />
+            <ProviderPanel onClose={() => {
+              setShowProviders(false)
+              notifyPluginPanelClose({ panel: 'providers' }, { storyId })
+            }} />
           </div>
         )}
         {showExportPanel && (
@@ -390,7 +444,10 @@ function StoryEditorPage() {
             <FragmentExportPanel
               storyId={storyId}
               storyName={story.name}
-              onClose={() => setShowExportPanel(false)}
+              onClose={() => {
+                setShowExportPanel(false)
+                notifyPluginPanelClose({ panel: 'export' }, { storyId })
+              }}
             />
           </div>
         )}
@@ -408,6 +465,7 @@ function StoryEditorPage() {
                   setSelectedFragment(created)
                   setCreatePrefill(null)
                   setEditorMode('edit')
+                  notifyPluginPanelOpen({ panel: 'fragment-editor', fragment: created, mode: 'edit' }, { storyId })
                 }
               }}
             />

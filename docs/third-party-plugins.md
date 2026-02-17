@@ -240,6 +240,92 @@ bun run dev
 - Only import Errata internals (`../../src/server/...`) for optional advanced recipes.
 - If you need those internal imports with full IDE resolution, develop the plugin inside this monorepo (or symlink into it) while iterating.
 
+## Client-Side Panel Hooks
+
+Errata broadcasts panel open/close events to all plugins. Both bundled and external plugins can react to these events.
+
+### Bundled Plugins (`entry.client.ts`)
+
+Bundled plugins export lifecycle and panel hooks directly:
+
+```ts
+// entry.client.ts
+import type { PanelEvent, PluginRuntimeContext } from '@/lib/plugin-panels'
+
+export const pluginName = 'my-plugin'
+export const activate = (ctx: PluginRuntimeContext) => { /* plugin enabled */ }
+export const deactivate = (ctx: PluginRuntimeContext) => { /* plugin disabled */ }
+
+export const onPanelOpen = (event: PanelEvent, ctx: PluginRuntimeContext) => {
+  if (event.panel === 'fragment-editor') {
+    console.log('Fragment opened:', event.fragment?.id, 'mode:', event.mode)
+  }
+}
+
+export const onPanelClose = (event: PanelEvent, ctx: PluginRuntimeContext) => {
+  if (event.panel === 'fragment-editor') {
+    console.log('Fragment editor closed')
+  }
+}
+```
+
+Export a `panel` React component for a sidebar panel:
+
+```ts
+import type { PluginPanelProps } from '@/lib/plugin-panels'
+
+export const panel = ({ storyId }: PluginPanelProps) => <div>...</div>
+```
+
+### External Plugins (iframe `postMessage`)
+
+External plugins receive the same events via `postMessage` on the iframe window:
+
+```js
+// ui/panel.js
+window.addEventListener('message', (e) => {
+  if (e.data.type === 'errata:panel-open') {
+    const { event, context } = e.data
+    // event.panel, event.fragment, event.mode
+    // context.storyId
+  }
+
+  if (e.data.type === 'errata:panel-close') {
+    const { event, context } = e.data
+  }
+
+  if (e.data.type === 'errata:data-changed') {
+    // Another plugin modified data — re-fetch if needed
+    // e.data.queryKeys contains the affected query key arrays
+  }
+})
+```
+
+### PanelEvent Shape
+
+`PanelEvent.panel` values: `'fragment-editor'`, `'debug'`, `'providers'`, `'export'`, `'wizard'`.
+
+For `'fragment-editor'`, the event also includes:
+- `fragment?: Fragment` — the fragment being edited (absent in create mode)
+- `mode: 'edit' | 'create'` — editor mode
+
+### Query Cache Invalidation
+
+Plugin runtimes (vanilla JS, no React context) can invalidate the host app's TanStack Query caches by dispatching a window event:
+
+```ts
+window.dispatchEvent(new CustomEvent('errata:plugin:invalidate', {
+  detail: {
+    queryKeys: [
+      ['tags', storyId, fragmentId],
+      ['fragment', storyId, fragmentId],
+    ],
+  },
+}))
+```
+
+The story route listens for this and invalidates each query key. It also broadcasts an `errata:data-changed` message to all plugin iframes so they can re-fetch their own data.
+
 ## Name Conflicts
 
 Plugins are keyed by `manifest.name`.

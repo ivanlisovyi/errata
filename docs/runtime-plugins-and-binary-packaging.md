@@ -124,7 +124,21 @@ External runtime plugin UI currently supports **iframe mode** via `plugin.json`.
 - Good for: standalone HTML/CSS/JS plugin UIs loaded at runtime.
 - Not supported (for external plugins): runtime React component mounting into host bundle.
 
-Bundled plugins can still use `entry.client.ts` React panels discovered at build time.
+Bundled plugins can use `entry.client.ts` for React panels and client-side hooks discovered at build time.
+
+### Client-Side Panel Hooks
+
+All plugins receive panel open/close events:
+
+- **Bundled plugins**: via `onPanelOpen` / `onPanelClose` exports in `entry.client.ts`.
+- **External plugins**: via `postMessage` on the iframe window (`errata:panel-open`, `errata:panel-close`, `errata:data-changed`).
+
+Available hooks:
+
+- `activate` / `deactivate` — called when the plugin is enabled/disabled for a story (bundled only).
+- `onPanelOpen` / `onPanelClose` — called when any UI panel opens/closes (fragment editor, debug, providers, export, wizard).
+
+See `docs/third-party-plugins.md` for the `PanelEvent` interface and postMessage protocol.
 
 ## Standalone Binary Workflow
 
