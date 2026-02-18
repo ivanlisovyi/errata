@@ -169,6 +169,63 @@ describe('librarian agent', () => {
     )
   })
 
+  it('embeds summary and analysisId in prose fragment meta._librarian', async () => {
+    await createStory(dataDir, makeStory())
+    await createFragment(dataDir, storyId, makeFragment({
+      id: 'pr-0001',
+      content: 'The hero walked into the dark forest.',
+    }))
+    await setupProseChain(dataDir, storyId, ['pr-0001'])
+
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'The hero ventured into the dark forest.' } },
+    ])
+
+    const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
+
+    const fragment = await getFragment(dataDir, storyId, 'pr-0001')
+    expect(fragment).toBeTruthy()
+    const librarian = fragment!.meta._librarian as { summary: string; analysisId: string }
+    expect(librarian).toBeDefined()
+    expect(librarian.summary).toBe('The hero ventured into the dark forest.')
+    expect(librarian.analysisId).toBe(analysis.id)
+  })
+
+  it('embeds summary alongside mention annotations', async () => {
+    await createStory(dataDir, makeStory())
+    await createFragment(dataDir, storyId, makeFragment({
+      id: 'ch-0001',
+      type: 'character',
+      name: 'Alice',
+      description: 'The protagonist',
+    }))
+    await createFragment(dataDir, storyId, makeFragment({
+      id: 'pr-0001',
+      content: 'Alice drew her sword.',
+    }))
+    await setupProseChain(dataDir, storyId, ['pr-0001'])
+
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Alice drew her sword.' } },
+      { toolName: 'reportMentions', args: { mentions: [{ characterId: 'ch-0001', text: 'Alice' }] } },
+    ])
+
+    const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
+
+    const fragment = await getFragment(dataDir, storyId, 'pr-0001')
+    expect(fragment).toBeTruthy()
+
+    // Summary and analysisId embedded
+    const librarian = fragment!.meta._librarian as { summary: string; analysisId: string }
+    expect(librarian.summary).toBe('Alice drew her sword.')
+    expect(librarian.analysisId).toBe(analysis.id)
+
+    // Annotations also present
+    const annotations = fragment!.meta.annotations as Array<{ type: string; fragmentId: string; text: string }>
+    expect(annotations).toHaveLength(1)
+    expect(annotations[0].text).toBe('Alice')
+  })
+
   it('sets summary when story had no summary', async () => {
     await createStory(dataDir, makeStory({ summary: '' }))
     await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
