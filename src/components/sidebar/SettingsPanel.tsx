@@ -314,7 +314,7 @@ export function SettingsPanel({
               onChange={setProseFontSize}
             />
           </SettingRow>
-          <SettingRow label="Enable custom CSS" description="Apply your own styles globally">
+          <SettingRow label="Custom CSS" description="Apply your own styles globally">
             <ToggleSwitch on={customCssEnabled} onToggle={() => setCustomCssEnabled(!customCssEnabled)} label="Toggle custom CSS" />
           </SettingRow>
           {customCssEnabled && (
