@@ -903,6 +903,134 @@ return ''`}</div>
     ],
   },
   {
+    id: 'timelines',
+    title: 'Timelines',
+    description: 'Explore alternate story directions by forking your narrative at any point.',
+    subsections: [
+      {
+        id: 'overview',
+        title: 'What are timelines',
+        content: (
+          <>
+            <P>
+              Timelines let you branch your story to explore alternate directions without losing
+              previous work. Each timeline is a complete, independent copy of your story's content —
+              prose, fragments, librarian data, and all metadata.
+            </P>
+            <P>
+              Every story starts with a single timeline called <strong className="text-foreground/75">Main</strong>.
+              You can create new timelines at any point, and each one evolves independently from there.
+              Edits and generations in one timeline never affect another.
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'creating',
+        title: 'Creating a timeline',
+        content: (
+          <>
+            <P>
+              There are two ways to create a new timeline:
+            </P>
+            <P>
+              <strong className="text-foreground/75">From the timeline bar</strong> — Click the{' '}
+              <Mono>+</Mono> button in the top bar. This creates a full copy of the current
+              timeline, including all prose and fragments. You can then continue writing from the end.
+            </P>
+            <P>
+              <strong className="text-foreground/75">From a prose section</strong> — Click the{' '}
+              <strong className="text-foreground/75">Timeline</strong> button on any prose block
+              in the chain view. This forks the story <em>at that point</em> — the new timeline
+              keeps everything up to and including that section, and you write an alternate
+              continuation from there.
+            </P>
+            <Tip>
+              Forking from a specific prose section is the most common use. It lets you ask
+              "what if the story went differently here?" and explore the answer without
+              affecting your main narrative.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'switching',
+        title: 'Switching timelines',
+        content: (
+          <>
+            <P>
+              Click any timeline tab in the top bar to switch to it. The entire view updates —
+              prose chain, fragments, librarian state — to show that timeline's content. You can
+              switch back and forth freely without losing anything.
+            </P>
+            <P>
+              The timeline bar appears automatically when your story has more than one timeline.
+              If you've hidden it, you can re-show it from the Timeline Manager in the sidebar.
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'managing',
+        title: 'Managing timelines',
+        content: (
+          <>
+            <P>
+              Hover over the active timeline tab and click the <Mono>...</Mono> menu to access
+              management options:
+            </P>
+            <P>
+              <strong className="text-foreground/75">Rename</strong> — Change the timeline's name.
+              The name is just a label and doesn't affect the content.
+            </P>
+            <P>
+              <strong className="text-foreground/75">Delete</strong> — Permanently remove a timeline
+              and all its content. This cannot be undone. The Main timeline cannot be deleted.
+            </P>
+            <P>
+              The <strong className="text-foreground/75">Timeline Manager</strong> panel in the sidebar
+              provides a more detailed view, showing each timeline's parent and fork point
+              (e.g., "from Main at section 3").
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'isolation',
+        title: 'Data isolation',
+        content: (
+          <>
+            <P>
+              Each timeline is fully independent. When you create a timeline, everything is copied:
+            </P>
+            <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-0.5">
+              {[
+                'Prose chain and all prose fragments',
+                'Character, guideline, and knowledge fragments',
+                'Fragment associations and tags',
+                'Librarian state, analyses, and chat history',
+                'Generation logs',
+                'Block configuration',
+              ].map((item, i) => (
+                <p key={item} className="text-[11.5px] text-foreground/55 leading-snug">
+                  <span className="text-muted-foreground/30 mr-1.5">{i + 1}.</span>{item}
+                </p>
+              ))}
+            </div>
+            <P>
+              After the copy, the timelines diverge completely. Creating a character in one timeline
+              won't create it in another. The librarian tracks each timeline's story independently.
+            </P>
+            <Tip>
+              Story-level settings (name, description, model configuration) are shared across
+              all timelines. Only the content within each timeline is isolated.
+            </Tip>
+          </>
+        ),
+      },
+    ],
+  },
+  {
     id: 'settings',
     title: 'Settings',
     description: 'Configuring providers, plugins, appearance, and generation behavior.',
