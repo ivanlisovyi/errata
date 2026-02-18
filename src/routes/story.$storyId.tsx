@@ -21,12 +21,14 @@ import {
   notifyPluginPanelClose,
 } from '@/lib/plugin-panels'
 import { FragmentImportDialog } from '@/components/fragments/FragmentImportDialog'
+import { TavernCardImportDialog } from '@/components/fragments/TavernCardImportDialog'
 import {
   parseErrataExport,
   readFileAsText,
   downloadTextFile,
   type ErrataExportData,
 } from '@/lib/fragment-clipboard'
+import { isTavernCardPng } from '@/lib/importers/tavern-card'
 import { Upload } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { TimelineTabs } from '@/components/prose/TimelineTabs'
@@ -52,6 +54,8 @@ function StoryEditorPage() {
   const [showProviders, setShowProviders] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importInitialData, setImportInitialData] = useState<ErrataExportData | null>(null)
+  const [showTavernImport, setShowTavernImport] = useState(false)
+  const [tavernImportBuffers, setTavernImportBuffers] = useState<ArrayBuffer[]>([])
   const [showExportPanel, setShowExportPanel] = useState(false)
   const [pluginSidebarVisibility, setPluginSidebarVisibility] = useState<Record<string, boolean>>({})
   const [pluginCloseReturnSection, setPluginCloseReturnSection] = useState<SidebarSection>(null)
@@ -236,6 +240,11 @@ function StoryEditorPage() {
     setShowImportDialog(true)
   }, [])
 
+  const handleOpenTavernImport = useCallback(() => {
+    setTavernImportBuffers([])
+    setShowTavernImport(true)
+  }, [])
+
   const handleExportProse = useCallback(async () => {
     const [chain, fragments] = await Promise.all([
       api.proseChain.get(storyId),
@@ -273,11 +282,10 @@ function StoryEditorPage() {
     return () => document.removeEventListener('paste', handlePaste)
   }, [])
 
-  // Global drag-and-drop for .json file import
+  // Global drag-and-drop for .json file import and PNG character card import
   useEffect(() => {
-    const hasJsonFile = (e: DragEvent) => {
+    const hasFiles = (e: DragEvent) => {
       if (!e.dataTransfer) return false
-      // Check types for files
       for (let i = 0; i < e.dataTransfer.types.length; i++) {
         if (e.dataTransfer.types[i] === 'Files') return true
       }
@@ -285,7 +293,7 @@ function StoryEditorPage() {
     }
 
     const handleDragEnter = (e: DragEvent) => {
-      if (!hasJsonFile(e)) return
+      if (!hasFiles(e)) return
       e.preventDefault()
       dragCounter.current++
       if (dragCounter.current === 1) {
@@ -294,7 +302,7 @@ function StoryEditorPage() {
     }
 
     const handleDragLeave = (e: DragEvent) => {
-      if (!hasJsonFile(e)) return
+      if (!hasFiles(e)) return
       e.preventDefault()
       dragCounter.current--
       if (dragCounter.current === 0) {
@@ -303,7 +311,7 @@ function StoryEditorPage() {
     }
 
     const handleDragOver = (e: DragEvent) => {
-      if (!hasJsonFile(e)) return
+      if (!hasFiles(e)) return
       e.preventDefault()
     }
 
@@ -312,18 +320,47 @@ function StoryEditorPage() {
       dragCounter.current = 0
       setFileDragOver(false)
 
-      const file = e.dataTransfer?.files[0]
-      if (!file) return
+      const files = e.dataTransfer?.files
+      if (!files || files.length === 0) return
 
-      try {
-        const text = await readFileAsText(file)
-        const parsed = parseErrataExport(text)
-        if (parsed) {
-          setImportInitialData(parsed)
-          setShowImportDialog(true)
+      // Collect all PNG tavern card buffers from the drop
+      const cardBuffers: ArrayBuffer[] = []
+      let nonCardFile: File | null = null
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+          try {
+            const buffer = await file.arrayBuffer()
+            if (isTavernCardPng(buffer)) {
+              cardBuffers.push(buffer)
+              continue
+            }
+          } catch {
+            // Not a valid tavern card PNG
+          }
         }
-      } catch {
-        // Not a valid file, ignore
+        if (!nonCardFile) nonCardFile = file
+      }
+
+      if (cardBuffers.length > 0) {
+        setTavernImportBuffers(cardBuffers)
+        setShowTavernImport(true)
+        return
+      }
+
+      // Fall through to JSON import with the first non-card file
+      if (nonCardFile) {
+        try {
+          const text = await readFileAsText(nonCardFile)
+          const parsed = parseErrataExport(text)
+          if (parsed) {
+            setImportInitialData(parsed)
+            setShowImportDialog(true)
+          }
+        } catch {
+          // Not a valid file, ignore
+        }
       }
     }
 
@@ -391,6 +428,7 @@ function StoryEditorPage() {
           notifyPluginPanelOpen({ panel: 'wizard' }, { storyId })
         }}
         onImportFragment={handleOpenImport}
+        onImportCard={handleOpenTavernImport}
         onExport={() => {
           setShowExportPanel(true)
           notifyPluginPanelOpen({ panel: 'export' }, { storyId })
@@ -500,8 +538,8 @@ function StoryEditorPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-none">
           <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 px-16 py-12">
             <Upload className="size-8 text-primary/50" />
-            <p className="text-sm font-medium text-primary/70">Drop .json file to import</p>
-            <p className="text-xs text-muted-foreground/50">Errata fragment or bundle</p>
+            <p className="text-sm font-medium text-primary/70">Drop file to import</p>
+            <p className="text-xs text-muted-foreground/50">JSON fragment, bundle, or PNG character card</p>
           </div>
         </div>
       )}
@@ -511,6 +549,13 @@ function StoryEditorPage() {
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
         initialData={importInitialData}
+      />
+
+      <TavernCardImportDialog
+        storyId={storyId}
+        open={showTavernImport}
+        onOpenChange={setShowTavernImport}
+        initialBuffers={tavernImportBuffers}
       />
     </SidebarProvider>
   )

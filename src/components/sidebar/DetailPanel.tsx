@@ -30,6 +30,7 @@ interface DetailPanelProps {
   pluginSidebarVisibility?: Record<string, boolean>
   onLaunchWizard?: () => void
   onImportFragment?: () => void
+  onImportCard?: () => void
   onExport?: () => void
   onDownloadStory?: () => void
   onExportProse?: () => void
@@ -83,6 +84,7 @@ export function DetailPanel({
   pluginSidebarVisibility,
   onLaunchWizard,
   onImportFragment,
+  onImportCard,
   onExport,
   onDownloadStory,
   onExportProse,
@@ -179,6 +181,7 @@ export function DetailPanel({
           onSelect={onSelectFragment}
           onCreateNew={() => onCreateFragment(SECTION_TO_TYPE[activeSection])}
           onImport={onImportFragment}
+          onImportCard={activeSection === 'characters' ? onImportCard : undefined}
           selectedId={selectedFragmentId}
         />
       )}

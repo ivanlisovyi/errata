@@ -9,6 +9,8 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { ThemeProvider } from '@/lib/theme'
 import { HelpProvider } from '@/hooks/use-help'
 import { HelpPanel } from '@/components/help/HelpPanel'
+import { CustomCssStyles } from '@/components/settings/CustomCssPanel'
+import { useCustomCss } from '@/lib/theme'
 import appCss from '../styles.css?url'
 
 const queryClient = new QueryClient({
@@ -41,7 +43,7 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 })
 
-const themeScript = `(function(){var t=localStorage.getItem('errata-theme');document.documentElement.classList.toggle('dark',t!=='light')})()`;
+const themeScript = `(function(){var t=localStorage.getItem('errata-theme');var r=document.documentElement;r.classList.toggle('dark',t==='dark');r.classList.toggle('high-contrast',t==='high-contrast')})()`;
 const fontScript = `(function(){var f=localStorage.getItem('errata-fonts');if(!f)return;try{var p=JSON.parse(f),s=document.documentElement.style,fb={display:', Georgia, serif',prose:', Georgia, serif',sans:', -apple-system, BlinkMacSystemFont, sans-serif',mono:', "Fira Code", Menlo, monospace'};for(var k in p){if(p[k]&&fb[k])s.setProperty('--font-'+k,'"'+p[k]+'"'+fb[k])}}catch(e){}})()`;
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -60,9 +62,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
+function CustomCssProvider() {
+  const [css, enabled] = useCustomCss()
+  return <CustomCssStyles css={css} enabled={enabled} />
+}
+
 function RootComponent() {
   return (
     <ThemeProvider>
+      <CustomCssProvider />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <HelpProvider>

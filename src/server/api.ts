@@ -437,7 +437,7 @@ export function createApp(dataDir: string = DATA_DIR) {
         name: body.name,
         description: body.description,
         content: body.content,
-        tags: [],
+        tags: body.tags ?? [],
         refs: [],
         sticky: registry.getType(body.type)?.stickyByDefault ?? false,
         placement: 'user',
@@ -445,7 +445,7 @@ export function createApp(dataDir: string = DATA_DIR) {
         updatedAt: now,
         archived: false,
         order: 0,
-        meta: {},
+        meta: body.meta ?? {},
         version: 1,
         versions: [],
       }
@@ -457,6 +457,8 @@ export function createApp(dataDir: string = DATA_DIR) {
         name: t.String(),
         description: t.String(),
         content: t.String(),
+        tags: t.Optional(t.Array(t.String())),
+        meta: t.Optional(t.Record(t.String(), t.Unknown())),
       }),
     })
 

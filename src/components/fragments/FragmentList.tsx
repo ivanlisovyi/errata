@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { Plus, Pin, GripVertical, FileDown } from 'lucide-react'
+import { Plus, Pin, GripVertical, FileDown, UserPlus } from 'lucide-react'
 
 interface FragmentListProps {
   storyId: string
@@ -18,6 +18,7 @@ interface FragmentListProps {
   onSelect: (fragment: Fragment) => void
   onCreateNew: () => void
   onImport?: () => void
+  onImportCard?: () => void
   selectedId?: string
 }
 
@@ -47,6 +48,7 @@ export function FragmentList({
   onSelect,
   onCreateNew,
   onImport,
+  onImportCard,
   selectedId,
 }: FragmentListProps) {
   const [search, setSearch] = useState('')
@@ -220,6 +222,16 @@ export function FragmentList({
             ))}
           </div>
           <div className="flex gap-0.5">
+            {onImportCard && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon" variant="ghost" className="size-6 text-muted-foreground/50 hover:text-foreground" onClick={onImportCard} data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'import-card-button')}>
+                    <UserPlus className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Import character card</TooltipContent>
+              </Tooltip>
+            )}
             {onImport && (
               <Tooltip>
                 <TooltipTrigger asChild>

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Sparkles, Square, ChevronLeft, ChevronRight,
   Plus, Trash2, Check, Pen, Bot, Users, PenLine,
-  RefreshCw,
+  RefreshCw, BookOpen, Layers, Eye, Zap,
 } from 'lucide-react'
 
 // ── Types ──────────────────────────────────────────────
@@ -17,17 +17,18 @@ interface StoryWizardProps {
   onComplete: () => void
 }
 
-type WizardStep = 'concept' | 'guideline' | 'world' | 'characters' | 'prose' | 'complete'
+type WizardStep = 'concept' | 'guideline' | 'world' | 'characters' | 'preferences' | 'prose' | 'complete'
 
-const STEPS: WizardStep[] = ['concept', 'guideline', 'world', 'characters', 'prose', 'complete']
+const STEPS: WizardStep[] = ['concept', 'guideline', 'world', 'characters', 'preferences', 'prose', 'complete']
 
 const STEP_QUESTIONS: Record<WizardStep, { question: string; subtitle: string }> = {
-  concept:    { question: 'Begin your story',          subtitle: 'Give it a name and a spark of inspiration.' },
-  guideline:  { question: 'How should it be written?', subtitle: 'Define the voice, tone, and style that shapes your prose.' },
-  world:      { question: 'Where does it take place?', subtitle: 'Paint the world your characters inhabit.' },
-  characters: { question: 'Who inhabits your story?',  subtitle: 'Create the cast that brings your world to life.' },
-  prose:      { question: 'How does it begin?',        subtitle: 'Write or generate the opening words.' },
-  complete:   { question: 'Your story is ready.',      subtitle: 'Everything you created is saved and editable from the sidebar.' },
+  concept:     { question: 'Begin your story',            subtitle: 'Give it a name and a spark of inspiration.' },
+  guideline:   { question: 'How should it be written?',   subtitle: 'Define the voice, tone, and style that shapes your prose.' },
+  world:       { question: 'Where does it take place?',   subtitle: 'Paint the world your characters inhabit.' },
+  characters:  { question: 'Who inhabits your story?',    subtitle: 'Create the cast that brings your world to life.' },
+  preferences: { question: 'How should Errata help you?', subtitle: 'Set up the AI assistant that works alongside your writing.' },
+  prose:       { question: 'How does it begin?',          subtitle: 'Write or generate the opening words.' },
+  complete:    { question: 'Your story is ready.',         subtitle: 'Everything you created is saved and editable from the sidebar.' },
 }
 
 interface CharData {
@@ -1178,6 +1179,148 @@ function CharactersStep({
   )
 }
 
+// ── PreferencesStep ─────────────────────────────────────
+
+function PreferencesStep({
+  storyId,
+  onContinue,
+  onBack,
+  onSkip,
+}: {
+  storyId: string
+  onContinue: () => void
+  onBack: () => void
+  onSkip: () => void
+}) {
+  const queryClient = useQueryClient()
+  const { data: story } = useQuery({
+    queryKey: ['story', storyId],
+    queryFn: () => api.stories.get(storyId),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data: { autoApplyLibrarianSuggestions?: boolean; contextOrderMode?: 'simple' | 'advanced' }) =>
+      api.settings.update(storyId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['story', storyId] })
+    },
+  })
+
+  const autoApply = story?.settings.autoApplyLibrarianSuggestions ?? false
+  const contextMode = story?.settings.contextOrderMode ?? 'simple'
+
+  return (
+    <WizardShell step="preferences" onSkip={onSkip}>
+      <div className="space-y-8">
+
+        {/* ── Librarian ── */}
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen className="size-4 text-primary/50" />
+              <h3 className="text-sm font-medium text-foreground/80">The Librarian</h3>
+            </div>
+            <p className="font-prose text-xs text-muted-foreground/45 leading-relaxed">
+              After each generation, a background AI reads what was written and tracks
+              characters, locations, plot points, and contradictions &mdash; building
+              a living reference for your world.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => updateMutation.mutate({ autoApplyLibrarianSuggestions: false })}
+              disabled={updateMutation.isPending}
+              className={`group text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                !autoApply
+                  ? 'border-primary/30 bg-primary/[0.04]'
+                  : 'border-border/30 bg-card/10 hover:border-border/50'
+              }`}
+            >
+              <Eye className="size-4 text-muted-foreground/50 mb-2.5" />
+              <div className="font-display text-[13px] italic leading-snug">Review first</div>
+              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+                The Librarian flags suggestions for you to accept or dismiss. Nothing changes without your say.
+              </p>
+            </button>
+            <button
+              onClick={() => updateMutation.mutate({ autoApplyLibrarianSuggestions: true })}
+              disabled={updateMutation.isPending}
+              className={`group text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                autoApply
+                  ? 'border-primary/30 bg-primary/[0.04]'
+                  : 'border-border/30 bg-card/10 hover:border-border/50'
+              }`}
+            >
+              <Zap className="size-4 text-muted-foreground/50 mb-2.5" />
+              <div className="font-display text-[13px] italic leading-snug">Auto-accept</div>
+              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+                New knowledge is created and updated automatically. Your world-bible stays current as you write.
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Context management ── */}
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Layers className="size-4 text-primary/50" />
+              <h3 className="text-sm font-medium text-foreground/80">Context management</h3>
+            </div>
+            <p className="font-prose text-xs text-muted-foreground/45 leading-relaxed">
+              Controls how your fragments, prose, and instructions are assembled
+              into the prompt that the AI sees when generating.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => updateMutation.mutate({ contextOrderMode: 'simple' })}
+              disabled={updateMutation.isPending}
+              className={`group text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                contextMode === 'simple'
+                  ? 'border-primary/30 bg-primary/[0.04]'
+                  : 'border-border/30 bg-card/10 hover:border-border/50'
+              }`}
+            >
+              <div className="font-display text-[13px] italic leading-snug">Simple</div>
+              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+                Errata assembles the prompt for you &mdash; guidelines, world, characters, then prose.
+                The right choice for most writers.
+              </p>
+            </button>
+            <button
+              onClick={() => updateMutation.mutate({ contextOrderMode: 'advanced' })}
+              disabled={updateMutation.isPending}
+              className={`group text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                contextMode === 'advanced'
+                  ? 'border-primary/30 bg-primary/[0.04]'
+                  : 'border-border/30 bg-card/10 hover:border-border/50'
+              }`}
+            >
+              <div className="font-display text-[13px] italic leading-snug">Advanced</div>
+              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+                Unlocks the Block Editor &mdash; reorder, override, or inject custom
+                blocks into the AI prompt directly.
+              </p>
+            </button>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-muted-foreground/30 leading-relaxed font-prose">
+          Both settings can be changed anytime in Settings.
+        </p>
+      </div>
+
+      <StepNav
+        onBack={onBack}
+        onContinue={onContinue}
+      />
+    </WizardShell>
+  )
+}
+
 // ── CompleteStep ────────────────────────────────────────
 
 function CompleteStep({
@@ -1365,10 +1508,20 @@ export function StoryWizard({ storyId, onComplete }: StoryWizardProps) {
           storyId={storyId}
           characters={characters}
           setCharacters={setCharacters}
-          onContinue={() => goTo('prose')}
+          onContinue={() => goTo('preferences')}
           onBack={() => goTo('world')}
           onSkip={onComplete}
           storyDesc={storyDesc}
+        />
+      )
+
+    case 'preferences':
+      return (
+        <PreferencesStep
+          storyId={storyId}
+          onContinue={() => goTo('prose')}
+          onBack={() => goTo('characters')}
+          onSkip={onComplete}
         />
       )
 

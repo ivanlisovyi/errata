@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useTheme, useFontPreferences, getActiveFont, FONT_CATALOGUE } from '@/lib/theme'
@@ -15,7 +15,82 @@ import {
   Zap,
   Check,
   Server,
+  BookOpen,
+  GitBranch,
 } from 'lucide-react'
+
+// ── Guilloche background ─────────────────────────────
+
+/** A closed ring whose radius oscillates sinusoidally — many concentric rings = parallel flowing waves. */
+function wavyRingPath(baseR: number, amplitude: number, waves: number, steps: number): string {
+  const pts: string[] = []
+  for (let i = 0; i <= steps; i++) {
+    const θ = (i / steps) * 2 * Math.PI
+    const r = baseR + amplitude * Math.sin(waves * θ)
+    pts.push(`${(r * Math.cos(θ)).toFixed(1)},${(r * Math.sin(θ)).toFixed(1)}`)
+  }
+  return `M ${pts[0]} L ${pts.slice(1).join(' ')} Z`
+}
+
+/** Two wave-groups with coprime frequencies create the classic guilloche interference. */
+const GUILLOCHE_GROUPS = [
+  { waves: 5, amplitude: 18, rMin: 40, rMax: 270, spacing: 11, dur: 180, rev: false },
+  { waves: 7, amplitude: 14, rMin: 45, rMax: 265, spacing: 11, dur: 240, rev: true },
+] as const
+
+function GuillocheBackground() {
+  const groups = useMemo(
+    () => GUILLOCHE_GROUPS.map((g) => {
+      const paths: string[] = []
+      for (let r = g.rMin; r <= g.rMax; r += g.spacing) {
+        paths.push(wavyRingPath(r, g.amplitude, g.waves, 360))
+      }
+      return paths
+    }),
+    [],
+  )
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none animate-guilloche-breathe" aria-hidden="true">
+      <svg
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%]"
+        viewBox="-300 -300 600 600"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <defs>
+          <radialGradient id="g-fade">
+            <stop offset="0%" stopColor="white" stopOpacity="1" />
+            <stop offset="50%" stopColor="white" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          <mask id="g-mask">
+            <rect x="-300" y="-300" width="600" height="600" fill="url(#g-fade)" />
+          </mask>
+        </defs>
+        <g mask="url(#g-mask)">
+          {GUILLOCHE_GROUPS.map((group, gi) => (
+            <g
+              key={gi}
+              className={group.rev ? 'animate-guilloche-reverse' : 'animate-guilloche'}
+              style={{ animationDuration: `${group.dur}s` }}
+            >
+              {groups[gi].map((d, ri) => (
+                <path
+                  key={ri}
+                  d={d}
+                  fill="none"
+                  stroke="var(--primary)"
+                  strokeWidth="0.4"
+                  strokeOpacity="0.06"
+                />
+              ))}
+            </g>
+          ))}
+        </g>
+      </svg>
+    </div>
+  )
+}
 
 // ── Provider card data ────────────────────────────────
 
@@ -109,39 +184,42 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [selectedPreset, setSelectedPreset] = useState<PresetKey | null>(null)
 
   return (
-    <div className="fixed inset-0 bg-background z-50 flex items-center justify-center" data-component-id="onboarding-root">
-      {step === 'theme' && (
-        <ThemeStep
-          onNext={() => setStep('typography')}
-        />
-      )}
-      {step === 'typography' && (
-        <TypographyStep
-          onNext={() => setStep('welcome')}
-          onBack={() => setStep('theme')}
-        />
-      )}
-      {step === 'welcome' && (
-        <WelcomeStep
-          onNext={() => setStep('provider-select')}
-        />
-      )}
-      {step === 'provider-select' && (
-        <ProviderSelectStep
-          onSelect={(preset) => {
-            setSelectedPreset(preset)
-            setStep('provider-setup')
-          }}
-          onBack={() => setStep('welcome')}
-        />
-      )}
-      {step === 'provider-setup' && selectedPreset && (
-        <ProviderSetupStep
-          preset={selectedPreset}
-          onComplete={onComplete}
-          onBack={() => setStep('provider-select')}
-        />
-      )}
+    <div className="fixed inset-0 bg-background z-50" data-component-id="onboarding-root">
+      <GuillocheBackground />
+      <div className="relative z-10 flex items-center justify-center h-full overflow-auto">
+        {step === 'theme' && (
+          <ThemeStep
+            onNext={() => setStep('typography')}
+          />
+        )}
+        {step === 'typography' && (
+          <TypographyStep
+            onNext={() => setStep('welcome')}
+            onBack={() => setStep('theme')}
+          />
+        )}
+        {step === 'welcome' && (
+          <WelcomeStep
+            onNext={() => setStep('provider-select')}
+          />
+        )}
+        {step === 'provider-select' && (
+          <ProviderSelectStep
+            onSelect={(preset) => {
+              setSelectedPreset(preset)
+              setStep('provider-setup')
+            }}
+            onBack={() => setStep('welcome')}
+          />
+        )}
+        {step === 'provider-setup' && selectedPreset && (
+          <ProviderSetupStep
+            preset={selectedPreset}
+            onComplete={onComplete}
+            onBack={() => setStep('provider-select')}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -368,24 +446,6 @@ function WelcomeStep({
 }) {
   const { theme, toggle } = useTheme()
 
-  const features = [
-    {
-      icon: Layers,
-      title: 'Fragment System',
-      desc: 'Prose, characters, guidelines, knowledge — everything is a composable fragment.',
-    },
-    {
-      icon: Sparkles,
-      title: 'Intelligent Generation',
-      desc: 'Fragments compose into rich context for nuanced story continuations.',
-    },
-    {
-      icon: Puzzle,
-      title: 'Plugin Architecture',
-      desc: 'Extend with custom fragment types, tools, and pipeline hooks.',
-    },
-  ]
-
   return (
     <div className="max-w-xl mx-auto text-center px-6 relative">
       {/* Theme toggle */}
@@ -404,12 +464,47 @@ function WelcomeStep({
         </p>
       </div>
 
-      <div className="mt-12 space-y-4">
-        {features.map((f, i) => (
+      {/* Hero features: Librarian & Timelines */}
+      <div className="mt-10 grid grid-cols-2 gap-4">
+        <div
+          className="text-left p-5 rounded-xl border border-primary/15 bg-primary/[0.03] animate-onboarding-fade-up"
+          style={{ animationDelay: '200ms' }}
+        >
+          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+            <BookOpen className="size-5 text-primary" />
+          </div>
+          <p className="text-sm font-medium mb-1">The Librarian</p>
+          <p className="text-xs text-muted-foreground/55 leading-relaxed">
+            A background AI reads every generation &mdash; tracking characters,
+            contradictions, and world details into a living story reference.
+          </p>
+        </div>
+        <div
+          className="text-left p-5 rounded-xl border border-primary/15 bg-primary/[0.03] animate-onboarding-fade-up"
+          style={{ animationDelay: '320ms' }}
+        >
+          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+            <GitBranch className="size-5 text-primary" />
+          </div>
+          <p className="text-sm font-medium mb-1">Timelines</p>
+          <p className="text-xs text-muted-foreground/55 leading-relaxed">
+            Fork at any point to explore alternate paths. Each timeline
+            carries its own fragments, prose, and accumulated knowledge.
+          </p>
+        </div>
+      </div>
+
+      {/* Supporting features */}
+      <div className="mt-4 space-y-3">
+        {[
+          { icon: Layers, title: 'Fragments', desc: 'Prose, characters, guidelines, knowledge — everything is a composable fragment.' },
+          { icon: Sparkles, title: 'Generation', desc: 'Fragments compose into rich context for nuanced story continuations.' },
+          { icon: Puzzle, title: 'Plugins', desc: 'Extend with custom fragment types, tools, and pipeline hooks.' },
+        ].map((f, i) => (
           <div
             key={f.title}
             className="flex items-start gap-4 text-left p-4 rounded-lg border border-border/20 bg-card/30 animate-onboarding-fade-up"
-            style={{ animationDelay: `${200 + i * 100}ms` }}
+            style={{ animationDelay: `${450 + i * 100}ms` }}
           >
             <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
               <f.icon className="size-4 text-primary" />
@@ -424,7 +519,7 @@ function WelcomeStep({
 
       <div
         className="mt-10 animate-onboarding-fade-up"
-        style={{ animationDelay: '550ms' }}
+        style={{ animationDelay: '800ms' }}
       >
         <Button onClick={onNext} className="px-8" data-component-id="onboarding-welcome-start">
           Get Started

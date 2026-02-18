@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark' | 'high-contrast'
 
 interface ThemeContextValue {
   theme: Theme
@@ -15,7 +15,7 @@ const STORAGE_KEY = 'errata-theme'
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'dark'
   const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored === 'light' || stored === 'dark') return stored
+  if (stored === 'light' || stored === 'dark' || stored === 'high-contrast') return stored
   return 'dark'
 }
 
@@ -23,7 +23,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(getInitialTheme)
 
   const applyTheme = useCallback((t: Theme) => {
-    document.documentElement.classList.toggle('dark', t === 'dark')
+    const root = document.documentElement
+    root.classList.toggle('dark', t === 'dark')
+    root.classList.toggle('high-contrast', t === 'high-contrast')
   }, [])
 
   useEffect(() => {
@@ -36,7 +38,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const toggle = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
+    const cycle: Record<Theme, Theme> = {
+      dark: 'light',
+      light: 'high-contrast',
+      'high-contrast': 'dark',
+    }
+    setTheme(cycle[theme])
   }, [theme, setTheme])
 
   return (
@@ -299,4 +306,64 @@ export function useFontPreferences(): [FontPreferences, (role: FontRole, name: s
 
 export function getActiveFont(role: FontRole, prefs: FontPreferences): string {
   return prefs[role] ?? DEFAULT_FONTS[role]
+}
+
+// --- Custom CSS preference ---
+
+const CUSTOM_CSS_KEY = 'errata-custom-css'
+const CUSTOM_CSS_ENABLED_KEY = 'errata-custom-css-enabled'
+const CUSTOM_CSS_EVENT = 'errata-custom-css-change'
+
+interface CustomCssChangeDetail {
+  css?: string
+  enabled?: boolean
+}
+
+function getInitialCustomCss(): string {
+  if (typeof window === 'undefined') return ''
+  try {
+    const stored = localStorage.getItem(CUSTOM_CSS_KEY)
+    return stored ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function getInitialCustomCssEnabled(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const stored = localStorage.getItem(CUSTOM_CSS_ENABLED_KEY)
+    return stored === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function useCustomCss(): [string, boolean, (css: string) => void, (enabled: boolean) => void] {
+  const [css, setCssState] = useState<string>(getInitialCustomCss)
+  const [enabled, setEnabledState] = useState<boolean>(getInitialCustomCssEnabled)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<CustomCssChangeDetail>).detail
+      if (typeof detail.css === 'string') setCssState(detail.css)
+      if (typeof detail.enabled === 'boolean') setEnabledState(detail.enabled)
+    }
+    window.addEventListener(CUSTOM_CSS_EVENT, handler)
+    return () => window.removeEventListener(CUSTOM_CSS_EVENT, handler)
+  }, [])
+
+  const setCss = useCallback((newCss: string) => {
+    setCssState(newCss)
+    localStorage.setItem(CUSTOM_CSS_KEY, newCss)
+    window.dispatchEvent(new CustomEvent<CustomCssChangeDetail>(CUSTOM_CSS_EVENT, { detail: { css: newCss } }))
+  }, [])
+
+  const setEnabled = useCallback((isEnabled: boolean) => {
+    setEnabledState(isEnabled)
+    localStorage.setItem(CUSTOM_CSS_ENABLED_KEY, String(isEnabled))
+    window.dispatchEvent(new CustomEvent<CustomCssChangeDetail>(CUSTOM_CSS_EVENT, { detail: { enabled: isEnabled } }))
+  }, [])
+
+  return [css, enabled, setCss, setEnabled]
 }

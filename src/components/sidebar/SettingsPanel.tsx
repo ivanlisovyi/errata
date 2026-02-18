@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type StoryMeta, type GlobalConfigSafe } from '@/lib/api'
-import { useTheme, useQuickSwitch, useCharacterMentions, useTimelineBar, useProseWidth, useProseFontSize, PROSE_FONT_SIZE_LABELS, useFontPreferences, getActiveFont, FONT_CATALOGUE, type FontRole, type ProseWidth, type ProseFontSize } from '@/lib/theme'
-import { Settings2, ChevronRight, ChevronDown, ExternalLink, Eye, EyeOff, Puzzle, Wrench, RotateCcw, CircleHelp } from 'lucide-react'
+import { useTheme, useQuickSwitch, useCharacterMentions, useTimelineBar, useProseWidth, useProseFontSize, PROSE_FONT_SIZE_LABELS, useFontPreferences, getActiveFont, FONT_CATALOGUE, useCustomCss, type FontRole, type ProseWidth, type ProseFontSize } from '@/lib/theme'
+import { Settings2, ChevronRight, ChevronDown, ExternalLink, Eye, EyeOff, Puzzle, Wrench, RotateCcw, CircleHelp, Code } from 'lucide-react'
 import { useHelp } from '@/hooks/use-help'
+import { CustomCssPanel } from '@/components/settings/CustomCssPanel'
 
 interface SettingsPanelProps {
   storyId: string
@@ -218,6 +219,7 @@ export function SettingsPanel({
   }
 
   const [toolsOpen, setToolsOpen] = useState(false)
+  const [customCssPanelOpen, setCustomCssPanelOpen] = useState(false)
   const { openHelp } = useHelp()
   const { theme, setTheme } = useTheme()
   const [quickSwitch, setQuickSwitch] = useQuickSwitch()
@@ -227,6 +229,7 @@ export function SettingsPanel({
   const [proseFontSize, setProseFontSize] = useProseFontSize()
   const [fontPrefs, setFont, resetFonts] = useFontPreferences()
   const hasCustomFonts = Object.keys(fontPrefs).length > 0
+  const [, customCssEnabled, , setCustomCssEnabled] = useCustomCss()
   const enabledBuiltinTools = story.settings.enabledBuiltinTools ?? []
   const builtinToolOptions = [
     { name: 'getFragment', description: 'Get full content for any fragment by ID.' },
@@ -256,6 +259,10 @@ export function SettingsPanel({
     updateMutation.mutate({ enabledBuiltinTools: next })
   }
 
+  if (customCssPanelOpen) {
+    return <CustomCssPanel onClose={() => setCustomCssPanelOpen(false)} />
+  }
+
   return (
     <div className="p-4 space-y-4" data-component-id="settings-panel-root">
       {/* Appearance */}
@@ -268,6 +275,7 @@ export function SettingsPanel({
               options={[
                 { value: 'light', label: 'Light' },
                 { value: 'dark', label: 'Dark' },
+                { value: 'high-contrast', label: 'High' },
               ]}
               onChange={setTheme}
             />
@@ -306,6 +314,22 @@ export function SettingsPanel({
               onChange={setProseFontSize}
             />
           </SettingRow>
+          <SettingRow label="Enable custom CSS" description="Apply your own styles globally">
+            <ToggleSwitch on={customCssEnabled} onToggle={() => setCustomCssEnabled(!customCssEnabled)} label="Toggle custom CSS" />
+          </SettingRow>
+          {customCssEnabled && (
+            <button
+              type="button"
+              onClick={() => setCustomCssPanelOpen(true)}
+              className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/20 transition-colors"
+            >
+              <span className="flex items-center gap-1.5">
+                <Code className="size-3" />
+                Edit custom CSS
+              </span>
+              <ChevronRight className="size-3" />
+            </button>
+          )}
         </div>
       </div>
 
