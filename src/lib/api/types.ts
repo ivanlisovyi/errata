@@ -87,6 +87,11 @@ export interface LibrarianAnalysis {
   createdAt: string
   fragmentId: string
   summaryUpdate: string
+  structuredSummary?: {
+    events: string[]
+    stateChanges: string[]
+    openThreads: string[]
+  }
   mentionedCharacters: string[]
   mentions?: Array<{ characterId: string; text: string }>
   contradictions: Array<{

@@ -10,6 +10,11 @@ export interface LibrarianAnalysis {
   createdAt: string
   fragmentId: string
   summaryUpdate: string
+  structuredSummary?: {
+    events: string[]
+    stateChanges: string[]
+    openThreads: string[]
+  }
   mentionedCharacters: string[]
   mentions?: Array<{ characterId: string; text: string }>
   contradictions: Array<{
@@ -35,6 +40,29 @@ export interface LibrarianAnalysis {
     type: string
     [key: string]: unknown
   }>
+}
+
+export function selectLatestAnalysesByFragment(
+  summaries: LibrarianAnalysisSummary[],
+): Map<string, LibrarianAnalysisSummary> {
+  const latest = new Map<string, LibrarianAnalysisSummary>()
+
+  for (const summary of summaries) {
+    const prev = latest.get(summary.fragmentId)
+    if (!prev) {
+      latest.set(summary.fragmentId, summary)
+      continue
+    }
+
+    if (
+      summary.createdAt > prev.createdAt
+      || (summary.createdAt === prev.createdAt && summary.id > prev.id)
+    ) {
+      latest.set(summary.fragmentId, summary)
+    }
+  }
+
+  return latest
 }
 
 export interface LibrarianAnalysisSummary {

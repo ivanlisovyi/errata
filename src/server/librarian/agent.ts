@@ -8,6 +8,7 @@ import {
   getAnalysis,
   getState,
   saveState,
+  selectLatestAnalysesByFragment,
   type LibrarianAnalysis,
 } from './storage'
 import { applyKnowledgeSuggestion } from './suggestions'
@@ -31,6 +32,8 @@ Your job is to analyze new prose fragments and maintain story continuity.
 You have five reporting tools. Use them to report your findings:
 
 1. updateSummary — Provide a concise summary of what happened in the new prose.
+   - Also provide structured fields when possible: events[], stateChanges[], openThreads[].
+   - If summary text is blank, structured fields are required.
 2. reportMentions — Report each character reference by name, nickname, or title (not pronouns). Include the character ID and the exact text used.
 3. reportContradictions — Flag when the new prose contradicts established facts in the summary, character descriptions, or knowledge. Only flag clear contradictions, not ambiguities.
 4. suggestKnowledge — Suggest creating or updating character/knowledge fragments based on new information.
@@ -309,6 +312,7 @@ async function runLibrarianInner(
     createdAt: new Date().toISOString(),
     fragmentId,
     summaryUpdate: collector.summaryUpdate,
+    structuredSummary: collector.structuredSummary,
     mentionedCharacters: mentionedCharacterIds,
     mentions: collector.mentions,
     contradictions: collector.contradictions,
@@ -461,8 +465,9 @@ async function applyDeferredSummaries(
   // Load all analyses and build a fragmentId -> analysis map
   const analysisSummaries = await listAnalyses(dataDir, storyId)
   const analysisByFragment = new Map<string, string>()
-  for (const s of analysisSummaries) {
-    analysisByFragment.set(s.fragmentId, s.id)
+  const latestByFragment = selectLatestAnalysesByFragment(analysisSummaries)
+  for (const [fragmentId, s] of latestByFragment.entries()) {
+    analysisByFragment.set(fragmentId, s.id)
   }
 
   // Collect summaries in prose-chain order, stopping at first gap.

@@ -2,7 +2,7 @@ import { getStory, listFragments, getFragment } from '../fragments/storage'
 import { registry } from '../fragments/registry'
 import { createLogger } from '../logging'
 import { getActiveProseIds, findSectionIndex } from '../fragments/prose-chain'
-import { listAnalyses, getAnalysis } from '../librarian/storage'
+import { listAnalyses, getAnalysis, selectLatestAnalysesByFragment } from '../librarian/storage'
 import type { Fragment, StoryMeta } from '../fragments/schema'
 
 export interface ContextBuildState {
@@ -129,8 +129,11 @@ async function buildSummaryBeforeFragment(
   const summaries = await listAnalyses(dataDir, storyId)
   if (summaries.length === 0) return ''
 
+  const latestByFragment = selectLatestAnalysesByFragment(summaries)
+  const latestSummaries = [...latestByFragment.values()]
+
   const analyses = await Promise.all(
-    summaries.map((s) => getAnalysis(dataDir, storyId, s.id)),
+    latestSummaries.map((s) => getAnalysis(dataDir, storyId, s.id)),
   )
 
   const position = new Map(fragmentIdsInOrder.map((id, idx) => [id, idx]))

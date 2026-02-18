@@ -6,7 +6,7 @@ import {
   createFragment,
   getFragment,
 } from '@/server/fragments/storage'
-import { getState, getAnalysis, listAnalyses } from '@/server/librarian/storage'
+import { getState, getAnalysis, listAnalyses, saveAnalysis } from '@/server/librarian/storage'
 import { initProseChain, addProseSection } from '@/server/fragments/prose-chain'
 import type { StoryMeta, Fragment } from '@/server/fragments/schema'
 
@@ -299,6 +299,48 @@ describe('librarian agent', () => {
     expect(story).toBeTruthy()
     expect(story!.summary.length).toBeLessThanOrEqual(100)
     expect(story!.summary).toContain('Latest event must remain visible.')
+  })
+
+  it('uses latest analysis per fragment in deferred summary application', async () => {
+    await createStory(dataDir, makeStory({
+      settings: {
+        summarizationThreshold: 0,
+      },
+    }))
+    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001', content: 'First prose' }))
+    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0002', content: 'Second prose' }))
+    await setupProseChain(dataDir, storyId, ['pr-0001', 'pr-0002'])
+
+    await saveAnalysis(dataDir, storyId, {
+      id: 'la-old',
+      createdAt: '2025-01-01T00:00:00.000Z',
+      fragmentId: 'pr-0001',
+      summaryUpdate: 'Old version should not be used.',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [],
+      timelineEvents: [],
+    })
+    await saveAnalysis(dataDir, storyId, {
+      id: 'la-new',
+      createdAt: '2025-01-02T00:00:00.000Z',
+      fragmentId: 'pr-0001',
+      summaryUpdate: 'New version should be used.',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [],
+      timelineEvents: [],
+    })
+
+    mockStreamWithToolCalls([
+      { toolName: 'updateSummary', args: { summary: 'Second prose summary.' } },
+    ])
+    await runLibrarian(dataDir, storyId, 'pr-0002')
+
+    const story = await getStory(dataDir, storyId)
+    expect(story).toBeTruthy()
+    expect(story!.summary).toContain('New version should be used.')
+    expect(story!.summary).not.toContain('Old version should not be used.')
   })
 
   it('detects character mentions', async () => {
@@ -635,6 +677,34 @@ describe('librarian agent', () => {
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
     expect(analysis.summaryUpdate).toBe('This is the summary from text.')
+  })
+
+  it('derives summary from structured updateSummary payload when summary text is empty', async () => {
+    await createStory(dataDir, makeStory())
+    await createFragment(dataDir, storyId, makeFragment({ id: 'pr-0001' }))
+    await setupProseChain(dataDir, storyId, ['pr-0001'])
+
+    mockStreamWithToolCalls([
+      {
+        toolName: 'updateSummary',
+        args: {
+          summary: ' ',
+          events: ['Alice entered the vault'],
+          stateChanges: ['Alice now has the key'],
+          openThreads: ['Who locked the vault?'],
+        },
+      },
+    ])
+
+    const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
+    expect(analysis.summaryUpdate).toContain('Events: Alice entered the vault.')
+    expect(analysis.summaryUpdate).toContain('State changes: Alice now has the key.')
+    expect(analysis.summaryUpdate).toContain('Open threads: Who locked the vault?.')
+    expect(analysis.structuredSummary).toEqual({
+      events: ['Alice entered the vault'],
+      stateChanges: ['Alice now has the key'],
+      openThreads: ['Who locked the vault?'],
+    })
   })
 
   it('uses prompt with correct structure', async () => {
