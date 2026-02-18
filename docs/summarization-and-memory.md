@@ -9,7 +9,7 @@ Errata uses a rolling `story.summary` string as memory for prose that has fallen
 The pipeline is:
 
 1. A prose fragment is generated/saved.
-2. Librarian analyzes that fragment and produces `summaryUpdate`.
+2. Librarian analyzes that fragment and produces `summaryUpdate` and optional `structuredSummary` signals.
 3. Deferred summary application appends eligible `summaryUpdate` entries into `story.summary`.
 4. Summary compaction runs when needed to keep `story.summary` bounded.
 
@@ -53,7 +53,21 @@ Inputs:
 - `state.summarizedUpTo` (watermark)
 - active prose chain order
 - `summarizationThreshold`
-- per-fragment librarian analyses (`summaryUpdate`)
+- latest librarian analysis per prose fragment (`summaryUpdate`)
+
+### Latest-analysis dedupe
+
+Reanalysis can create multiple analysis records for the same prose fragment. Deferred application now resolves each `fragmentId` to the latest analysis first, then applies summaries using that deduped set.
+
+Selection rules:
+
+- prefer newest `createdAt`
+- break timestamp ties by lexicographically larger analysis `id`
+
+Implementation:
+
+- `selectLatestAnalysesByFragment(...)` in `src/server/librarian/storage.ts`
+- used by deferred summary application in `src/server/librarian/agent.ts`
 
 ### Threshold semantics
 
@@ -121,6 +135,8 @@ Runtime clamp behavior:
 
 The rolling summary appears in prompt context as `Story Summary So Far` (unless excluded by options such as `excludeStorySummary` in specialized flows).
 
+When building `summaryBeforeFragmentId`, context rebuild also uses the same latest-analysis dedupe to avoid stale reanalysis summaries.
+
 Relevant file:
 
 - `src/server/llm/context-builder.ts`
@@ -135,6 +151,8 @@ Important coverage:
 
 - contiguous application does not skip gaps
 - compaction enforces bounded summary length
+- deferred apply uses latest analysis per fragment
+- librarian can derive `summaryUpdate` from structured signals when summary text is empty
 
 Related context tests:
 
@@ -151,5 +169,5 @@ Related context tests:
 ## Known Limitations
 
 - Compaction is character-based, not semantic; it can drop useful older context.
-- Latest-analysis dedupe per fragment is not yet part of this mechanism.
+- Structured summary signals are optional and quality depends on model/tool-call discipline.
 - Hierarchical summaries (micro/meso/macro) are not yet implemented.

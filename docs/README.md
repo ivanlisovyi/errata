@@ -5,7 +5,7 @@
 - `docs/context-blocks.md`
   - Context block system: structured LLM prompt blocks, the `beforeBlocks` plugin hook, Block Editor UI, custom blocks (simple + script), and block configuration API.
 - `docs/summarization-and-memory.md`
-  - Technical reference for rolling story memory: deferred summary application, contiguous watermark behavior, summary compaction thresholds, settings/API wiring, and test coverage.
+  - Technical reference for rolling story memory: deferred summary application, latest-analysis dedupe for reanalysis safety, structured summary signals, compaction thresholds, settings/API wiring, and test coverage.
 - `docs/third-party-plugins.md`
   - How to build external plugins, use runtime iframe UI, scaffold from templates, client-side panel hooks (`onPanelOpen`/`onPanelClose` for bundled, `postMessage` for iframe), query cache invalidation, and validate in dev.
 - `docs/runtime-plugins-and-binary-packaging.md`
