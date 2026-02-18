@@ -11,6 +11,7 @@
     "build:binary": "bun scripts/build-binary.mjs",
     "package:binary": "bun scripts/package-binary.mjs",
     "release:binary": "bun run build:binary && bun run package:binary",
+    "stress:backend": "bun scripts/backend-stress-harness.ts",
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts"
