@@ -26,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Plus, Trash2, Sparkles, BookOpen, Users, Scroll, Globe, Upload, ChevronRight, FileJson, AlertCircle, Clipboard } from 'lucide-react'
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import { ErrataLogo } from '@/components/ErrataLogo'
+import { ImportDialog } from '@/components/ImportDialog'
 import {
   isTavernCardPng,
   extractParsedCard,
@@ -40,8 +41,7 @@ function StoryListPage() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [importing, setImporting] = useState(false)
-  const importInputRef = useRef<HTMLInputElement>(null)
+  const [showImportDialog, setShowImportDialog] = useState(false)
   const [fileDragOver, setFileDragOver] = useState(false)
   const dragCounter = useRef(0)
 
@@ -207,25 +207,7 @@ function StoryListPage() {
   const [manualWizard, setManualWizard] = useState(false)
   const showOnboarding = manualWizard || (!configLoading && globalConfig && globalConfig.providers.length === 0)
 
-  const handleImportStory = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImporting(true)
-    try {
-      const newStory = await api.stories.importFromZip(file)
-      await queryClient.invalidateQueries({ queryKey: ['stories'] })
-      navigate({ to: '/story/$storyId', params: { storyId: newStory.id } })
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Import failed')
-    } finally {
-      setImporting(false)
-      // Reset input so same file can be re-selected
-      if (importInputRef.current) importInputRef.current.value = ''
-    }
-  }
-
-  // Global drag-and-drop for character card files (JSON + PNG)
-  // Creates a new story and navigates, passing card data via sessionStorage
+  // Global drag-and-drop for story archives (ZIP) and character card files (JSON + PNG)
   useEffect(() => {
     const hasFiles = (e: DragEvent) => {
       if (!e.dataTransfer) return false
@@ -349,6 +331,21 @@ function StoryListPage() {
           }
         }
       }
+
+      // Try ZIP story import
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        if (file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
+          try {
+            const newStory = await api.stories.importFromZip(file)
+            await queryClient.invalidateQueries({ queryKey: ['stories'] })
+            navigate({ to: '/story/$storyId', params: { storyId: newStory.id } })
+            return
+          } catch {
+            // Not a valid story archive
+          }
+        }
+      }
     }
 
     document.addEventListener('dragenter', handleDragEnter)
@@ -387,20 +384,12 @@ function StoryListPage() {
               size="sm"
               variant="ghost"
               className="gap-1.5"
-              disabled={importing}
-              onClick={() => importInputRef.current?.click()}
+              onClick={() => setShowImportDialog(true)}
               data-component-id="story-import-button"
             >
               <Upload className="size-3.5" />
-              {importing ? 'Importing...' : 'Import Story'}
+              Import
             </Button>
-            <input
-              ref={importInputRef}
-              type="file"
-              accept=".zip"
-              className="hidden"
-              onChange={handleImportStory}
-            />
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetDialog() }}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1.5" variant={'ghost'} data-component-id="story-create-open">
@@ -615,11 +604,13 @@ function StoryListPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-none">
           <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 px-16 py-12">
             <Upload className="size-8 text-primary/50" />
-            <p className="text-sm font-medium text-primary/70">Drop to create story</p>
-            <p className="text-xs text-muted-foreground/50">Character card JSON or PNG</p>
+            <p className="text-sm font-medium text-primary/70">Drop to import</p>
+            <p className="text-xs text-muted-foreground/50">Story archive (.zip), character card (.json / .png)</p>
           </div>
         </div>
       )}
+
+      <ImportDialog open={showImportDialog} onOpenChange={setShowImportDialog} />
 
       {/* Re-run onboarding */}
       <button
