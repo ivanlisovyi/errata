@@ -4,11 +4,10 @@ import { getActiveProseIds } from '../fragments/prose-chain'
 import { withBranch } from '../fragments/branches'
 import {
   saveAnalysis,
-  listAnalyses,
+  getLatestAnalysisIdsByFragment,
   getAnalysis,
   getState,
   saveState,
-  selectLatestAnalysesByFragment,
   type LibrarianAnalysis,
 } from './storage'
 import { applyKnowledgeSuggestion } from './suggestions'
@@ -462,13 +461,8 @@ async function applyDeferredSummaries(
     return
   }
 
-  // Load all analyses and build a fragmentId -> analysis map
-  const analysisSummaries = await listAnalyses(dataDir, storyId)
-  const analysisByFragment = new Map<string, string>()
-  const latestByFragment = selectLatestAnalysesByFragment(analysisSummaries)
-  for (const [fragmentId, s] of latestByFragment.entries()) {
-    analysisByFragment.set(fragmentId, s.id)
-  }
+  // Load latest analysis IDs by fragment from index (rebuilds index if missing)
+  const analysisByFragment = await getLatestAnalysisIdsByFragment(dataDir, storyId)
 
   // Collect summaries in prose-chain order, stopping at first gap.
   // This guarantees contiguous progress from summarizedUpTo.

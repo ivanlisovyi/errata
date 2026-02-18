@@ -7,6 +7,9 @@ import {
 import { addProseSection } from '@/server/fragments/prose-chain'
 import { addProseVariation } from '@/server/fragments/prose-chain'
 import { saveAnalysis } from '@/server/librarian/storage'
+import { unlink } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import type { StoryMeta, Fragment } from '@/server/fragments/schema'
 import {
   buildContext,
@@ -582,6 +585,57 @@ describe('context-builder', () => {
 
     expect(user.content).toContain('Summary A Summary B new')
     expect(user.content).not.toContain('Summary B old')
+  })
+
+  it('rebuilds summaryBeforeFragmentId correctly when analysis index is missing', async () => {
+    const story = makeStory({ summary: 'Global summary should not leak in.' })
+    await createStory(dataDir, story)
+
+    const proseA = makeFragment({ id: 'pr-0001', type: 'prose', name: 'A', content: 'A', order: 1 })
+    const proseB = makeFragment({ id: 'pr-0002', type: 'prose', name: 'B', content: 'B', order: 2 })
+    const proseC = makeFragment({ id: 'pr-0003', type: 'prose', name: 'C', content: 'C', order: 3 })
+    await createFragment(dataDir, story.id, proseA)
+    await createFragment(dataDir, story.id, proseB)
+    await createFragment(dataDir, story.id, proseC)
+    await addProseSection(dataDir, story.id, proseA.id)
+    await addProseSection(dataDir, story.id, proseB.id)
+    await addProseSection(dataDir, story.id, proseC.id)
+
+    await saveAnalysis(dataDir, story.id, {
+      id: 'la-a',
+      createdAt: '2025-01-01T00:00:00.000Z',
+      fragmentId: 'pr-0001',
+      summaryUpdate: 'Summary A',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [],
+      timelineEvents: [],
+    })
+    await saveAnalysis(dataDir, story.id, {
+      id: 'la-b',
+      createdAt: '2025-01-02T00:00:00.000Z',
+      fragmentId: 'pr-0002',
+      summaryUpdate: 'Summary B',
+      mentionedCharacters: [],
+      contradictions: [],
+      knowledgeSuggestions: [],
+      timelineEvents: [],
+    })
+
+    const indexPath = join(dataDir, 'stories', story.id, 'branches', 'main', 'librarian', 'index.json')
+    if (existsSync(indexPath)) {
+      await unlink(indexPath)
+    }
+
+    const messages = await buildContext(dataDir, story.id, 'Regenerate C', {
+      proseBeforeFragmentId: 'pr-0003',
+      summaryBeforeFragmentId: 'pr-0003',
+      excludeFragmentId: 'pr-0003',
+    })
+    const user = messages.find((m) => m.role === 'user')!
+
+    expect(user.content).toContain('Summary A Summary B')
+    expect(user.content).not.toContain('Global summary should not leak in.')
   })
 
   it('limits prose by maxCharacters', async () => {

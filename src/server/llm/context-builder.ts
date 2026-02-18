@@ -2,7 +2,7 @@ import { getStory, listFragments, getFragment } from '../fragments/storage'
 import { registry } from '../fragments/registry'
 import { createLogger } from '../logging'
 import { getActiveProseIds, findSectionIndex, getFullProseChain } from '../fragments/prose-chain'
-import { listAnalyses, getAnalysis, selectLatestAnalysesByFragment } from '../librarian/storage'
+import { getAnalysis, getLatestAnalysisIdsByFragment } from '../librarian/storage'
 import type { Fragment, StoryMeta } from '../fragments/schema'
 
 export interface ContextBuildState {
@@ -131,23 +131,20 @@ async function buildSummaryBeforeFragment(
 ): Promise<string> {
   if (fragmentIdsInOrder.length === 0) return ''
 
-  const summaries = await listAnalyses(dataDir, storyId)
-  if (summaries.length === 0) return ''
+  const latestByFragment = await getLatestAnalysisIdsByFragment(dataDir, storyId)
+  if (latestByFragment.size === 0) return ''
 
-  const latestByFragment = selectLatestAnalysesByFragment(summaries)
-  const latestSummaries = [...latestByFragment.values()]
+  const analysisIds = fragmentIdsInOrder
+    .map((fragmentId) => latestByFragment.get(fragmentId))
+    .filter((analysisId): analysisId is string => !!analysisId)
 
-  const analyses = await Promise.all(
-    latestSummaries.map((s) => getAnalysis(dataDir, storyId, s.id)),
-  )
+  if (analysisIds.length === 0) return ''
 
-  const position = new Map(fragmentIdsInOrder.map((id, idx) => [id, idx]))
+  const analyses = await Promise.all(analysisIds.map((analysisId) => getAnalysis(dataDir, storyId, analysisId)))
   const updates = analyses
     .filter((a): a is NonNullable<typeof a> => !!a)
-    .filter((a) => position.has(a.fragmentId))
-    .filter((a) => a.summaryUpdate.trim().length > 0)
-    .sort((a, b) => (position.get(a.fragmentId) ?? 0) - (position.get(b.fragmentId) ?? 0))
     .map((a) => a.summaryUpdate.trim())
+    .filter((summary) => summary.length > 0)
 
   return updates.join(' ').trim()
 }
