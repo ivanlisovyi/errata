@@ -77,6 +77,7 @@ import { invokeAgent, listAgentRuns } from './agents'
 import { exportStoryAsZip, importStoryFromZip } from './story-archive'
 import type { RefineResult } from './librarian/refine'
 import type { ChatResult } from './librarian/chat'
+import type { ProseTransformResult } from './librarian/prose-transform'
 import {
   getState as getLibrarianState,
   listAnalyses as listLibrarianAnalyses,
@@ -1047,6 +1048,90 @@ export function createApp(dataDir: string = DATA_DIR) {
       body: t.Object({
         fragmentId: t.String(),
         instructions: t.Optional(t.String()),
+      }),
+    })
+
+    // --- Librarian Prose Transform ---
+    .post('/stories/:storyId/librarian/prose-transform', async ({ params, body, set }) => {
+      const requestLogger = logger.child({ storyId: params.storyId })
+      requestLogger.info('Prose transform request started', {
+        fragmentId: body.fragmentId,
+        operation: body.operation,
+      })
+
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+
+      const fragment = await getFragment(dataDir, params.storyId, body.fragmentId)
+      if (!fragment) {
+        set.status = 404
+        return { error: 'Fragment not found' }
+      }
+
+      if (fragment.type !== 'prose') {
+        set.status = 422
+        return { error: 'Only prose fragments support selection transforms.' }
+      }
+
+      try {
+        const { output: transformOutput, trace } = await invokeAgent({
+          dataDir,
+          storyId: params.storyId,
+          agentName: 'librarian.prose-transform',
+          input: {
+            fragmentId: body.fragmentId,
+            selectedText: body.selectedText,
+            operation: body.operation,
+            sourceContent: body.sourceContent,
+            contextBefore: body.contextBefore,
+            contextAfter: body.contextAfter,
+          },
+        })
+
+        const { eventStream, completion } = transformOutput as ProseTransformResult
+        requestLogger.info('Agent trace (prose-transform)', { trace })
+
+        completion.then((result) => {
+          requestLogger.info('Prose transform completed', {
+            fragmentId: body.fragmentId,
+            operation: body.operation,
+            stepCount: result.stepCount,
+            finishReason: result.finishReason,
+            outputLength: result.text.trim().length,
+            reasoningLength: result.reasoning.trim().length,
+          })
+        }).catch((err) => {
+          requestLogger.error('Prose transform completion error', {
+            error: err instanceof Error ? err.message : String(err),
+          })
+        })
+
+        const encoder = new TextEncoder()
+        const encodedStream = eventStream.pipeThrough(new TransformStream<string, Uint8Array>({
+          transform(chunk, controller) {
+            controller.enqueue(encoder.encode(chunk))
+          },
+        }))
+
+        return new Response(encodedStream, {
+          headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8' },
+        })
+      } catch (err) {
+        requestLogger.error('Prose transform failed', { error: err instanceof Error ? err.message : String(err) })
+        set.status = 500
+        return { error: err instanceof Error ? err.message : 'Prose transform failed' }
+      }
+    }, {
+      body: t.Object({
+        fragmentId: t.String(),
+        selectedText: t.String({ minLength: 1 }),
+        operation: t.Union([t.Literal('rewrite'), t.Literal('expand'), t.Literal('compress')]),
+        sourceContent: t.Optional(t.String()),
+        contextBefore: t.Optional(t.String()),
+        contextAfter: t.Optional(t.String()),
       }),
     })
 
