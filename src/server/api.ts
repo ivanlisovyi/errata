@@ -223,6 +223,8 @@ export function createApp(dataDir: string = DATA_DIR) {
           contextCompact: { type: 'proseLimit' as const, value: 10 },
           summaryCompact: { maxCharacters: 12000, targetCharacters: 9000 },
           enableHierarchicalSummary: false,
+          characterChatProviderId: null,
+          characterChatModelId: null,
         },
       }
       await createStory(dataDir, story)
@@ -1297,7 +1299,7 @@ export function createApp(dataDir: string = DATA_DIR) {
     })
 
     .post('/stories/:storyId/character-chat/conversations/:conversationId/chat', async ({ params, body, set }) => {
-      const requestLogger = logger.child({ storyId: params.storyId, conversationId: params.conversationId })
+      const requestLogger = logger.child({ storyId: params.storyId, extra: { conversationId: params.conversationId } })
       requestLogger.info('Character chat request', { messageCount: body.messages.length })
 
       const story = await getStory(dataDir, params.storyId)

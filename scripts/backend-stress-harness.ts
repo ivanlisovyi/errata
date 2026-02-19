@@ -248,6 +248,8 @@ async function seedStory(dataDir: string, options: HarnessOptions): Promise<{
       contextCompact: { type: options.compactType, value: options.compactValue },
       summaryCompact: { maxCharacters: 12000, targetCharacters: 9000 },
       enableHierarchicalSummary: true,
+      characterChatProviderId: null,
+      characterChatModelId: null,
     },
   })
 

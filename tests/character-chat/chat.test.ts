@@ -42,7 +42,7 @@ function makeStory(overrides: Partial<StoryMeta> = {}): StoryMeta {
   }
 }
 
-function makeFragment(overrides: Partial<Fragment>): Fragment {
+function makeFragment(overrides: Partial<Fragment> = {}): Fragment {
   const now = new Date().toISOString()
   return {
     id: 'ch-hero',
