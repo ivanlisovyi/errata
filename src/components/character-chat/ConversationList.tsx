@@ -4,6 +4,7 @@ import type { CharacterChatConversationSummary, PersonaMode } from '@/lib/api/ty
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { X, Plus, Trash2, MessageSquare, User, Users, Sparkles } from 'lucide-react'
+import { resolveFragmentVisual } from '@/lib/fragment-visuals'
 
 function personaIcon(persona: PersonaMode) {
   switch (persona.type) {
@@ -42,6 +43,7 @@ interface ConversationListProps {
   storyId: string
   characterId: string | null
   characters: Fragment[]
+  mediaById: Map<string, Fragment>
   onSelect: (conv: CharacterChatConversationSummary) => void
   onNew: () => void
   onClose: () => void
@@ -51,6 +53,7 @@ export function ConversationList({
   storyId,
   characterId,
   characters,
+  mediaById,
   onSelect,
   onNew,
   onClose,
@@ -127,7 +130,31 @@ export function ConversationList({
               <div key={charId}>
                 {/* Only show group header if not filtering by character */}
                 {!characterId && (
-                  <div className="px-2 pt-3 pb-1.5 first:pt-0">
+                  <div className="flex items-center gap-2 px-2 pt-3 pb-1.5 first:pt-0">
+                    {character && (() => {
+                      const visual = resolveFragmentVisual(character, mediaById)
+                      if (!visual.imageUrl) return null
+                      const boundary = visual.boundary
+                      if (boundary && boundary.width < 1 && boundary.height < 1) {
+                        const bgPosX = boundary.x / (1 - boundary.width) * 100
+                        const bgPosY = boundary.y / (1 - boundary.height) * 100
+                        return (
+                          <div
+                            className="size-5 shrink-0 rounded-full overflow-hidden bg-muted bg-no-repeat"
+                            style={{
+                              backgroundImage: `url("${visual.imageUrl}")`,
+                              backgroundSize: `${100 / boundary.width}% ${100 / boundary.height}%`,
+                              backgroundPosition: `${bgPosX}% ${bgPosY}%`,
+                            }}
+                          />
+                        )
+                      }
+                      return (
+                        <div className="size-5 shrink-0 rounded-full overflow-hidden bg-muted">
+                          <img src={visual.imageUrl} alt="" className="size-full object-cover" />
+                        </div>
+                      )
+                    })()}
                     <span className="font-display text-sm text-muted-foreground/60">
                       {character?.name ?? charId}
                     </span>

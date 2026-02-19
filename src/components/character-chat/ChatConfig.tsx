@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { Fragment, PersonaMode, ProseChain } from '@/lib/api/types'
+import { resolveFragmentVisual } from '@/lib/fragment-visuals'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -31,6 +32,34 @@ interface ChatConfigProps {
   onShowConversations: () => void
   onClose: () => void
   disabled?: boolean
+  mediaById: Map<string, Fragment>
+}
+
+function CharacterThumb({ character, mediaById }: { character: Fragment; mediaById: Map<string, Fragment> }) {
+  const visual = resolveFragmentVisual(character, mediaById)
+  if (!visual.imageUrl) return null
+
+  const boundary = visual.boundary
+  if (boundary && boundary.width < 1 && boundary.height < 1) {
+    const bgPosX = boundary.x / (1 - boundary.width) * 100
+    const bgPosY = boundary.y / (1 - boundary.height) * 100
+    return (
+      <div
+        className="size-4 shrink-0 rounded-full overflow-hidden bg-muted bg-no-repeat"
+        style={{
+          backgroundImage: `url("${visual.imageUrl}")`,
+          backgroundSize: `${100 / boundary.width}% ${100 / boundary.height}%`,
+          backgroundPosition: `${bgPosX}% ${bgPosY}%`,
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="size-4 shrink-0 rounded-full overflow-hidden bg-muted">
+      <img src={visual.imageUrl} alt="" className="size-full object-cover" />
+    </div>
+  )
 }
 
 export function ChatConfig({
@@ -46,6 +75,7 @@ export function ChatConfig({
   onShowConversations,
   onClose,
   disabled,
+  mediaById,
 }: ChatConfigProps) {
   const selectedCharacter = characters.find((c) => c.id === selectedCharacterId)
   const personaCharacter = persona.type === 'character'
@@ -79,7 +109,8 @@ export function ChatConfig({
       {/* Character selector */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild disabled={disabled}>
-          <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs font-medium max-w-[160px]">
+          <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs font-medium max-w-[180px]">
+            {selectedCharacter && <CharacterThumb character={selectedCharacter} mediaById={mediaById} />}
             <span className="font-display text-sm truncate">
               {selectedCharacter?.name ?? 'Select character'}
             </span>
@@ -93,6 +124,7 @@ export function ChatConfig({
               onClick={() => onCharacterChange(ch.id)}
               className="gap-2"
             >
+              <CharacterThumb character={ch} mediaById={mediaById} />
               <span className="font-display text-sm">{ch.name}</span>
               <span className="text-[10px] text-muted-foreground/50 truncate ml-auto max-w-[120px]">
                 {ch.description}
