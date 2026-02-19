@@ -266,7 +266,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full" data-component-id="block-editor-root">
+    <div className="flex h-full min-h-0 flex-col" data-component-id="block-editor-root">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/30 flex items-center gap-3">
         <p className="text-[11px] text-muted-foreground leading-snug flex-1">
@@ -291,7 +291,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 [&>[data-slot=scroll-area-viewport]>div]:!block" data-component-id="block-editor-scroll">
+      <ScrollArea className="flex-1 min-h-0 [&>[data-slot=scroll-area-viewport]>div]:!block" data-component-id="block-editor-scroll">
         <div className="px-2 py-3 space-y-1">
           {mergedBlocks.map((block, index) => {
             const isExpanded = expandedId === block.id

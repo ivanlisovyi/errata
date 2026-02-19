@@ -11,7 +11,7 @@ import {
 } from '../character-chat/storage'
 import { createLogger } from '../logging'
 import { encodeStream } from './encode-stream'
-import type { ChatResult as CharacterChatResult } from '../character-chat/chat'
+import type { AgentStreamResult } from '../agents/stream-types'
 
 export function characterChatRoutes(dataDir: string) {
   const logger = createLogger('api:character-chat', { dataDir })
@@ -114,7 +114,7 @@ export function characterChatRoutes(dataDir: string) {
           },
         })
 
-        const { eventStream, completion } = chatOutput as CharacterChatResult
+        const { eventStream, completion } = chatOutput as AgentStreamResult
         requestLogger.info('Agent trace (character-chat)', { trace })
 
         // Persist conversation after completion (in background)

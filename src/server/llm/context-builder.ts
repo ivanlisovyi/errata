@@ -30,6 +30,7 @@ export interface ContextMessage {
 
 export interface ContextBlock {
   id: string
+  name?: string
   role: 'system' | 'user'
   content: string
   order: number
@@ -659,9 +660,21 @@ export function createDefaultBlocks(state: ContextBuildState, opts: AssembleOpti
 }
 
 /**
- * Renders a single block: prepends the [@block=id] marker to its content.
+ * Slugifies a block name for use in markers: lowercase, non-alphanumeric → dashes, collapse.
+ */
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+/**
+ * Renders a single block: prepends the [@block=...] marker to its content.
+ * When the block has a name different from its id, emits [@block=slug src=id].
+ * Otherwise emits [@block=id].
  */
 function renderBlock(block: ContextBlock): string {
+  if (block.name && block.name !== block.id) {
+    return `[@block=${slugify(block.name)} src=${block.id}]\n${block.content}`
+  }
   return `[@block=${block.id}]\n${block.content}`
 }
 

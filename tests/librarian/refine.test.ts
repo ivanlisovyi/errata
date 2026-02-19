@@ -50,22 +50,24 @@ function makeFragment(overrides: Partial<Fragment>): Fragment {
 }
 
 function createMockStreamResult(text: string) {
-  const textStream = new ReadableStream<string>({
+  const eventStream = new ReadableStream<string>({
     start(controller) {
-      controller.enqueue(text)
+      controller.enqueue(JSON.stringify({ type: 'text', text }) + '\n')
+      controller.enqueue(JSON.stringify({ type: 'finish', finishReason: 'stop', stepCount: 1 }) + '\n')
       controller.close()
     },
   })
 
   const completion = Promise.resolve({
     text,
+    reasoning: '',
     toolCalls: [] as Array<{ toolName: string; args: Record<string, unknown>; result: unknown }>,
-    stepCount: 0,
+    stepCount: 1,
     finishReason: 'stop',
   })
 
   return {
-    textStream,
+    eventStream,
     completion,
   }
 }
@@ -123,9 +125,9 @@ describe('librarian refine endpoint', () => {
     await createFragment(dataDir, story.id, fragment)
 
     const refinedText = 'Bob is a master blacksmith with a mysterious past.'
-    const { textStream, completion } = createMockStreamResult(refinedText)
+    const { eventStream, completion } = createMockStreamResult(refinedText)
     mockInvokeAgent.mockResolvedValue({
-      output: { textStream, completion },
+      output: { eventStream, completion },
       trace: [],
     })
 
@@ -143,7 +145,8 @@ describe('librarian refine endpoint', () => {
     expect(res.status).toBe(200)
 
     const responseText = await res.text()
-    expect(responseText).toBe(refinedText)
+    expect(responseText).toContain('"type":"text"')
+    expect(responseText).toContain(refinedText)
   })
 
   it('calls streamText with write-enabled tools', async () => {
@@ -153,7 +156,7 @@ describe('librarian refine endpoint', () => {
     const fragment = makeFragment({ type: 'guideline', id: 'gl-refine', name: 'Tone' })
     await createFragment(dataDir, story.id, fragment)
 
-    mockInvokeAgent.mockReturnValue(createMockStreamResult('Updated guideline'))
+    mockInvokeAgent.mockResolvedValue({ output: createMockStreamResult('Updated guideline'), trace: [] })
 
     await app.fetch(
       new Request(`http://localhost/api/stories/${story.id}/librarian/refine`, {
@@ -178,7 +181,7 @@ describe('librarian refine endpoint', () => {
     const fragment = makeFragment({ type: 'character', id: 'ch-refine2', name: 'Eve' })
     await createFragment(dataDir, story.id, fragment)
 
-    mockInvokeAgent.mockReturnValue(createMockStreamResult('Refined'))
+    mockInvokeAgent.mockResolvedValue({ output: createMockStreamResult('Refined'), trace: [] })
 
     await app.fetch(
       new Request(`http://localhost/api/stories/${story.id}/librarian/refine`, {
@@ -204,9 +207,9 @@ describe('librarian refine endpoint', () => {
     const character = makeFragment({ type: 'character', id: 'ch-refine', name: 'Hero', content: 'A brave warrior' })
     await createFragment(dataDir, story.id, character)
 
-    const { textStream, completion } = createMockStreamResult('Refined character')
+    const mockResult = createMockStreamResult('Refined character')
     mockInvokeAgent.mockResolvedValue({
-      output: { textStream, completion },
+      output: mockResult,
       trace: [],
     })
 
@@ -234,9 +237,9 @@ describe('librarian refine endpoint', () => {
     const fragment = makeFragment({ type: 'knowledge', id: 'kn-refine', name: 'Magic' })
     await createFragment(dataDir, story.id, fragment)
 
-    const { textStream, completion } = createMockStreamResult('Improved knowledge')
+    const mockResult = createMockStreamResult('Improved knowledge')
     mockInvokeAgent.mockResolvedValue({
-      output: { textStream, completion },
+      output: mockResult,
       trace: [],
     })
 
@@ -265,9 +268,9 @@ describe('librarian refine endpoint', () => {
     })
     await createFragment(dataDir, story.id, fragment)
 
-    const { textStream: ts4, completion: c4 } = createMockStreamResult('Enhanced style guide')
+    const mockResult = createMockStreamResult('Enhanced style guide')
     mockInvokeAgent.mockResolvedValue({
-      output: { textStream: ts4, completion: c4 },
+      output: mockResult,
       trace: [],
     })
 
@@ -284,7 +287,8 @@ describe('librarian refine endpoint', () => {
 
     expect(res.status).toBe(200)
     const responseText = await res.text()
-    expect(responseText).toBe('Enhanced style guide')
+    expect(responseText).toContain('"type":"text"')
+    expect(responseText).toContain('Enhanced style guide')
   })
 
   it('streams transformed prose text for selection rewrite', async () => {

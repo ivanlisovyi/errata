@@ -32,6 +32,7 @@ vi.mock('ai', async () => {
 })
 
 import { runLibrarian } from '@/server/librarian/agent'
+import { ensureCoreAgentsRegistered } from '@/server/agents'
 
 function makeStory(
   overrides: Omit<Partial<StoryMeta>, 'settings'> & { settings?: Partial<StoryMeta['settings']> } = {},
@@ -128,6 +129,7 @@ describe('librarian agent', () => {
   const storyId = 'story-test'
 
   beforeEach(async () => {
+    ensureCoreAgentsRegistered()
     const tmp = await createTempDir()
     dataDir = tmp.path
     cleanup = tmp.cleanup

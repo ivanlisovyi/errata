@@ -13,7 +13,8 @@ import {
 } from './storage'
 import { applyKnowledgeSuggestion } from './suggestions'
 import { createLogger } from '../logging'
-import { createLibrarianAnalyzeToolAgent } from './llm-agents'
+import { createToolAgent } from '../agents/create-agent'
+import { compileAgentContext } from '../agents/compile-agent-context'
 import { createEmptyCollector, createAnalysisTools } from './analysis-tools'
 import {
   createAnalysisBuffer,
@@ -22,31 +23,9 @@ import {
   clearBuffer,
 } from './analysis-stream'
 import { getFragmentsByTag } from '../fragments/associations'
+import type { AgentBlockContext } from '../agents/agent-block-context'
 
 const logger = createLogger('librarian-agent')
-
-const SYSTEM_PROMPT = `
-You are a librarian agent for a collaborative writing app.
-Your job is to analyze new prose fragments and maintain story continuity.
-
-You have five reporting tools. Use them to report your findings:
-
-1. updateSummary — Provide a concise summary of what happened in the new prose.
-   - Also provide structured fields when possible: events[], stateChanges[], openThreads[].
-   - If summary text is blank, structured fields are required.
-2. reportMentions — Report each character reference by name, nickname, or title (not pronouns). Include the character ID and the exact text used.
-3. reportContradictions — Flag when the new prose contradicts established facts in the summary, character descriptions, or knowledge. Only flag clear contradictions, not ambiguities.
-4. suggestKnowledge — Suggest creating or updating character/knowledge fragments based on new information.
-   - If an existing fragment should be refined, set targetFragmentId to that existing ID and provide the updated name/description/content.
-   - If this is truly new information, omit targetFragmentId and suggest creating a new fragment.
-   - Set type to "character" for characters or "knowledge" for world-building details, locations, items, or facts.
-   - When updating a character or knowledge fragment, retain important established facts from the existing description in the updated content.
-5. reportTimeline — Note significant events. "position" is relative to the previous prose: "before" if it's a flashback, "during" if concurrent, "after" if it follows sequentially.
-
-Always call updateSummary. Only call the other tools if there are relevant findings.
-If there are no contradictions, suggestions, mentions, or timeline events, don't call those tools.
-Only return 'Analysis complete' in your final output. 
-`
 
 const DEFAULT_SUMMARY_COMPACT = {
   maxCharacters: 12000,
@@ -165,41 +144,6 @@ async function compactSummary(
   return compactSummaryByCharacters(normalized, maxCharacters, target)
 }
 
-function buildUserPrompt(
-  summary: string,
-  characters: Array<{ id: string; name: string; description: string }>,
-  knowledge: Array<{ id: string; name: string; content: string }>,
-  newProse: { id: string; content: string },
-): string {
-  const parts: string[] = []
-
-  parts.push('## Story Summary So Far')
-  parts.push(summary || '(No summary yet — this may be the beginning of the story.)')
-  parts.push('')
-
-  if (characters.length > 0) {
-    parts.push('## Known Characters')
-    for (const ch of characters) {
-      parts.push(`- ${ch.id}: ${ch.name} — ${ch.description}`)
-    }
-    parts.push('')
-  }
-
-  if (knowledge.length > 0) {
-    parts.push('## Knowledge Base')
-    for (const kn of knowledge) {
-      parts.push(`- ${kn.id}: ${kn.name} — ${kn.content}`)
-    }
-    parts.push('')
-  }
-
-  parts.push('## New Prose Fragment')
-  parts.push(`Fragment ID: ${newProse.id}`)
-  parts.push(newProse.content)
-
-  return parts.join('\n')
-}
-
 export async function runLibrarian(
   dataDir: string,
   storyId: string,
@@ -241,20 +185,42 @@ async function runLibrarianInner(
   // Load current librarian state for context
   const state = await getState(dataDir, storyId)
 
-  // Build the prompt
-  const userPrompt = buildUserPrompt(
-    story.summary,
-    characters.map((c) => ({ id: c.id, name: c.name, description: c.description })),
-    knowledge.map((k) => ({ id: k.id, name: k.name, content: k.content })),
-    { id: fragment.id, content: fragment.content },
-  )
+  // Load system prompt fragments
+  const sysFragIds = await getFragmentsByTag(dataDir, storyId, 'pass-to-librarian-system-prompt')
+  const systemPromptFragments = []
+  for (const id of sysFragIds) {
+    const frag = await getFragment(dataDir, storyId, id)
+    if (frag) {
+      requestLogger.debug('Adding system prompt fragment to context', { fragmentId: frag.id, name: frag.name })
+      systemPromptFragments.push(frag)
+    }
+  }
 
-  // Resolve model for this story (with request config such as custom headers/user-agent)
-  const { model, modelId, providerId, config } = await getModel(dataDir, storyId, { role: 'librarian' })
+  // Build agent block context
+  const blockContext: AgentBlockContext = {
+    story,
+    proseFragments: [],
+    stickyGuidelines: [],
+    stickyKnowledge: [],
+    stickyCharacters: [],
+    guidelineShortlist: [],
+    knowledgeShortlist: [],
+    characterShortlist: [],
+    systemPromptFragments,
+    allCharacters: characters,
+    allKnowledge: knowledge,
+    newProse: { id: fragment.id, content: fragment.content },
+  }
 
   // Create collector and analysis tools
   const collector = createEmptyCollector()
   const analysisTools = createAnalysisTools(collector)
+
+  // Compile context via block system
+  const compiled = await compileAgentContext(dataDir, storyId, 'librarian.analyze', blockContext, analysisTools)
+
+  // Resolve model for this story
+  const { model, modelId, providerId, config } = await getModel(dataDir, storyId, { role: 'librarian' })
 
   // Create event buffer for live streaming
   const buffer = createAnalysisBuffer(storyId)
@@ -267,24 +233,14 @@ async function runLibrarianInner(
     'User-Agent': config.headers['User-Agent'] ?? 'errata-librarian/1.0',
   }
 
-  let sys = SYSTEM_PROMPT
-  let sysFragIds = await getFragmentsByTag(dataDir, storyId, 'pass-to-librarian-system-prompt')
-  let sysFrags = []
-  for (const id of sysFragIds) {
-    const frag = await getFragment(dataDir, storyId, id)
-    if (frag) {
-      requestLogger.debug('Adding system prompt fragment to context', { fragmentId: frag.id, name: frag.name })
-      sysFrags.push(frag)
-    }
-  }
+  // Extract system instructions from compiled messages
+  const systemMessage = compiled.messages.find(m => m.role === 'system')
+  const userMessage = compiled.messages.find(m => m.role === 'user')
 
-  sys += '\n\n' + sysFrags.map((frag) => `## ${frag.name}\n${frag.content}`).join('\n\n')
-  
-
-  const agent = createLibrarianAnalyzeToolAgent({
+  const agent = createToolAgent({
     model,
-    instructions: sys,
-    tools: analysisTools,
+    instructions: systemMessage?.content ?? '',
+    tools: compiled.tools,
     maxSteps: 3,
   })
 
@@ -294,10 +250,10 @@ async function runLibrarianInner(
 
   try {
     const result = await agent.stream({
-      prompt: userPrompt,
+      prompt: userMessage?.content ?? '',
     })
 
-    // Iterate fullStream, mapping events to buffer (same pattern as chat.ts)
+    // Iterate fullStream, mapping events to buffer
     for await (const part of result.fullStream) {
       const p = part as Record<string, unknown>
 
@@ -485,9 +441,7 @@ async function runLibrarianInner(
   await saveState(dataDir, storyId, updatedState)
   requestLogger.info('Analysis saved', { analysisId })
 
-  // Deferred summary application: apply summaries for fragments that have
-  // aged past the threshold. This lets the author refine/reiterate recent
-  // prose without those edits being baked into the rolling summary yet.
+  // Deferred summary application
   await applyDeferredSummaries(dataDir, storyId, story, updatedState, requestLogger)
 
   // Clean up buffer after analysis is saved
@@ -499,9 +453,6 @@ async function runLibrarianInner(
 /**
  * Apply summaries from analyses whose fragments are now old enough
  * (past the summarization threshold from the end of the prose chain).
- *
- * Summaries are applied in prose-chain order, and `state.summarizedUpTo`
- * tracks progress so each summary is only applied once.
  */
 async function applyDeferredSummaries(
   dataDir: string,
@@ -536,11 +487,10 @@ async function applyDeferredSummaries(
     return
   }
 
-  // Load latest analysis IDs by fragment from index (rebuilds index if missing)
+  // Load latest analysis IDs by fragment from index
   const analysisByFragment = await getLatestAnalysisIdsByFragment(dataDir, storyId)
 
   // Collect summaries in prose-chain order, stopping at first gap.
-  // This guarantees contiguous progress from summarizedUpTo.
   const summaryParts: string[] = []
   let lastAppliedId: string | null = state.summarizedUpTo
 

@@ -57,6 +57,7 @@ export interface ContextMessage {
 
 export interface ContextBlock {
   id: string
+  name?: string
   role: 'system' | 'user'
   content: string
   order: number

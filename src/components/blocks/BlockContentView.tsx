@@ -10,16 +10,28 @@ interface BlockContentViewProps {
   className?: string
 }
 
-/** Parse compiled messages into per-block segments using [@block=id] markers */
+/**
+ * Parse compiled messages into per-block segments using [@block=...] markers.
+ * Supports both formats:
+ *   [@block=id]              — builtin blocks
+ *   [@block=slug src=id]     — named blocks (custom blocks with human-readable names)
+ */
 function parseBlockSegments(messages: Array<{ role: string; content: string }>) {
-  const segments: Array<{ id: string; role: string; content: string }> = []
+  const segments: Array<{ id: string; name: string; role: string; content: string }> = []
 
   for (const msg of messages) {
     const parts = msg.content.split(/\[@block=([^\]]+)\]\n?/)
     for (let i = 1; i < parts.length; i += 2) {
-      const id = parts[i]
+      const marker = parts[i]
       const content = (parts[i + 1] ?? '').replace(/\n{2,}$/, '')
-      segments.push({ id, role: msg.role, content })
+
+      // Parse "slug src=id" format
+      const srcMatch = marker.match(/^(.+?)\s+src=(.+)$/)
+      if (srcMatch) {
+        segments.push({ id: srcMatch[2], name: srcMatch[1], role: msg.role, content })
+      } else {
+        segments.push({ id: marker, name: marker, role: msg.role, content })
+      }
     }
   }
 
@@ -34,7 +46,7 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
 
   // Build nav groups from explicit blocks list, or fall back to segments
   const navGroups = useMemo(() => {
-    const source = blocks ?? segments.map((s) => ({ id: s.id, name: s.id, role: s.role }))
+    const source = blocks ?? segments.map((s) => ({ id: s.id, name: s.name, role: s.role }))
     const groups: Array<{ role: string; blocks: Array<{ id: string; name: string }> }> = []
     let currentRole = ''
     for (const block of source) {
@@ -110,8 +122,13 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
               {/* Block header */}
               <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/10 border-b border-border/10">
                 <span className="text-[10px] font-medium text-muted-foreground truncate">
-                  {seg.id}
+                  {seg.name}
                 </span>
+                {seg.name !== seg.id && (
+                  <span className="text-[9px] text-muted-foreground/50 font-mono truncate">
+                    {seg.id}
+                  </span>
+                )}
                 <span className="text-[9px] text-muted-foreground tabular-nums ml-auto shrink-0">
                   {seg.content.length.toLocaleString()} chars
                 </span>

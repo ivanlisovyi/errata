@@ -1,14 +1,15 @@
-import type { ContextBlock, ContextBuildState } from '../llm/context-builder'
+import type { ContextBlock } from '../llm/context-builder'
 import type { BlockConfig, CustomBlockDefinition } from './schema'
 
 /**
  * Evaluates a custom block definition into a ContextBlock.
  * Simple blocks use content as-is; script blocks execute the content as a function body.
  */
-function evaluateCustomBlock(def: CustomBlockDefinition, state: ContextBuildState): ContextBlock | null {
+function evaluateCustomBlock(def: CustomBlockDefinition, scriptContext: object): ContextBlock | null {
   if (def.type === 'simple') {
     return {
       id: def.id,
+      name: def.name,
       role: def.role,
       content: def.content,
       order: def.order,
@@ -19,22 +20,13 @@ function evaluateCustomBlock(def: CustomBlockDefinition, state: ContextBuildStat
   // Script block: execute content as a function body with ctx parameter
   try {
     const fn = new Function('ctx', def.content)
-    const result = fn({
-      story: state.story,
-      proseFragments: state.proseFragments,
-      stickyGuidelines: state.stickyGuidelines,
-      stickyKnowledge: state.stickyKnowledge,
-      stickyCharacters: state.stickyCharacters,
-      guidelineShortlist: state.guidelineShortlist,
-      knowledgeShortlist: state.knowledgeShortlist,
-      characterShortlist: state.characterShortlist,
-      authorInput: state.authorInput,
-    })
+    const result = fn(scriptContext)
 
     if (typeof result !== 'string' || result.trim() === '') return null
 
     return {
       id: def.id,
+      name: def.name,
       role: def.role,
       content: result,
       order: def.order,
@@ -44,6 +36,7 @@ function evaluateCustomBlock(def: CustomBlockDefinition, state: ContextBuildStat
     // Script errors produce an error block so users can see what went wrong
     return {
       id: def.id,
+      name: def.name,
       role: def.role,
       content: `[Script error in custom block "${def.name}"]`,
       order: def.order,
@@ -63,7 +56,7 @@ function evaluateCustomBlock(def: CustomBlockDefinition, state: ContextBuildStat
 export function applyBlockConfig(
   blocks: ContextBlock[],
   config: BlockConfig,
-  state: ContextBuildState,
+  scriptContext: object,
 ): ContextBlock[] {
   let result = [...blocks]
 
@@ -74,7 +67,7 @@ export function applyBlockConfig(
     const override = config.overrides[def.id]
     if (override?.enabled === false) continue
 
-    const block = evaluateCustomBlock(def, state)
+    const block = evaluateCustomBlock(def, scriptContext)
     if (block) {
       result.push(block)
     }

@@ -20,9 +20,7 @@ import {
 import { applyKnowledgeSuggestion } from '../librarian/suggestions'
 import { createLogger } from '../logging'
 import { encodeStream } from './encode-stream'
-import type { RefineResult } from '../librarian/refine'
-import type { ChatResult } from '../librarian/chat'
-import type { ProseTransformResult } from '../librarian/prose-transform'
+import type { AgentStreamResult } from '../agents/stream-types'
 
 export function librarianRoutes(dataDir: string) {
   const logger = createLogger('api:librarian', { dataDir })
@@ -144,7 +142,7 @@ export function librarianRoutes(dataDir: string) {
           },
         })
 
-        const { textStream, completion } = refineOutput as RefineResult
+        const { eventStream, completion } = refineOutput as AgentStreamResult
         requestLogger.info('Agent trace (refine)', { trace })
 
         // Log completion in background
@@ -159,8 +157,8 @@ export function librarianRoutes(dataDir: string) {
           requestLogger.error('Refinement completion error', { error: err instanceof Error ? err.message : String(err) })
         })
 
-        return new Response(encodeStream(textStream), {
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        return new Response(encodeStream(eventStream), {
+          headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8' },
         })
       } catch (err) {
         requestLogger.error('Refinement failed', { error: err instanceof Error ? err.message : String(err) })
@@ -215,7 +213,7 @@ export function librarianRoutes(dataDir: string) {
           },
         })
 
-        const { eventStream, completion } = transformOutput as ProseTransformResult
+        const { eventStream, completion } = transformOutput as AgentStreamResult
         requestLogger.info('Agent trace (prose-transform)', { trace })
 
         completion.then((result) => {
@@ -289,7 +287,7 @@ export function librarianRoutes(dataDir: string) {
           },
         })
 
-        const { eventStream, completion } = chatOutput as ChatResult
+        const { eventStream, completion } = chatOutput as AgentStreamResult
         requestLogger.info('Agent trace (chat)', { trace })
 
         // Persist chat history after completion (in background)

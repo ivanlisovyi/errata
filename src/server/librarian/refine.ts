@@ -3,26 +3,14 @@ import { getStory, getFragment } from '../fragments/storage'
 import { buildContextState } from '../llm/context-builder'
 import { createFragmentTools } from '../llm/tools'
 import { createLogger } from '../logging'
-import { createLibrarianRefineAgent } from './llm-agents'
+import { createToolAgent } from '../agents/create-agent'
+import { createEventStream } from '../agents/create-event-stream'
+import { compileAgentContext } from '../agents/compile-agent-context'
 import { withBranch } from '../fragments/branches'
+import type { AgentStreamResult } from '../agents/stream-types'
+import type { AgentBlockContext } from '../agents/agent-block-context'
 
 const logger = createLogger('librarian-refine')
-
-const REFINE_SYSTEM_PROMPT = `You are a fragment refinement agent for a collaborative writing app. Your job is to improve a specific fragment (character, guideline, or knowledge) based on the story context.
-
-Instructions:
-1. First, read the target fragment using the appropriate get tool (e.g. getCharacter, getKnowledge, getGuideline).
-2. Analyze the story context provided: prose, summary, and other fragments.
-3. Use the updateFragment or editFragment tool to improve the target fragment.
-4. Explain what you changed and why in your text response.
-
-Guidelines for refinement:
-- If the user provides specific instructions, follow them precisely.
-- If no instructions are given, improve the fragment for consistency, clarity, and depth based on story events.
-- Preserve the fragment's existing voice and style unless asked otherwise.
-- Update descriptions to stay within the 250 character limit.
-- Do NOT delete fragments unless explicitly asked.
-- Do NOT modify prose fragments — only characters, guidelines, and knowledge.`
 
 export interface RefineOptions {
   fragmentId: string
@@ -30,15 +18,7 @@ export interface RefineOptions {
   maxSteps?: number
 }
 
-export interface RefineResult {
-  textStream: ReadableStream<string>
-  completion: Promise<{
-    text: string
-    toolCalls: Array<{ toolName: string; args: Record<string, unknown>; result: unknown }>
-    stepCount: number
-    finishReason: string
-  }>
-}
+export type RefineResult = AgentStreamResult
 
 export async function refineFragment(
   dataDir: string,
@@ -73,113 +53,46 @@ async function refineFragmentInner(
     excludeFragmentId: opts.fragmentId,
   })
 
-  // Build a simplified context message for refinement (not prose generation)
-  const contextParts: string[] = []
-
-  contextParts.push(`## Story: ${story.name}`)
-  contextParts.push(story.description)
-  if (story.summary) {
-    contextParts.push(`\n## Story Summary\n${story.summary}`)
-  }
-
-  // Include recent prose for context
-  if (ctxState.proseFragments.length > 0) {
-    contextParts.push('\n## Recent Prose')
-    for (const p of ctxState.proseFragments) {
-      contextParts.push(`### ${p.name} (${p.id})`)
-      contextParts.push(p.content)
-    }
-  }
-
-  // Include sticky fragments for reference
-  const stickyAll = [
-    ...ctxState.stickyGuidelines,
-    ...ctxState.stickyKnowledge,
-    ...ctxState.stickyCharacters,
-  ]
-  if (stickyAll.length > 0) {
-    contextParts.push('\n## Active Context Fragments')
-    for (const f of stickyAll) {
-      contextParts.push(`- ${f.id}: ${f.name} — ${f.description}`)
-    }
-  }
-
-  // Build user message with target info and instructions
-  const userParts: string[] = []
-  userParts.push(`Target fragment to refine: ${opts.fragmentId} (type: ${fragment.type}, name: "${fragment.name}")`)
-  if (opts.instructions) {
-    userParts.push(`\nUser instructions: ${opts.instructions}`)
-  } else {
-    userParts.push('\nNo specific instructions provided. Improve this fragment based on recent story events for consistency, clarity, and depth.')
+  // Build agent block context
+  const blockContext: AgentBlockContext = {
+    story: ctxState.story,
+    proseFragments: ctxState.proseFragments,
+    stickyGuidelines: ctxState.stickyGuidelines,
+    stickyKnowledge: ctxState.stickyKnowledge,
+    stickyCharacters: ctxState.stickyCharacters,
+    guidelineShortlist: ctxState.guidelineShortlist,
+    knowledgeShortlist: ctxState.knowledgeShortlist,
+    characterShortlist: ctxState.characterShortlist,
+    systemPromptFragments: [],
+    targetFragment: fragment,
+    instructions: opts.instructions,
   }
 
   // Create write-enabled fragment tools
-  const tools = createFragmentTools(dataDir, storyId, { readOnly: false })
+  const allTools = createFragmentTools(dataDir, storyId, { readOnly: false })
+
+  // Compile context via block system
+  const compiled = await compileAgentContext(dataDir, storyId, 'librarian.refine', blockContext, allTools)
 
   // Resolve model
   const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarianRefine' })
   requestLogger.info('Resolved model', { modelId })
 
-  const refineAgent = createLibrarianRefineAgent({
+  // Extract system instructions from compiled messages
+  const systemMessage = compiled.messages.find(m => m.role === 'system')
+  const userMessage = compiled.messages.find(m => m.role === 'user')
+
+  const refineAgent = createToolAgent({
     model,
-    instructions: REFINE_SYSTEM_PROMPT,
-    tools,
+    instructions: systemMessage?.content ?? '',
+    tools: compiled.tools,
     maxSteps: opts.maxSteps ?? 5,
   })
 
   // Stream with write tools
   const result = await refineAgent.stream({
-    messages: [
-      { role: 'user', content: contextParts.join('\n') + '\n\n' + userParts.join('\n') },
-    ],
+    messages: userMessage ? [{ role: 'user' as const, content: userMessage.content }] : [],
   })
 
-  // Tee the text stream
-  const textStream = result.textStream
-  const [clientStream, collectStream] = textStream.tee()
-
-  // Build completion promise
-  const completion = (async () => {
-    // Collect full text
-    let fullText = ''
-    const reader = collectStream.getReader()
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      fullText += value
-    }
-
-    // Collect tool calls from steps
-    const toolCalls: Array<{ toolName: string; args: Record<string, unknown>; result: unknown }> = []
-    const steps = await result.steps
-    for (const step of steps) {
-      if (step.toolCalls) {
-        for (const tc of step.toolCalls) {
-          const call = tc as { toolName: string; args?: Record<string, unknown>; result?: unknown }
-          toolCalls.push({
-            toolName: call.toolName,
-            args: call.args ?? {},
-            result: call.result ?? null,
-          })
-        }
-      }
-    }
-
-    const finishReason = await result.finishReason ?? 'unknown'
-    const stepCount = steps.length
-
-    requestLogger.info('Refinement completed', { stepCount, finishReason: String(finishReason), toolCallCount: toolCalls.length })
-
-    return {
-      text: fullText,
-      toolCalls,
-      stepCount,
-      finishReason: String(finishReason),
-    }
-  })()
-
-  return {
-    textStream: clientStream,
-    completion,
-  }
+  return createEventStream(result.fullStream)
 }

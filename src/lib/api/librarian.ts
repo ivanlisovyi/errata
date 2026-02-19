@@ -1,4 +1,4 @@
-import { apiFetch, fetchStream, fetchEventStream, fetchGetEventStream } from './client'
+import { apiFetch, fetchEventStream, fetchGetEventStream } from './client'
 import type {
   LibrarianState,
   LibrarianAnalysisSummary,
@@ -20,7 +20,7 @@ export const librarian = {
   acceptSuggestion: (storyId: string, analysisId: string, index: number) =>
     apiFetch<LibrarianAcceptSuggestionResponse>(`/stories/${storyId}/librarian/analyses/${analysisId}/suggestions/${index}/accept`, { method: 'POST' }),
   refine: (storyId: string, fragmentId: string, instructions?: string) =>
-    fetchStream(`/stories/${storyId}/librarian/refine`, { fragmentId, instructions }),
+    fetchEventStream(`/stories/${storyId}/librarian/refine`, { fragmentId, instructions }),
   transformProseSelection: (
     storyId: string,
     fragmentId: string,

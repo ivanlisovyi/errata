@@ -6,6 +6,7 @@ import { getPluginPanel } from '@/lib/plugin-panels'
 import { FragmentList } from '@/components/fragments/FragmentList'
 import { ContextOrderPanel } from '@/components/fragments/ContextOrderPanel'
 import { BlockEditorPanel } from '@/components/blocks/BlockEditorPanel'
+import { AgentContextPanel } from '@/components/agents/AgentContextPanel'
 import { StoryInfoPanel } from './StoryInfoPanel'
 import { SettingsPanel } from './SettingsPanel'
 import { LibrarianPanel } from './LibrarianPanel'
@@ -54,6 +55,7 @@ const SECTION_TITLES: Record<string, string> = {
   branches: 'Timelines',
   'context-order': 'Fragment Order',
   'block-editor': 'Block Editor',
+  'agent-context': 'Agent Context',
   settings: 'Settings',
   'agent-activity': 'Librarian',
 }
@@ -155,6 +157,10 @@ export function DetailPanel({
 
       {activeSection === 'block-editor' && (
         <BlockEditorPanel storyId={storyId} />
+      )}
+
+      {activeSection === 'agent-context' && (
+        <AgentContextPanel storyId={storyId} />
       )}
 
       {activeSection === 'context-order' && (

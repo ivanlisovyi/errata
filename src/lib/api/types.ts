@@ -283,6 +283,24 @@ export interface BlockPreviewResponse {
   blockCount: number
 }
 
+// Agent Block types
+export interface AgentBlockInfo {
+  agentName: string
+  displayName: string
+  description: string
+  availableTools: string[]
+}
+
+export interface AgentBlockConfig extends BlockConfig {
+  disabledTools: string[]
+}
+
+export interface AgentBlocksResponse {
+  config: AgentBlockConfig
+  builtinBlocks: BuiltinBlockMeta[]
+  availableTools: string[]
+}
+
 // Branch types
 export interface BranchMeta {
   id: string

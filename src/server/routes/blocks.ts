@@ -44,7 +44,7 @@ export function blockRoutes(dataDir: string) {
           if (a.role !== b.role) return a.role === 'system' ? -1 : 1
           return a.order - b.order
         })
-        .map(b => ({ id: b.id, name: b.id, role: b.role }))
+        .map(b => ({ id: b.id, name: b.name ?? b.id, role: b.role }))
       return { messages, blocks: blocksMeta, blockCount: blocks.length }
     })
 

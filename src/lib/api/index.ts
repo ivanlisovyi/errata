@@ -16,6 +16,7 @@ export { blocks } from './blocks'
 export { branches } from './branches'
 export { chapters } from './chapters'
 export { characterChat } from './character-chat'
+export { agentBlocks } from './agent-blocks'
 
 // HTTP Client utilities (exported for advanced use cases)
 export { apiFetch, fetchStream, fetchEventStream } from './client'
@@ -33,6 +34,7 @@ import { blocks } from './blocks'
 import { branches } from './branches'
 import { chapters } from './chapters'
 import { characterChat } from './character-chat'
+import { agentBlocks } from './agent-blocks'
 
 export const api = {
   stories,
@@ -47,4 +49,5 @@ export const api = {
   branches,
   chapters,
   characterChat,
+  agentBlocks,
 }

@@ -1,10 +1,21 @@
 import { z } from 'zod/v4'
 import { agentRegistry } from '../agents/registry'
+import { agentBlockRegistry } from '../agents/agent-block-registry'
 import type { AgentDefinition } from '../agents/types'
 import { runLibrarian } from './agent'
 import { librarianChat } from './chat'
 import { refineFragment } from './refine'
 import { transformProseSelection } from './prose-transform'
+import {
+  createLibrarianAnalyzeBlocks,
+  buildAnalyzePreviewContext,
+  createLibrarianChatBlocks,
+  buildChatPreviewContext,
+  createLibrarianRefineBlocks,
+  buildRefinePreviewContext,
+  createProseTransformBlocks,
+  buildProseTransformPreviewContext,
+} from './blocks'
 
 const AnalyzeInputSchema = z.object({
   fragmentId: z.string(),
@@ -13,7 +24,7 @@ const AnalyzeInputSchema = z.object({
 const RefineInputSchema = z.object({
   fragmentId: z.string(),
   instructions: z.string().optional(),
-  maxSteps: z.number().int().positive().optional(),
+  maxSteps: z.int().positive().optional(),
 })
 
 const ChatInputSchema = z.object({
@@ -21,7 +32,7 @@ const ChatInputSchema = z.object({
     role: z.union([z.literal('user'), z.literal('assistant')]),
     content: z.string(),
   })),
-  maxSteps: z.number().int().positive().optional(),
+  maxSteps: z.int().positive().optional(),
 })
 
 const ProseTransformInputSchema = z.object({
@@ -76,9 +87,57 @@ let registered = false
 
 export function registerLibrarianAgents(): void {
   if (registered) return
+
+  // Agent definitions
   agentRegistry.register(analyzeDefinition)
   agentRegistry.register(refineDefinition)
   agentRegistry.register(chatDefinition)
   agentRegistry.register(proseTransformDefinition)
+
+  // Block definitions
+  agentBlockRegistry.register({
+    agentName: 'librarian.analyze',
+    displayName: 'Librarian Analyze',
+    description: 'Analyzes prose fragments for continuity signals and summary updates.',
+    createDefaultBlocks: createLibrarianAnalyzeBlocks,
+    availableTools: ['updateSummary', 'reportMentions', 'reportContradictions', 'suggestKnowledge', 'reportTimeline'],
+    buildPreviewContext: buildAnalyzePreviewContext,
+  })
+
+  agentBlockRegistry.register({
+    agentName: 'librarian.chat',
+    displayName: 'Librarian Chat',
+    description: 'Conversational librarian assistant with write-enabled fragment tools.',
+    createDefaultBlocks: createLibrarianChatBlocks,
+    availableTools: [
+      'getFragment', 'listFragments', 'searchFragments', 'listFragmentTypes',
+      'createFragment', 'updateFragment', 'editFragment', 'deleteFragment',
+      'editProse', 'getStorySummary', 'updateStorySummary', 'reanalyzeFragment',
+    ],
+    buildPreviewContext: buildChatPreviewContext,
+  })
+
+  agentBlockRegistry.register({
+    agentName: 'librarian.refine',
+    displayName: 'Librarian Refine',
+    description: 'Refines non-prose fragments using story context and fragment tools.',
+    createDefaultBlocks: createLibrarianRefineBlocks,
+    availableTools: [
+      'getFragment', 'listFragments', 'searchFragments', 'listFragmentTypes',
+      'createFragment', 'updateFragment', 'editFragment', 'deleteFragment',
+      'editProse', 'getStorySummary', 'updateStorySummary',
+    ],
+    buildPreviewContext: buildRefinePreviewContext,
+  })
+
+  agentBlockRegistry.register({
+    agentName: 'librarian.prose-transform',
+    displayName: 'Prose Transform',
+    description: 'Transforms selected prose spans (rewrite, expand, compress, custom).',
+    createDefaultBlocks: createProseTransformBlocks,
+    availableTools: [],
+    buildPreviewContext: buildProseTransformPreviewContext,
+  })
+
   registered = true
 }

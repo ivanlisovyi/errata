@@ -1,16 +1,17 @@
 import { ToolLoopAgent, stepCountIs, type LanguageModel, type ToolSet } from 'ai'
 
-export function createCharacterChatAgent(args: {
+export function createToolAgent(args: {
   model: LanguageModel
   instructions: string
   tools: ToolSet
-  maxSteps: number
-}) {
+  maxSteps?: number
+  toolChoice?: 'auto' | 'none'
+}): ToolLoopAgent {
   return new ToolLoopAgent({
     model: args.model,
     instructions: args.instructions,
     tools: args.tools,
-    toolChoice: 'auto',
-    stopWhen: stepCountIs(args.maxSteps),
+    toolChoice: args.toolChoice ?? 'auto',
+    stopWhen: stepCountIs(args.maxSteps ?? 3),
   })
 }

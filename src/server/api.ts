@@ -13,6 +13,7 @@ import { characterChatRoutes } from './routes/character-chat'
 import { generationRoutes } from './routes/generation'
 import { proseChainRoutes } from './routes/prose-chain'
 import { configRoutes } from './routes/config'
+import { agentBlockRoutes } from './routes/agent-blocks'
 
 const DATA_DIR = process.env.DATA_DIR ?? './data'
 
@@ -99,6 +100,7 @@ export function createApp(dataDir: string = DATA_DIR) {
     .use(generationRoutes(dataDir))
     .use(proseChainRoutes(dataDir))
     .use(configRoutes(dataDir))
+    .use(agentBlockRoutes(dataDir))
 
   // Mount plugin routes
   for (const plugin of pluginRegistry.listAll()) {

@@ -50,8 +50,10 @@ export function RefinementPanel({
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        accumulated += value
-        setStreamedText(accumulated)
+        if (value.type === 'text') {
+          accumulated += value.text
+          setStreamedText(accumulated)
+        }
 
         if (outputRef.current) {
           outputRef.current.scrollTop = outputRef.current.scrollHeight

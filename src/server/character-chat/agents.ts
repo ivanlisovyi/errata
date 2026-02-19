@@ -1,7 +1,9 @@
 import { z } from 'zod/v4'
 import { agentRegistry } from '../agents/registry'
+import { agentBlockRegistry } from '../agents/agent-block-registry'
 import type { AgentDefinition } from '../agents/types'
 import { characterChat } from './chat'
+import { createCharacterChatBlocks, buildCharacterChatPreviewContext } from './blocks'
 
 const PersonaModeSchema = z.union([
   z.object({ type: z.literal('character'), characterId: z.string() }),
@@ -34,6 +36,21 @@ let registered = false
 
 export function registerCharacterChatAgents(): void {
   if (registered) return
+
+  // Agent definition
   agentRegistry.register(chatDefinition)
+
+  // Block definition
+  agentBlockRegistry.register({
+    agentName: 'character-chat.chat',
+    displayName: 'Character Chat',
+    description: 'In-character conversation with a story character.',
+    createDefaultBlocks: createCharacterChatBlocks,
+    availableTools: [
+      'getFragment', 'listFragments', 'searchFragments', 'listFragmentTypes',
+    ],
+    buildPreviewContext: buildCharacterChatPreviewContext,
+  })
+
   registered = true
 }
