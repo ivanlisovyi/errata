@@ -169,7 +169,7 @@ const ACCENT_COLORS: Record<string, { border: string; bg: string; text: string }
 
 const inputClass =
   'w-full h-9 px-3 text-sm bg-background border border-border/40 rounded-md focus:border-primary/30 focus:outline-none'
-const labelClass = 'text-xs font-medium text-muted-foreground/70 mb-1.5 block'
+const labelClass = 'text-xs font-medium text-muted-foreground mb-1.5 block'
 
 // ── Main Wizard ───────────────────────────────────────
 
@@ -330,7 +330,7 @@ function TypographyStep({
     <div className="max-w-xl mx-auto px-6">
       <div className="text-center mb-10 animate-onboarding-fade-up">
         <h2 className="font-display text-3xl italic mb-2">Choose your typeface</h2>
-        <p className="text-sm text-muted-foreground/60">
+        <p className="text-sm text-muted-foreground">
           The reading font shapes your entire writing experience.
         </p>
       </div>
@@ -338,7 +338,7 @@ function TypographyStep({
       {/* Prose fonts — the main event */}
       <div className="mb-8">
         <p
-          className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-3 animate-onboarding-fade-up"
+          className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3 animate-onboarding-fade-up"
           style={{ animationDelay: '100ms' }}
         >
           Prose
@@ -357,7 +357,7 @@ function TypographyStep({
                 }`}
                 style={{ animationDelay: `${150 + i * 80}ms` }}
               >
-                <p className="text-[11px] font-medium text-muted-foreground/50 mb-2">{opt.name}</p>
+                <p className="text-[11px] font-medium text-muted-foreground mb-2">{opt.name}</p>
                 <p
                   className="text-[15px] leading-relaxed text-foreground/80"
                   style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
@@ -378,7 +378,7 @@ function TypographyStep({
       {/* Display fonts — secondary */}
       <div className="mb-10">
         <p
-          className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-3 animate-onboarding-fade-up"
+          className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3 animate-onboarding-fade-up"
           style={{ animationDelay: '500ms' }}
         >
           Headings
@@ -405,7 +405,7 @@ function TypographyStep({
                 >
                   Chapter One
                 </p>
-                <p className="text-[10px] text-muted-foreground/40">{opt.name}</p>
+                <p className="text-[10px] text-muted-foreground">{opt.name}</p>
                 {isActive && (
                   <div className="absolute top-2 right-2 size-4 rounded-full bg-primary flex items-center justify-center animate-onboarding-scale-in">
                     <Check className="size-2.5 text-primary-foreground" />
@@ -427,7 +427,7 @@ function TypographyStep({
         <div className="mt-4">
           <button
             onClick={onBack}
-            className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors flex items-center gap-1"
+            className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors flex items-center gap-1"
           >
             <ArrowLeft className="size-3" /> Back
           </button>
@@ -451,7 +451,7 @@ function WelcomeStep({
       {/* Theme toggle */}
       <button
         onClick={toggle}
-        className="absolute -top-12 right-0 size-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-card/50 transition-all"
+        className="absolute -top-12 right-0 size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-muted-foreground hover:bg-card/50 transition-all"
         title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       >
         {theme === 'dark' ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
@@ -474,7 +474,7 @@ function WelcomeStep({
             <BookOpen className="size-5 text-primary" />
           </div>
           <p className="text-sm font-medium mb-1">The Librarian</p>
-          <p className="text-xs text-muted-foreground/55 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             A background AI reads every generation &mdash; tracking characters,
             contradictions, and world details into a living story reference.
           </p>
@@ -487,7 +487,7 @@ function WelcomeStep({
             <GitBranch className="size-5 text-primary" />
           </div>
           <p className="text-sm font-medium mb-1">Timelines</p>
-          <p className="text-xs text-muted-foreground/55 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Fork at any point to explore alternate paths. Each timeline
             carries its own fragments, prose, and accumulated knowledge.
           </p>
@@ -511,7 +511,7 @@ function WelcomeStep({
             </div>
             <div>
               <p className="text-sm font-medium mb-0.5">{f.title}</p>
-              <p className="text-xs text-muted-foreground/60 leading-relaxed">{f.desc}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
             </div>
           </div>
         ))}
@@ -544,7 +544,7 @@ function ProviderSelectStep({
     <div className="max-w-2xl mx-auto px-6">
       <div className="text-center mb-8 animate-onboarding-fade-up">
         <h2 className="font-display text-3xl italic mb-2">Choose your provider</h2>
-        <p className="text-sm text-muted-foreground/60">
+        <p className="text-sm text-muted-foreground">
           Pick an LLM provider to power your writing. You can always add more later.
         </p>
       </div>
@@ -572,12 +572,12 @@ function ProviderSelectStep({
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium">{card.name}</span>
                     {card.defaultModel && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/50 text-muted-foreground/50">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/50 text-muted-foreground">
                         {card.defaultModel}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground/50 leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     {card.description}
                   </p>
                 </div>
@@ -593,7 +593,7 @@ function ProviderSelectStep({
       >
         <button
           onClick={onBack}
-          className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors flex items-center gap-1"
+          className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors flex items-center gap-1"
         >
           <ArrowLeft className="size-3" /> Back
         </button>
@@ -731,7 +731,7 @@ function ProviderSetupStep({
           You're all set!
         </h2>
         <p
-          className="text-sm text-muted-foreground/60 mb-8 animate-onboarding-fade-up"
+          className="text-sm text-muted-foreground mb-8 animate-onboarding-fade-up"
           style={{ animationDelay: '350ms' }}
         >
           {card.name || name} is configured and ready to go. You can manage providers anytime in
@@ -758,7 +758,7 @@ function ProviderSetupStep({
             {preset === 'custom' ? 'Custom Provider' : card.name}
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground/60">
+        <p className="text-sm text-muted-foreground">
           Enter your credentials to get started.
         </p>
       </div>
@@ -851,7 +851,7 @@ function ProviderSetupStep({
           {fetchedModels.length > 0 && (
             <button
               type="button"
-              className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground mt-1 underline"
+              className="text-[11px] text-muted-foreground hover:text-muted-foreground mt-1 underline"
               onClick={() => setUseCustomModel(!useCustomModel)}
             >
               {useCustomModel ? 'Use fetched models' : 'Enter model ID manually'}
@@ -859,7 +859,7 @@ function ProviderSetupStep({
           )}
           {fetchError && <p className="text-xs text-destructive mt-1">{fetchError}</p>}
           {fetchedModels.length > 0 && !fetchError && (
-            <p className="text-[11px] text-muted-foreground/40 mt-1">
+            <p className="text-[11px] text-muted-foreground mt-1">
               {fetchedModels.length} models available
             </p>
           )}
@@ -915,7 +915,7 @@ function ProviderSetupStep({
       >
         <button
           onClick={onBack}
-          className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors flex items-center gap-1"
+          className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors flex items-center gap-1"
         >
           <ArrowLeft className="size-3" /> Back
         </button>

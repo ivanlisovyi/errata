@@ -53,7 +53,7 @@ export function ColorPickerPanel({ storyId }: PluginPanelProps) {
 
   if (!fragmentId) {
     return (
-      <div className="p-3 text-xs text-muted-foreground/60">
+      <div className="p-3 text-xs text-muted-foreground">
         <p>Open a fragment to see its color.</p>
         <p className="mt-1.5 text-[11px]">
           Use the <span className="font-medium text-foreground/70">Color</span> button in the
@@ -72,7 +72,7 @@ export function ColorPickerPanel({ storyId }: PluginPanelProps) {
             style={{ background: currentColor }}
           />
         )}
-        <span className="font-mono text-muted-foreground/70 truncate">{fragmentId}</span>
+        <span className="font-mono text-muted-foreground truncate">{fragmentId}</span>
         {currentColor && (
           <Badge variant="secondary" className="text-[10px] h-4 font-mono shrink-0">
             {currentColor}
@@ -80,7 +80,7 @@ export function ColorPickerPanel({ storyId }: PluginPanelProps) {
         )}
       </div>
       {!currentColor && (
-        <p className="text-muted-foreground/50">No color assigned.</p>
+        <p className="text-muted-foreground">No color assigned.</p>
       )}
     </div>
   )

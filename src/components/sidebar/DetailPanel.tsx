@@ -234,7 +234,7 @@ export function DetailPanel({
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/50" data-component-id="detail-panel-header">
           <h2 className="font-display text-lg truncate">{title}</h2>
-          <Button size="icon" variant="ghost" className="size-9 text-muted-foreground/50 hover:text-foreground" onClick={onClose} data-component-id="detail-panel-close">
+          <Button size="icon" variant="ghost" className="size-9 text-muted-foreground hover:text-foreground" onClick={onClose} data-component-id="detail-panel-close">
             <X className="size-5" />
           </Button>
         </div>
@@ -258,7 +258,7 @@ export function DetailPanel({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/50" data-component-id="detail-panel-header">
           <h2 className="font-display text-lg truncate">{title}</h2>
-          <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={onClose} data-component-id="detail-panel-close">
+          <Button size="icon" variant="ghost" className="size-7 text-muted-foreground hover:text-foreground" onClick={onClose} data-component-id="detail-panel-close">
             <X className="size-4" />
           </Button>
         </div>

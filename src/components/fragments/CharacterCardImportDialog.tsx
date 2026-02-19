@@ -298,19 +298,19 @@ export function CharacterCardImportDialog({
           <p className="font-display text-xl tracking-tight">
             {hasCard ? 'Import Character Card' : 'Import Character Card'}
           </p>
-          <p className="text-xs text-muted-foreground/60 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {hasCard ? (
               <span className="flex items-center gap-2">
                 <span className="font-medium text-foreground/70">{cardData.card.name}</span>
                 {cardData.card.spec && (
-                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-border/40 text-muted-foreground/50">
+                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-border/40 text-muted-foreground">
                     {cardData.card.spec}
                   </Badge>
                 )}
                 {cardData.card.creator && (
-                  <span className="text-muted-foreground/40">by {cardData.card.creator}</span>
+                  <span className="text-muted-foreground">by {cardData.card.creator}</span>
                 )}
-                <span className="text-muted-foreground/30 ml-auto tabular-nums">
+                <span className="text-muted-foreground ml-auto tabular-nums">
                   {totalCount} {totalCount === 1 ? 'entry' : 'entries'}
                 </span>
               </span>
@@ -356,7 +356,7 @@ export function CharacterCardImportDialog({
                   }`}>
                     <div className="w-14 h-16 rounded-lg bg-gradient-to-b from-muted-foreground/[0.07] to-muted-foreground/[0.03] flex items-center justify-center overflow-hidden">
                       <BookOpen className={`size-7 transition-colors duration-300 ${
-                        dragOver ? 'text-primary/40' : 'text-muted-foreground/15 group-hover:text-muted-foreground/20'
+                        dragOver ? 'text-primary/40' : 'text-muted-foreground group-hover:text-muted-foreground'
                       }`} />
                     </div>
                     {dragOver && (
@@ -372,7 +372,7 @@ export function CharacterCardImportDialog({
                   }`}>
                     Drop character card JSON
                   </p>
-                  <p className="text-[11px] text-muted-foreground/40 mt-1.5">
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
                     V2 or V3 character card .json files
                   </p>
                 </div>
@@ -381,13 +381,13 @@ export function CharacterCardImportDialog({
               {/* URL input */}
               <div className="flex items-center gap-2">
                 <div className="h-px flex-1 bg-border/30" />
-                <span className="text-[10px] text-muted-foreground/30 uppercase tracking-wider">or paste URL</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">or paste URL</span>
                 <div className="h-px flex-1 bg-border/30" />
               </div>
 
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/30" />
+                  <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                   <Input
                     ref={urlInputRef}
                     placeholder="https://example.com/card.json"
@@ -436,7 +436,7 @@ export function CharacterCardImportDialog({
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{cardData.card.name}</p>
                     {cardData.card.description && (
-                      <p className="text-[11px] text-muted-foreground/50 line-clamp-1">
+                      <p className="text-[11px] text-muted-foreground line-clamp-1">
                         {cardData.card.description}
                       </p>
                     )}
@@ -455,11 +455,11 @@ export function CharacterCardImportDialog({
                 <span className="text-border/60">/</span>
                 <button
                   onClick={deselectAll}
-                  className="text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors"
+                  className="text-muted-foreground hover:text-muted-foreground transition-colors"
                 >
                   Deselect all
                 </button>
-                <span className="ml-auto text-muted-foreground/30 tabular-nums">
+                <span className="ml-auto text-muted-foreground tabular-nums">
                   {selectedCount} selected
                 </span>
               </div>
@@ -476,12 +476,12 @@ export function CharacterCardImportDialog({
                     return (
                       <div key={group.key}>
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/30 font-medium">
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                             {group.label}
                           </span>
                           <div className="h-px flex-1 bg-border/20" />
                           {group.key === 'lorebook' && (
-                            <span className="text-[10px] text-muted-foreground/25 tabular-nums">
+                            <span className="text-[10px] text-muted-foreground tabular-nums">
                               {groupItems.length}
                             </span>
                           )}
@@ -529,11 +529,11 @@ export function CharacterCardImportDialog({
         {/* ── Footer ── */}
         <DialogFooter className="px-5 py-3.5 flex-row items-center">
           {hasCard && (
-            <span className="text-[11px] text-muted-foreground/40 mr-auto tabular-nums">
+            <span className="text-[11px] text-muted-foreground mr-auto tabular-nums">
               {selectedCount} of {totalCount} selected
             </span>
           )}
-          <Button variant="ghost" size="sm" className="text-muted-foreground/60" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           {hasCard && (
@@ -603,12 +603,12 @@ function ItemRow({
             {item.name}
           </span>
           {item.sticky && (
-            <Pin className="size-3 text-muted-foreground/30 shrink-0" />
+            <Pin className="size-3 text-muted-foreground shrink-0" />
           )}
         </div>
 
         {/* Content preview */}
-        <p className="text-[11px] text-muted-foreground/40 line-clamp-1 leading-relaxed">
+        <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">
           {item.content.slice(0, 120)}
         </p>
 
@@ -618,13 +618,13 @@ function ItemRow({
             {item.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
-                className="text-[9px] px-1.5 py-0.5 rounded-md bg-muted-foreground/[0.06] text-muted-foreground/40"
+                className="text-[9px] px-1.5 py-0.5 rounded-md bg-muted-foreground/[0.06] text-muted-foreground"
               >
                 {tag}
               </span>
             ))}
             {item.tags.length > 4 && (
-              <span className="text-[9px] text-muted-foreground/25">
+              <span className="text-[9px] text-muted-foreground">
                 +{item.tags.length - 4}
               </span>
             )}

@@ -114,7 +114,7 @@ export function TimelineTabs({ storyId, branches, activeBranchId, onHide }: Time
             {isActive && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-0.5 rounded text-muted-foreground/30 hover:text-muted-foreground transition-colors opacity-0 group-hover/tab:opacity-100">
+                  <button className="p-0.5 rounded text-muted-foreground hover:text-muted-foreground transition-colors opacity-0 group-hover/tab:opacity-100">
                     <MoreVertical className="size-3" />
                   </button>
                 </DropdownMenuTrigger>
@@ -151,7 +151,7 @@ export function TimelineTabs({ storyId, branches, activeBranchId, onHide }: Time
             value={newTimelineName}
             onChange={(e) => setNewTimelineName(e.target.value)}
             placeholder="Timeline name..."
-            className="h-6 w-28 rounded border border-primary/30 bg-background px-2 text-xs placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            className="h-6 w-28 rounded border border-primary/30 bg-background px-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
             autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter' && newTimelineName.trim()) {
@@ -173,7 +173,7 @@ export function TimelineTabs({ storyId, branches, activeBranchId, onHide }: Time
         <Button
           size="icon"
           variant="ghost"
-          className="size-6 text-muted-foreground/40 hover:text-foreground shrink-0"
+          className="size-6 text-muted-foreground hover:text-foreground shrink-0"
           onClick={() => setCreatingTimeline(true)}
           title="Create timeline from current"
           data-component-id="timeline-create-button"
@@ -187,7 +187,7 @@ export function TimelineTabs({ storyId, branches, activeBranchId, onHide }: Time
         <Button
           size="icon"
           variant="ghost"
-          className="size-6 text-muted-foreground/30 hover:text-muted-foreground shrink-0"
+          className="size-6 text-muted-foreground hover:text-muted-foreground shrink-0"
           onClick={onHide}
           title="Hide timeline bar"
           data-component-id="timeline-hide-button"

@@ -58,7 +58,7 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
   if (segments.length === 0) {
     return (
       <div className={cn('flex items-center justify-center py-16', className)}>
-        <p className="text-xs text-muted-foreground/55 italic">No blocks in context</p>
+        <p className="text-xs text-muted-foreground italic">No blocks in context</p>
       </div>
     )
   }
@@ -71,7 +71,7 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
           <div key={group.role} className="mb-3 last:mb-0">
             <div className="flex items-center gap-1.5 px-2 mb-1">
               <div className="size-1 rounded-full bg-muted-foreground/50" />
-              <span className="text-[9px] text-muted-foreground/55 uppercase tracking-[0.15em] font-medium">
+              <span className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">
                 {group.role}
               </span>
             </div>
@@ -82,7 +82,7 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
                 'w-full text-left px-2 py-1 rounded-md text-[11px] truncate transition-colors duration-100',
                 activeBlockId === block.id
                   ? 'bg-accent/50 text-foreground font-medium'
-                  : 'text-muted-foreground/60 hover:text-foreground/80 hover:bg-accent/25',
+                  : 'text-muted-foreground hover:text-foreground/80 hover:bg-accent/25',
               )}
               onClick={() => scrollToBlock(block.id)}
               title={block.name}
@@ -109,22 +109,22 @@ export function BlockContentView({ messages, blocks, className }: BlockContentVi
             >
               {/* Block header */}
               <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/10 border-b border-border/10">
-                <span className="text-[10px] font-medium text-muted-foreground/50 truncate">
+                <span className="text-[10px] font-medium text-muted-foreground truncate">
                   {seg.id}
                 </span>
-                <span className="text-[9px] text-muted-foreground/45 tabular-nums ml-auto shrink-0">
+                <span className="text-[9px] text-muted-foreground tabular-nums ml-auto shrink-0">
                   {seg.content.length.toLocaleString()} chars
                 </span>
                 <Badge
                   variant="outline"
-                  className="text-[9px] h-3.5 px-1 font-normal border-transparent text-muted-foreground/50 bg-muted/30 shrink-0"
+                  className="text-[9px] h-3.5 px-1 font-normal border-transparent text-muted-foreground bg-muted/30 shrink-0"
                 >
                   {seg.role}
                 </Badge>
               </div>
 
               {/* Block content */}
-              <pre className="whitespace-pre-wrap text-[11px] font-mono text-muted-foreground/70 p-3 max-h-[300px] overflow-y-auto leading-relaxed">
+              <pre className="whitespace-pre-wrap text-[11px] font-mono text-muted-foreground p-3 max-h-[300px] overflow-y-auto leading-relaxed">
                 {seg.content}
               </pre>
             </div>

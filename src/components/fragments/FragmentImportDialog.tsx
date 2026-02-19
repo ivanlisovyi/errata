@@ -311,7 +311,7 @@ export function SingleFragmentPreview({
           <Badge variant="secondary" className="text-[10px] h-4">{f.type}</Badge>
           {f.sticky && <Badge className="text-[10px] h-4">pinned</Badge>}
           {data.source && (
-            <span className="text-[9px] font-mono text-muted-foreground/30 ml-auto truncate max-w-24" title={`Source: ${data.source}`}>
+            <span className="text-[9px] font-mono text-muted-foreground ml-auto truncate max-w-24" title={`Source: ${data.source}`}>
               {data.source.slice(0, 8)}
             </span>
           )}
@@ -319,7 +319,7 @@ export function SingleFragmentPreview({
         <div>
           <p className="font-display text-base leading-tight">{f.name}</p>
           {f.description && (
-            <p className="text-xs text-muted-foreground/60 mt-0.5">{f.description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{f.description}</p>
           )}
         </div>
         {f.content && (
@@ -336,7 +336,7 @@ export function SingleFragmentPreview({
         )}
         {data.attachments && data.attachments.length > 0 && (
           <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50">
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <ImageIcon className="size-3" />
               {data.attachments.length} attached {data.attachments.length === 1 ? 'image' : 'images'}
             </div>
@@ -350,7 +350,7 @@ export function SingleFragmentPreview({
                   </div>
                 ) : (
                   <div key={att.name} className="size-10 rounded border border-border/30 bg-muted flex items-center justify-center shrink-0">
-                    <ImageIcon className="size-4 text-muted-foreground/30" />
+                    <ImageIcon className="size-4 text-muted-foreground" />
                   </div>
                 )
               })}
@@ -361,7 +361,7 @@ export function SingleFragmentPreview({
       <div className="border-t border-border/30 px-4 py-2">
         <button
           onClick={onClear}
-          className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+          className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           Paste different fragment
         </button>
@@ -400,13 +400,13 @@ export function BundlePreview({
       {/* Bundle header */}
       <div className="px-4 py-3 border-b border-border/30">
         <div className="flex items-center gap-2">
-          <Package className="size-3.5 text-muted-foreground/50" />
+          <Package className="size-3.5 text-muted-foreground" />
           <span className="text-xs font-medium">Fragment Bundle</span>
           <Badge variant="secondary" className="text-[10px] h-4 tabular-nums">
             {data.fragments.length} fragments
           </Badge>
           {data.storyName && (
-            <span className="text-[10px] text-muted-foreground/40 ml-auto truncate max-w-32">
+            <span className="text-[10px] text-muted-foreground ml-auto truncate max-w-32">
               from {data.storyName}
             </span>
           )}
@@ -414,11 +414,11 @@ export function BundlePreview({
         <div className="flex items-center gap-2 mt-2">
           <button
             onClick={allSelected ? onDeselectAll : onSelectAll}
-            className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors"
+            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
           >
             {allSelected ? 'Deselect all' : 'Select all'}
           </button>
-          <span className="text-[10px] text-muted-foreground/30">
+          <span className="text-[10px] text-muted-foreground">
             {selectedIndices.size} of {data.fragments.length} selected
           </span>
         </div>
@@ -429,7 +429,7 @@ export function BundlePreview({
         {Object.entries(groupedEntries).map(([type, items]) => (
           <div key={type}>
             <div className="px-4 py-1.5 bg-background/30 border-b border-border/20">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">{type}</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{type}</span>
             </div>
             {items.map(({ entry, index }) => (
               <div
@@ -452,14 +452,14 @@ export function BundlePreview({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate leading-tight">{entry.name}</p>
                   {entry.description && (
-                    <p className="text-[11px] text-muted-foreground/50 truncate">{entry.description}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{entry.description}</p>
                   )}
                 </div>
                 {entry.sticky && (
                   <Badge variant="secondary" className="text-[9px] h-3.5 px-1 shrink-0">pinned</Badge>
                 )}
                 {entry.attachments && entry.attachments.length > 0 && (
-                  <ImageIcon className="size-3 text-muted-foreground/30 shrink-0" />
+                  <ImageIcon className="size-3 text-muted-foreground shrink-0" />
                 )}
               </div>
             ))}
@@ -471,7 +471,7 @@ export function BundlePreview({
       <div className="border-t border-border/30 px-4 py-2">
         <button
           onClick={onClear}
-          className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+          className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           Load different file
         </button>

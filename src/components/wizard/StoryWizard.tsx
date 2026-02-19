@@ -119,12 +119,12 @@ function WizardShell({
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3">
-        <span className="text-[10px] text-muted-foreground/35 uppercase tracking-widest">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
           {showStepCount ? `Step ${stepIndex} of ${STEPS.length - 2}` : '\u00a0'}
         </span>
         <button
           onClick={onSkip}
-          className="text-[11px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+          className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
           data-component-id="wizard-skip"
         >
           Skip setup
@@ -140,7 +140,7 @@ function WizardShell({
               {q.question}
             </h2>
             {q.subtitle && (
-              <p className="font-prose text-sm text-muted-foreground/50 mt-2 leading-relaxed">
+              <p className="font-prose text-sm text-muted-foreground mt-2 leading-relaxed">
                 {q.subtitle}
               </p>
             )}
@@ -218,7 +218,7 @@ function ContentPreview({
     <div className="relative">
       <div className={`p-4 rounded-xl border border-border/30 bg-card/20 ${fontClass} text-sm leading-relaxed whitespace-pre-wrap min-h-[140px] max-h-[400px] overflow-auto`}>
         {content || (
-          <span className="text-muted-foreground/25 italic">Generating...</span>
+          <span className="text-muted-foreground italic">Generating...</span>
         )}
         {isStreaming && (
           <span className="inline-block w-0.5 h-4 bg-primary animate-wizard-cursor ml-0.5 align-text-bottom" />
@@ -226,9 +226,9 @@ function ContentPreview({
       </div>
       {charLimit && content && (
         <div className={`text-[10px] mt-1 text-right ${
-          content.length < charLimit.min ? 'text-muted-foreground/40' :
+          content.length < charLimit.min ? 'text-muted-foreground' :
           content.length > charLimit.max ? 'text-destructive' :
-          'text-muted-foreground/40'
+          'text-muted-foreground'
         }`}>
           {content.length} / {charLimit.min}&ndash;{charLimit.max}
         </div>
@@ -256,7 +256,7 @@ function StepNav({
         <Button
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-muted-foreground/50"
+          className="gap-1.5 text-muted-foreground"
           onClick={onBack}
         >
           <ChevronLeft className="size-3.5" /> Back
@@ -343,7 +343,7 @@ function ConceptStep({
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground/50 mb-2 block font-prose">
+          <label className="text-xs text-muted-foreground mb-2 block font-prose">
             A theme, a world, a feeling &mdash; this guides AI generation throughout.
           </label>
           <Textarea
@@ -356,11 +356,11 @@ function ConceptStep({
 
         {showProviderPicker && globalConfig && (
           <div>
-            <label className="text-xs text-muted-foreground/50 mb-2 block font-prose">
+            <label className="text-xs text-muted-foreground mb-2 block font-prose">
               Model provider for generation
             </label>
             <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border/40 bg-card/30">
-              <Bot className="size-4 text-muted-foreground/40 shrink-0" />
+              <Bot className="size-4 text-muted-foreground shrink-0" />
               <select
                 value={story?.settings.providerId ?? ''}
                 onChange={e => {
@@ -568,7 +568,7 @@ function ContentStep({
             >
               <Sparkles className="size-5 text-primary/60 mb-3" />
               <div className="font-display text-base italic">Generate</div>
-              <p className="text-xs text-muted-foreground/45 mt-1 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Let AI create it based on your story concept
               </p>
             </button>
@@ -576,9 +576,9 @@ function ContentStep({
               onClick={() => setPhase('write')}
               className="group text-left p-5 rounded-xl border-2 border-border/40 hover:border-foreground/15 bg-card/20 hover:bg-card/40 transition-all duration-200"
             >
-              <PenLine className="size-5 text-muted-foreground/40 mb-3" />
+              <PenLine className="size-5 text-muted-foreground mb-3" />
               <div className="font-display text-base italic">Write</div>
-              <p className="text-xs text-muted-foreground/45 mt-1 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Write it yourself from scratch
               </p>
             </button>
@@ -627,9 +627,9 @@ function ContentStep({
           />
           {charLimit && (
             <div className={`text-[10px] text-right ${
-              content.length < charLimit.min ? 'text-muted-foreground/40' :
+              content.length < charLimit.min ? 'text-muted-foreground' :
               content.length > charLimit.max ? 'text-destructive' :
-              'text-muted-foreground/40'
+              'text-muted-foreground'
             }`}>
               {content.length} / {charLimit.min}&ndash;{charLimit.max}
             </div>
@@ -908,7 +908,7 @@ function CharactersStep({
                   /* Inline edit form */
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-1 block">
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
                         Name
                       </label>
                       <Input
@@ -919,7 +919,7 @@ function CharactersStep({
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-1 block">
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
                         Description
                       </label>
                       <Textarea
@@ -959,7 +959,7 @@ function CharactersStep({
                         )}
                       </div>
                       {char.description && char.description !== char.name && (
-                        <p className="text-xs text-muted-foreground/45 mt-0.5 line-clamp-2 font-prose">
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 font-prose">
                           {char.description}
                         </p>
                       )}
@@ -1000,7 +1000,7 @@ function CharactersStep({
             >
               <Users className="size-5 text-primary/60 mb-3" />
               <div className="font-display text-base italic">Generate a Cast</div>
-              <p className="text-xs text-muted-foreground/45 mt-1 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Let AI suggest characters that fit your story
               </p>
             </button>
@@ -1008,9 +1008,9 @@ function CharactersStep({
               onClick={() => setPhase('manual')}
               className="group text-left p-5 rounded-xl border-2 border-border/40 hover:border-foreground/15 bg-card/20 hover:bg-card/40 transition-all duration-200"
             >
-              <Plus className="size-5 text-muted-foreground/40 mb-3" />
+              <Plus className="size-5 text-muted-foreground mb-3" />
               <div className="font-display text-base italic">Add One by One</div>
-              <p className="text-xs text-muted-foreground/45 mt-1 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Create characters manually with name and description
               </p>
             </button>
@@ -1044,7 +1044,7 @@ function CharactersStep({
             {/* Cast preview with checkboxes */}
             {showCastPreview && castParsed.length > 0 && (
               <div className="space-y-2">
-                <label className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   Select characters to add
                 </label>
                 {castParsed.map((char, i) => (
@@ -1068,7 +1068,7 @@ function CharactersStep({
                     />
                     <div className="flex-1 min-w-0">
                       <span className="text-sm font-medium">{char.name}</span>
-                      <p className="text-xs text-muted-foreground/45 mt-0.5 font-prose">
+                      <p className="text-xs text-muted-foreground mt-0.5 font-prose">
                         {char.description}
                       </p>
                     </div>
@@ -1106,7 +1106,7 @@ function CharactersStep({
             {!showCastPreview && !castGen.isStreaming && (
               <button
                 onClick={() => setPhase(characters.length > 0 ? 'manual' : 'choose')}
-                className="text-xs text-muted-foreground/35 hover:text-muted-foreground/60 transition-colors"
+                className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
               >
                 {characters.length > 0 ? 'Add manually instead' : 'Back to options'}
               </button>
@@ -1119,7 +1119,7 @@ function CharactersStep({
           <div className="space-y-3 animate-wizard-reveal">
             <div className="p-4 rounded-xl border border-border/30 bg-card/20 space-y-3">
               <div>
-                <label className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
                   Character Name
                 </label>
                 <Input
@@ -1137,7 +1137,7 @@ function CharactersStep({
                 />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
                   Brief Description
                 </label>
                 <Textarea
@@ -1162,7 +1162,7 @@ function CharactersStep({
 
             <button
               onClick={() => setPhase('cast')}
-              className="text-xs text-muted-foreground/35 hover:text-muted-foreground/60 transition-colors"
+              className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
             >
               Or generate a cast instead
             </button>
@@ -1220,7 +1220,7 @@ function PreferencesStep({
               <BookOpen className="size-4 text-primary/50" />
               <h3 className="text-sm font-medium text-foreground/80">The Librarian</h3>
             </div>
-            <p className="font-prose text-xs text-muted-foreground/45 leading-relaxed">
+            <p className="font-prose text-xs text-muted-foreground leading-relaxed">
               After each generation, a background AI reads what was written and tracks
               characters, locations, plot points, and contradictions &mdash; building
               a living reference for your world.
@@ -1237,9 +1237,9 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <Eye className="size-4 text-muted-foreground/50 mb-2.5" />
+              <Eye className="size-4 text-muted-foreground mb-2.5" />
               <div className="font-display text-[13px] italic leading-snug">Review first</div>
-              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
                 The Librarian flags suggestions for you to accept or dismiss. Nothing changes without your say.
               </p>
             </button>
@@ -1252,9 +1252,9 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <Zap className="size-4 text-muted-foreground/50 mb-2.5" />
+              <Zap className="size-4 text-muted-foreground mb-2.5" />
               <div className="font-display text-[13px] italic leading-snug">Auto-accept</div>
-              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
                 New knowledge is created and updated automatically. Your world-bible stays current as you write.
               </p>
             </button>
@@ -1268,7 +1268,7 @@ function PreferencesStep({
               <Layers className="size-4 text-primary/50" />
               <h3 className="text-sm font-medium text-foreground/80">Context management</h3>
             </div>
-            <p className="font-prose text-xs text-muted-foreground/45 leading-relaxed">
+            <p className="font-prose text-xs text-muted-foreground leading-relaxed">
               Controls how your fragments, prose, and instructions are assembled
               into the prompt that the AI sees when generating.
             </p>
@@ -1285,7 +1285,7 @@ function PreferencesStep({
               }`}
             >
               <div className="font-display text-[13px] italic leading-snug">Simple</div>
-              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
                 Errata assembles the prompt for you &mdash; guidelines, world, characters, then prose.
                 The right choice for most writers.
               </p>
@@ -1300,7 +1300,7 @@ function PreferencesStep({
               }`}
             >
               <div className="font-display text-[13px] italic leading-snug">Advanced</div>
-              <p className="text-[11px] text-muted-foreground/40 mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
                 Unlocks the Block Editor &mdash; reorder, override, or inject custom
                 blocks into the AI prompt directly.
               </p>
@@ -1308,7 +1308,7 @@ function PreferencesStep({
           </div>
         </div>
 
-        <p className="text-[10px] text-muted-foreground/30 leading-relaxed font-prose">
+        <p className="text-[10px] text-muted-foreground leading-relaxed font-prose">
           Both settings can be changed anytime in Settings.
         </p>
       </div>
@@ -1360,14 +1360,14 @@ function CompleteStep({
               >
                 <Check className="size-4 text-primary/50 shrink-0" />
                 <span className="text-sm font-medium">{item.label}</span>
-                <span className="text-[10px] text-muted-foreground/35 ml-auto uppercase tracking-wider">
+                <span className="text-[10px] text-muted-foreground ml-auto uppercase tracking-wider">
                   {item.type}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground/45 font-prose italic">
+          <p className="text-sm text-muted-foreground font-prose italic">
             No fragments created yet &mdash; you can always add them later from the sidebar.
           </p>
         )}

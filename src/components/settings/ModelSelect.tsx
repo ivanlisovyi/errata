@@ -30,7 +30,7 @@ export function ModelSelect({ providerId, value, onChange, disabled, defaultLabe
     return (
       <select
         disabled
-        className="w-full max-w-[140px] h-[26px] px-2 text-[11px] text-muted-foreground/40 bg-muted/30 border border-border/30 rounded-md"
+        className="w-full max-w-[140px] h-[26px] px-2 text-[11px] text-muted-foreground bg-muted/30 border border-border/30 rounded-md"
       >
         <option>No provider</option>
       </select>
@@ -46,14 +46,14 @@ export function ModelSelect({ providerId, value, onChange, disabled, defaultLabe
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value || null)}
           placeholder="model-id"
-          className="w-full max-w-[120px] h-[26px] px-2 text-[11px] text-foreground/80 bg-muted/50 border border-border/50 rounded-md focus:border-foreground/20 focus:outline-none font-mono placeholder:text-muted-foreground/30"
+          className="w-full max-w-[120px] h-[26px] px-2 text-[11px] text-foreground/80 bg-muted/50 border border-border/50 rounded-md focus:border-foreground/20 focus:outline-none font-mono placeholder:text-muted-foreground"
           disabled={disabled}
         />
         {hasModels && (
           <button
             type="button"
             onClick={() => setManualEntry(false)}
-            className="text-[9px] text-muted-foreground/30 hover:text-foreground/50 transition-colors shrink-0"
+            className="text-[9px] text-muted-foreground hover:text-foreground/50 transition-colors shrink-0"
             title="Switch to dropdown"
           >
             list
@@ -80,7 +80,7 @@ export function ModelSelect({ providerId, value, onChange, disabled, defaultLabe
         <button
           type="button"
           onClick={() => setManualEntry(true)}
-          className="text-[9px] text-muted-foreground/30 hover:text-foreground/50 transition-colors shrink-0"
+          className="text-[9px] text-muted-foreground hover:text-foreground/50 transition-colors shrink-0"
           title="Type model ID manually"
         >
           edit

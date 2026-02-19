@@ -107,7 +107,7 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
   if (stickyFragments.length === 0) {
     return (
       <div className="p-6 text-center">
-        <p className="text-sm text-muted-foreground/60 italic">
+        <p className="text-sm text-muted-foreground italic">
           No pinned fragments. Pin fragments from the Characters, Guidelines, or Knowledge panels.
         </p>
       </div>
@@ -117,7 +117,7 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border/30">
-        <p className="text-[11px] text-muted-foreground/50 leading-snug">
+        <p className="text-[11px] text-muted-foreground leading-snug">
           Drag to reorder how pinned fragments appear in the model context
         </p>
       </div>
@@ -146,7 +146,7 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-medium truncate leading-tight">{fragment.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[10px] font-mono text-muted-foreground/50">
+                  <span className="text-[10px] font-mono text-muted-foreground">
                     {fragment.id}
                   </span>
                   <Badge
@@ -156,7 +156,7 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
                     {fragment.type}
                   </Badge>
                   {fragment.placement === 'system' && (
-                    <Badge variant="outline" className="text-[9px] h-3.5 px-1 text-muted-foreground/50 bg-muted/30 border-transparent">
+                    <Badge variant="outline" className="text-[9px] h-3.5 px-1 text-muted-foreground bg-muted/30 border-transparent">
                       sys
                     </Badge>
                   )}
@@ -167,7 +167,7 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
               <Button
                 size="icon"
                 variant="ghost"
-                className="size-6 shrink-0 text-muted-foreground/55 hover:text-foreground"
+                className="size-6 shrink-0 text-muted-foreground hover:text-foreground"
                 onClick={() =>
                   placementMutation.mutate({
                     fragmentId: fragment.id,

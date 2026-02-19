@@ -75,16 +75,16 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <div className="flex items-center gap-2">
           <h2 className="font-display text-lg">Selection Transforms</h2>
-          <span className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">Writing</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Writing</span>
         </div>
-        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" onClick={onClose}>
           <X className="size-4" />
         </Button>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="max-w-3xl mx-auto p-6 space-y-4">
-          <p className="text-sm text-muted-foreground/60">
+          <p className="text-sm text-muted-foreground">
             Custom transforms appear in the floating toolbar when you select text in the writing panel. Drag to reorder, toggle to show/hide.
           </p>
 
@@ -114,9 +114,9 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
                       className="flex items-center gap-1.5 flex-1 min-w-0 text-left cursor-pointer"
                     >
                       {isExpanded
-                        ? <ChevronDown className="size-3 text-muted-foreground/40 shrink-0" />
-                        : <ChevronRight className="size-3 text-muted-foreground/40 shrink-0" />}
-                      <span className={`text-[12px] truncate ${t.enabled ? 'text-foreground/80' : 'text-muted-foreground/40 line-through'}`}>
+                        ? <ChevronDown className="size-3 text-muted-foreground shrink-0" />
+                        : <ChevronRight className="size-3 text-muted-foreground shrink-0" />}
+                      <span className={`text-[12px] truncate ${t.enabled ? 'text-foreground/80' : 'text-muted-foreground line-through'}`}>
                         {t.label}
                       </span>
                     </button>
@@ -137,7 +137,7 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
                     <button
                       type="button"
                       onClick={() => removeTransform(t.id)}
-                      className="text-muted-foreground/25 hover:text-destructive/70 transition-colors shrink-0 cursor-pointer"
+                      className="text-muted-foreground hover:text-destructive/70 transition-colors shrink-0 cursor-pointer"
                       title="Delete"
                     >
                       <Trash2 className="size-3" />
@@ -147,7 +147,7 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
                   {isExpanded && (
                     <div className="px-3 pb-3 space-y-2 border-t border-border/20 pt-2">
                       <div>
-                        <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1 block">Label</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">Label</label>
                         <input
                           type="text"
                           value={t.label}
@@ -158,7 +158,7 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1 block">Instruction</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">Instruction</label>
                         <textarea
                           value={t.instruction}
                           onChange={(e) => updateInstruction(t.id, e.target.value)}

@@ -370,10 +370,10 @@ export function ProseChainView({
             ))
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center" data-component-id="prose-empty-state">
-              <p className="font-display text-2xl italic text-muted-foreground/40 mb-2">
+              <p className="font-display text-2xl italic text-muted-foreground mb-2">
                 The page awaits.
               </p>
-              <p className="text-sm text-muted-foreground/50 mb-8 max-w-xs leading-relaxed">
+              <p className="text-sm text-muted-foreground mb-8 max-w-xs leading-relaxed">
                 Write your first passage below, or let the wizard help you set up your story.
               </p>
               {onLaunchWizard && (
@@ -406,7 +406,7 @@ export function ProseChainView({
                 {isGenerating && (
                   <div className="flex items-center gap-2 mt-3 opacity-60">
                     <Loader2 className="size-3 animate-spin text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground/50">
+                    <span className="text-[10px] text-muted-foreground">
                       generating...
                     </span>
                   </div>

@@ -50,7 +50,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
         <div className="space-y-5 py-1">
           {/* Name */}
           <div>
-            <h4 className="text-[9px] text-muted-foreground/55 uppercase tracking-[0.15em] font-medium mb-2">
+            <h4 className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-2">
               Name
             </h4>
             <Input
@@ -66,7 +66,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
           {/* Role + Type selectors */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h4 className="text-[9px] text-muted-foreground/55 uppercase tracking-[0.15em] font-medium mb-2">
+              <h4 className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-2">
                 Role
               </h4>
               <div className="flex rounded-lg bg-muted/25 p-[3px] gap-[3px]">
@@ -80,7 +80,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
                     'flex-1 flex items-center justify-center gap-1.5 px-2 py-[6px] rounded-md text-[11px] font-medium transition-all duration-150',
                     role === value
                       ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground/50 hover:text-muted-foreground/80',
+                      : 'text-muted-foreground hover:text-muted-foreground',
                   )}
                   onClick={() => setRole(value)}
                   data-component-id={componentId('block-create-role', value)}
@@ -93,7 +93,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
             </div>
 
             <div>
-              <h4 className="text-[9px] text-muted-foreground/55 uppercase tracking-[0.15em] font-medium mb-2">
+              <h4 className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-2">
                 Type
               </h4>
               <div className="flex rounded-lg bg-muted/25 p-[3px] gap-[3px]">
@@ -107,7 +107,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
                     'flex-1 flex items-center justify-center gap-1.5 px-2 py-[6px] rounded-md text-[11px] font-medium transition-all duration-150',
                     type === value
                       ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground/50 hover:text-muted-foreground/80',
+                      : 'text-muted-foreground hover:text-muted-foreground',
                   )}
                   onClick={() => setType(value)}
                   data-component-id={componentId('block-create-type', value)}
@@ -122,7 +122,7 @@ export function BlockCreateDialog({ open, onOpenChange, onSubmit }: BlockCreateD
 
           {/* Content */}
           <div>
-            <h4 className="text-[9px] text-muted-foreground/55 uppercase tracking-[0.15em] font-medium mb-2">
+            <h4 className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-2">
               Content
             </h4>
 

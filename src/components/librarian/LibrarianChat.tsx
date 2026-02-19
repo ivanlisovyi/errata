@@ -185,7 +185,7 @@ export function LibrarianChat({ storyId, initialInput }: LibrarianChatProps) {
         <div className="p-3 space-y-3">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center" data-component-id="librarian-chat-empty">
-              <p className="text-xs text-muted-foreground/40 italic max-w-[240px]">
+              <p className="text-xs text-muted-foreground italic max-w-[240px]">
                 Ask the librarian to make changes across your story — update characters, adjust guidelines, or reshape knowledge.
               </p>
             </div>
@@ -232,7 +232,7 @@ export function LibrarianChat({ storyId, initialInput }: LibrarianChatProps) {
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 text-[10px] gap-1 text-muted-foreground/50 hover:text-muted-foreground"
+              className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-muted-foreground"
               onClick={handleClear}
               data-component-id="librarian-chat-clear"
             >
@@ -250,7 +250,7 @@ export function LibrarianChat({ storyId, initialInput }: LibrarianChatProps) {
             onKeyDown={handleKeyDown}
             placeholder="Ask the librarian..."
             disabled={isStreaming}
-            className="min-h-[40px] max-h-[120px] resize-none text-xs bg-transparent placeholder:italic placeholder:text-muted-foreground/40 flex-1"
+            className="min-h-[40px] max-h-[120px] resize-none text-xs bg-transparent placeholder:italic placeholder:text-muted-foreground flex-1"
             rows={1}
             data-component-id="librarian-chat-input"
           />
@@ -269,7 +269,7 @@ export function LibrarianChat({ storyId, initialInput }: LibrarianChatProps) {
           </Button>
         </div>
 
-        <p className="text-[10px] text-muted-foreground/30 text-center">
+        <p className="text-[10px] text-muted-foreground text-center">
           Enter to send, Shift+Enter for newline
         </p>
       </div>

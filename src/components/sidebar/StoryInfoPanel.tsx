@@ -132,11 +132,11 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
     return (
       <div className="p-4 space-y-3" data-component-id="story-info-edit">
         <div>
-          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1.5 block">Name</label>
+          <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 block">Name</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-transparent" data-component-id="story-info-name" />
         </div>
         <div>
-          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1.5 block">Description</label>
+          <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 block">Description</label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -145,7 +145,7 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
           />
         </div>
         <div>
-          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1.5 block">Summary</label>
+          <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 block">Summary</label>
           <Textarea
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
@@ -173,9 +173,9 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
       <div className="px-5 pt-5 pb-4">
         <h2 className="text-xl font-display leading-tight tracking-tight">{story.name}</h2>
         {story.description ? (
-          <p className="text-[13px] text-muted-foreground/60 mt-1.5 leading-relaxed">{story.description}</p>
+          <p className="text-[13px] text-muted-foreground mt-1.5 leading-relaxed">{story.description}</p>
         ) : (
-          <p className="text-[13px] text-muted-foreground/25 mt-1.5 italic">No description</p>
+          <p className="text-[13px] text-muted-foreground mt-1.5 italic">No description</p>
         )}
       </div>
 
@@ -214,12 +214,12 @@ export function StoryInfoPanel({ storyId, story, onLaunchWizard, onExport, onDow
       {/* Dates */}
       <div className="px-5 py-4 flex justify-between">
         <div>
-          <label className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.15em]">Created</label>
-          <p className="text-[11px] text-muted-foreground/50 mt-0.5 font-mono">{formatDate(story.createdAt)}</p>
+          <label className="text-[9px] text-muted-foreground uppercase tracking-[0.15em]">Created</label>
+          <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{formatDate(story.createdAt)}</p>
         </div>
         <div className="text-right">
-          <label className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.15em]">Updated</label>
-          <p className="text-[11px] text-muted-foreground/50 mt-0.5 font-mono">{timeAgo(story.updatedAt)}</p>
+          <label className="text-[9px] text-muted-foreground uppercase tracking-[0.15em]">Updated</label>
+          <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{timeAgo(story.updatedAt)}</p>
         </div>
       </div>
 
@@ -274,7 +274,7 @@ function StatCell({ value, label }: { value: string; label: string }) {
   return (
     <div className="text-center py-2 rounded-md bg-accent/30">
       <p className="text-lg font-display leading-none tracking-tight text-foreground/85">{value}</p>
-      <p className="text-[9px] text-muted-foreground/40 uppercase tracking-[0.12em] mt-1">{label}</p>
+      <p className="text-[9px] text-muted-foreground uppercase tracking-[0.12em] mt-1">{label}</p>
     </div>
   )
 }
@@ -283,7 +283,7 @@ function MiniStat({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-baseline gap-1.5">
       <span className="text-[12px] font-mono text-foreground/60">{value}</span>
-      <span className="text-[9px] text-muted-foreground/35 uppercase tracking-wider">{label}</span>
+      <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{label}</span>
     </div>
   )
 }
@@ -295,10 +295,10 @@ function ActionTile({ icon: Icon, label, description, onClick, dataComponentId }
       className="flex items-start gap-2.5 rounded-md border border-border/40 px-3 py-2.5 text-left transition-colors hover:bg-accent/40 hover:border-border/60"
       data-component-id={dataComponentId}
     >
-      <Icon className="size-3.5 mt-0.5 text-muted-foreground/50 shrink-0" />
+      <Icon className="size-3.5 mt-0.5 text-muted-foreground shrink-0" />
       <div className="min-w-0">
         <p className="text-[12px] font-medium leading-none text-foreground/80">{label}</p>
-        <p className="text-[10px] text-muted-foreground/40 mt-1 leading-tight">{description}</p>
+        <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{description}</p>
       </div>
     </button>
   )
@@ -319,15 +319,15 @@ function SummarySection({ summary }: { summary: string | undefined }) {
   if (!summary) {
     return (
       <div className="px-5 py-4">
-        <label className="text-[9px] text-muted-foreground/35 uppercase tracking-[0.15em] font-medium">Summary</label>
-        <p className="text-[13px] text-muted-foreground/25 mt-1.5 italic">No summary yet</p>
+        <label className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">Summary</label>
+        <p className="text-[13px] text-muted-foreground mt-1.5 italic">No summary yet</p>
       </div>
     )
   }
 
   return (
     <div className="px-5 py-4">
-      <label className="text-[9px] text-muted-foreground/35 uppercase tracking-[0.15em] font-medium">Summary</label>
+      <label className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">Summary</label>
       <div className="relative">
         <div
           ref={contentRef}
@@ -342,7 +342,7 @@ function SummarySection({ summary }: { summary: string | undefined }) {
         {overflows && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground mt-1 transition-colors"
+            className="text-[11px] text-muted-foreground hover:text-muted-foreground mt-1 transition-colors"
             data-component-id="story-info-summary-toggle"
           >
             {expanded ? 'Show less' : 'Read more'}

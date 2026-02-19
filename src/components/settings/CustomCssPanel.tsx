@@ -30,18 +30,18 @@ export function CustomCssPanel({ onClose }: CustomCssPanelProps) {
     <div className="flex flex-col h-full" data-component-id="custom-css-panel-root">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <div className="flex items-center gap-2">
-          <Code2 className="size-4 text-muted-foreground/70" />
+          <Code2 className="size-4 text-muted-foreground" />
           <h2 className="font-display text-lg">Custom CSS</h2>
-          <span className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">Appearance</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Appearance</span>
         </div>
-        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={onClose} data-component-id="custom-css-panel-close">
+        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" onClick={onClose} data-component-id="custom-css-panel-close">
           <X className="size-4" />
         </Button>
       </div>
 
       <ScrollArea className="flex-1" data-component-id="custom-css-panel-scroll">
         <div className="max-w-3xl mx-auto p-6 space-y-4">
-          <p className="text-sm text-muted-foreground/60">
+          <p className="text-sm text-muted-foreground">
             Add your own CSS to customize the interface. Styles are applied globally when Custom CSS is enabled.
           </p>
 

@@ -76,9 +76,9 @@ export function RefinementPanel({
         <div className="flex items-center gap-1.5 text-xs">
           <Sparkles className="size-3 text-primary/70" />
           <span className="font-medium">Refine</span>
-          <span className="text-muted-foreground/50 truncate max-w-[150px]">{fragmentName}</span>
+          <span className="text-muted-foreground truncate max-w-[150px]">{fragmentName}</span>
         </div>
-        <Button size="icon" variant="ghost" className="size-5 text-muted-foreground/50" onClick={onClose} data-component-id="refinement-close">
+        <Button size="icon" variant="ghost" className="size-5 text-muted-foreground" onClick={onClose} data-component-id="refinement-close">
           <X className="size-3" />
         </Button>
       </div>
@@ -91,7 +91,7 @@ export function RefinementPanel({
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               placeholder="Optional: describe how to improve this fragment..."
-              className="min-h-[60px] resize-none text-xs bg-transparent placeholder:italic placeholder:text-muted-foreground/40"
+              className="min-h-[60px] resize-none text-xs bg-transparent placeholder:italic placeholder:text-muted-foreground"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                   e.preventDefault()
@@ -110,7 +110,7 @@ export function RefinementPanel({
                 <Sparkles className="size-3" />
                 Refine
               </Button>
-              <span className="text-[10px] text-muted-foreground/40">
+              <span className="text-[10px] text-muted-foreground">
                 Ctrl+Enter to start
               </span>
             </div>
@@ -120,7 +120,7 @@ export function RefinementPanel({
         {/* Streaming output */}
         {(isRefining || streamedText) && (
           <div ref={outputRef} className="max-h-[200px] overflow-auto">
-            <div className="text-xs text-muted-foreground/70">
+            <div className="text-xs text-muted-foreground">
               <StreamMarkdown content={streamedText} streaming={isRefining} variant="prose" />
             </div>
           </div>

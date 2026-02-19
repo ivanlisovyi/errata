@@ -103,21 +103,21 @@ export function HelpPanel() {
             {activeSection && (
               <button
                 onClick={() => openHelp()}
-                className="shrink-0 p-1 -ml-1 rounded-md text-muted-foreground/40 hover:text-foreground/70 transition-colors"
+                className="shrink-0 p-1 -ml-1 rounded-md text-muted-foreground hover:text-foreground/70 transition-colors"
                 title="Back to topics"
                 data-component-id="help-back"
               >
                 <ArrowLeft className="size-4" />
               </button>
             )}
-            <BookOpen className="size-4 text-muted-foreground/35 shrink-0" />
+            <BookOpen className="size-4 text-muted-foreground shrink-0" />
             <h2 className="font-display text-lg truncate">
               {activeSection ? activeSection.title : 'Help'}
             </h2>
           </div>
           <button
             onClick={closeHelp}
-            className="shrink-0 p-1.5 rounded-md text-muted-foreground/35 hover:text-foreground/70 hover:bg-accent/30 transition-colors"
+            className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-foreground/70 hover:bg-accent/30 transition-colors"
             data-component-id="help-close"
           >
             <X className="size-4" />
@@ -139,7 +139,7 @@ export function HelpPanel() {
 
         {/* Footer */}
         <div className="shrink-0 border-t border-border/20 px-6 py-3">
-          <p className="text-[10px] text-muted-foreground/25 text-center leading-relaxed">
+          <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
             Press <kbd className="px-1 py-0.5 rounded border border-border/30 bg-muted/30 text-[9px] font-mono">Esc</kbd> to close
           </p>
         </div>
@@ -155,7 +155,7 @@ export function HelpPanel() {
 function TopicIndex({ onSelect }: { onSelect: (sectionId: string) => void }) {
   return (
     <div className="space-y-2">
-      <p className="text-[11px] text-muted-foreground/40 leading-relaxed mb-4">
+      <p className="text-[11px] text-muted-foreground leading-relaxed mb-4">
         Select a topic to learn more about Errata's features.
       </p>
       {HELP_SECTIONS.map((section, idx) => (
@@ -171,16 +171,16 @@ function TopicIndex({ onSelect }: { onSelect: (sectionId: string) => void }) {
               <p className="text-[13px] font-medium text-foreground/80 group-hover:text-foreground transition-colors">
                 {section.title}
               </p>
-              <p className="text-[11px] text-muted-foreground/40 mt-0.5 leading-snug">
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
                 {section.description}
               </p>
             </div>
-            <ChevronRight className="size-3.5 text-muted-foreground/25 group-hover:text-muted-foreground/50 shrink-0 transition-colors" />
+            <ChevronRight className="size-3.5 text-muted-foreground group-hover:text-muted-foreground shrink-0 transition-colors" />
           </div>
           {/* Subsection preview */}
           <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
             {section.subsections.map((sub) => (
-              <span key={sub.id} className="text-[10px] text-muted-foreground/30">
+              <span key={sub.id} className="text-[10px] text-muted-foreground">
                 {sub.title}
               </span>
             ))}
@@ -198,13 +198,13 @@ function SectionView({ section, scrollAreaRef }: { section: HelpSection; scrollA
   return (
     <div className="space-y-6">
       {/* Section description */}
-      <p className="text-[12px] text-muted-foreground/45 leading-relaxed -mt-1">
+      <p className="text-[12px] text-muted-foreground leading-relaxed -mt-1">
         {section.description}
       </p>
 
       {/* Table of contents */}
       <nav className="rounded-lg border border-border/20 bg-accent/10 px-4 py-3">
-        <p className="text-[10px] text-muted-foreground/35 uppercase tracking-wider mb-2">On this page</p>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">On this page</p>
         <div className="space-y-1">
           {section.subsections.map((sub) => (
             <button

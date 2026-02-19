@@ -160,7 +160,7 @@ export function StorySidebar({
                 >
                   <Info className="size-4" />
                   <span>Info</span>
-                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -185,7 +185,7 @@ export function StorySidebar({
                     </defs>
                   </svg>
                   <span>Librarian</span>
-                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -196,7 +196,7 @@ export function StorySidebar({
 
         {/* Fragments */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
             Fragments
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -211,7 +211,7 @@ export function StorySidebar({
                   >
                     <section.icon className="size-4" />
                     <span>{section.label}</span>
-                    <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                    <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -222,7 +222,7 @@ export function StorySidebar({
         <SidebarSeparator />
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
             Management
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -238,7 +238,7 @@ export function StorySidebar({
                     >
                       <Layers className="size-4" />
                       <span>Block Editor</span>
-                      <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                      <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                     </SidebarMenuButton>
                   </SidebarMenuItem>
 
@@ -251,7 +251,7 @@ export function StorySidebar({
                     >
                       <ArrowUpDown className="size-4" />
                       <span>Fragment Order</span>
-                      <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                      <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </>
@@ -266,7 +266,7 @@ export function StorySidebar({
                   >
                     <GitBranch className="size-4" />
                     <span>Timelines</span>
-                    <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                    <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
@@ -279,7 +279,7 @@ export function StorySidebar({
                   >
                     <Image className="size-4" />
                     <span>Media</span>
-                    <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                    <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
@@ -315,7 +315,7 @@ export function StorySidebar({
                 >
                   <Archive className="size-4" />
                   <span>Archive</span>
-                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                  <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -327,7 +327,7 @@ export function StorySidebar({
           <>
             <SidebarSeparator />
             <SidebarGroup>
-              <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+              <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
                 Plugins
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -342,7 +342,7 @@ export function StorySidebar({
                       >
                         <PluginIcon icon={plugin.icon} />
                         <span>{plugin.title}</span>
-                        <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+                        <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
@@ -375,7 +375,7 @@ export function StorySidebar({
             >
               <Settings className="size-4" />
               <span>Settings</span>
-              <ChevronRight className="ml-auto size-3.5 text-muted-foreground/40" />
+              <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

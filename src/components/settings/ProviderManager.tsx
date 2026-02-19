@@ -45,7 +45,7 @@ export function ProviderList({ onManage }: { onManage: () => void }) {
   return (
     <div className="space-y-2">
       {providers.length === 0 ? (
-        <p className="text-xs text-muted-foreground/40 italic">No providers configured. Using DeepSeek via environment variable.</p>
+        <p className="text-xs text-muted-foreground italic">No providers configured. Using DeepSeek via environment variable.</p>
       ) : (
         providers.map((p) => (
           <div key={p.id} className="flex items-center gap-1.5 py-0.5">
@@ -53,7 +53,7 @@ export function ProviderList({ onManage }: { onManage: () => void }) {
             {defaultId === p.id && (
               <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full shrink-0">default</span>
             )}
-            <span className="text-[11px] text-muted-foreground/40 truncate ml-auto">{p.defaultModel}</span>
+            <span className="text-[11px] text-muted-foreground truncate ml-auto">{p.defaultModel}</span>
           </div>
         ))
       )}
@@ -245,7 +245,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
     : form.name && form.baseURL && form.apiKey && form.defaultModel)
 
   const inputClass = "w-full h-9 px-3 text-sm text-foreground bg-muted/30 border border-border/50 rounded-md focus:border-primary/30 focus:outline-none"
-  const labelClass = "text-xs font-medium text-muted-foreground/70 mb-1.5 block"
+  const labelClass = "text-xs font-medium text-muted-foreground mb-1.5 block"
 
   return (
     <div className="flex flex-col h-full" data-component-id="provider-panel-root">
@@ -253,16 +253,16 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <div className="flex items-center gap-2">
           {form && (
-            <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={closeForm} data-component-id="provider-panel-back">
+            <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" onClick={closeForm} data-component-id="provider-panel-back">
               <ArrowLeft className="size-4" />
             </Button>
           )}
           <h2 className="font-display text-lg">Providers</h2>
-          <span className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
             {form ? (editingId ? 'Edit' : 'Add New') : 'LLM Configuration'}
           </span>
         </div>
-        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground/50" onClick={onClose} data-component-id="provider-panel-close">
+        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" onClick={onClose} data-component-id="provider-panel-close">
           <X className="size-4" />
         </Button>
       </div>
@@ -333,14 +333,14 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                 <label className={labelClass + ' !mb-0'}>Custom Headers</label>
                 <button
                   type="button"
-                  className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground flex items-center gap-0.5 transition-colors"
+                  className="text-[11px] text-muted-foreground hover:text-muted-foreground flex items-center gap-0.5 transition-colors"
                   onClick={() => setForm({ ...form, customHeaders: [...form.customHeaders, { key: '', value: '', _id: crypto.randomUUID() }] })}
                 >
                   <Plus className="size-3" /> Add
                 </button>
               </div>
               {form.customHeaders.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground/40 italic">No custom headers</p>
+                <p className="text-[11px] text-muted-foreground italic">No custom headers</p>
               ) : (
                 <div className="space-y-1.5">
                   {form.customHeaders.map((header, i) => (
@@ -369,7 +369,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="h-9 w-9 p-0 shrink-0 text-muted-foreground/40 hover:text-destructive"
+                        className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-destructive"
                         onClick={() => {
                           const next = form.customHeaders.filter((_, j) => j !== i)
                           setForm({ ...form, customHeaders: next })
@@ -425,7 +425,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
               {fetchedModels.length > 0 && (
                 <button
                   type="button"
-                  className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground mt-1 underline"
+                  className="text-[11px] text-muted-foreground hover:text-muted-foreground mt-1 underline"
                   onClick={() => setUseCustomModel(!useCustomModel)}
                 >
                   {useCustomModel ? 'Use fetched models' : 'Enter model ID manually'}
@@ -435,7 +435,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                 <p className="text-xs text-destructive mt-1">{fetchError}</p>
               )}
               {fetchedModels.length > 0 && !fetchError && (
-                <p className="text-[11px] text-muted-foreground/40 mt-1">{fetchedModels.length} models available</p>
+                <p className="text-[11px] text-muted-foreground mt-1">{fetchedModels.length} models available</p>
               )}
             </div>
 
@@ -477,8 +477,8 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
           <div className="max-w-2xl mx-auto p-6 space-y-2">
             {providers.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-sm text-muted-foreground/50 italic mb-4">No providers configured.</p>
-                <p className="text-xs text-muted-foreground/40 mb-6">Using DeepSeek via environment variable as fallback.</p>
+                <p className="text-sm text-muted-foreground italic mb-4">No providers configured.</p>
+                <p className="text-xs text-muted-foreground mb-6">Using DeepSeek via environment variable as fallback.</p>
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={openAdd}>
                   <Plus className="size-3" /> Add your first provider
                 </Button>
@@ -494,10 +494,10 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                       <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">default</span>
                     )}
                     {p.preset !== 'custom' && (
-                      <span className="text-[10px] text-muted-foreground/30">{p.preset}</span>
+                      <span className="text-[10px] text-muted-foreground">{p.preset}</span>
                     )}
                   </div>
-                  <div className="text-[11px] text-muted-foreground/40 mt-0.5 flex gap-3">
+                  <div className="text-[11px] text-muted-foreground mt-0.5 flex gap-3">
                     <span>Model: {p.defaultModel}</span>
                     <span>URL: {p.baseURL}</span>
                     <span>Key: {p.apiKey}</span>
@@ -538,13 +538,13 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
 
       {/* Creator */}
       <div className="px-6 py-3 border-t border-border/30 text-center">
-        <span className="text-[10px] text-muted-foreground/30">
+        <span className="text-[10px] text-muted-foreground">
           built by{' '}
           <a
             href="https://github.com/tealios/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors underline underline-offset-2"
+            className="text-muted-foreground hover:text-muted-foreground transition-colors underline underline-offset-2"
           >
             Tealios
           </a>

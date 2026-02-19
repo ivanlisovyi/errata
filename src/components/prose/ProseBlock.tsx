@@ -376,7 +376,7 @@ export function ProseBlock({
                   type="text"
                   value={actionInput}
                   onChange={(e) => setActionInput(e.target.value)}
-                  className="w-full bg-transparent font-display italic text-sm text-foreground/80 placeholder:text-muted-foreground/30 outline-none border-none p-0 caret-primary"
+                  className="w-full bg-transparent font-display italic text-sm text-foreground/80 placeholder:text-muted-foreground outline-none border-none p-0 caret-primary"
                   placeholder="New direction..."
                   autoFocus
                   onKeyDown={(e) => {
@@ -400,7 +400,7 @@ export function ProseBlock({
                         providerMutation.mutate({ providerId, modelId: null })
                       }}
                       disabled={providerMutation.isPending || isStreamingAction}
-                      className="text-[10px] text-muted-foreground/50 bg-transparent hover:bg-muted/40 border border-border/30 hover:border-border/50 rounded outline-none cursor-pointer transition-all appearance-none pl-1.5 pr-4 py-0.5 font-mono max-w-[140px] truncate disabled:opacity-30 focus:ring-1 focus:ring-primary/20"
+                      className="text-[10px] text-muted-foreground bg-transparent hover:bg-muted/40 border border-border/30 hover:border-border/50 rounded outline-none cursor-pointer transition-all appearance-none pl-1.5 pr-4 py-0.5 font-mono max-w-[140px] truncate disabled:opacity-30 focus:ring-1 focus:ring-primary/20"
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center' }}
                     >
                       {(() => {
@@ -423,7 +423,7 @@ export function ProseBlock({
                       })()}
                     </select>
                   )}
-                  <span className="text-[10px] text-muted-foreground/25">
+                  <span className="text-[10px] text-muted-foreground">
                     Enter &middot; Esc
                   </span>
                   <button
@@ -451,20 +451,20 @@ export function ProseBlock({
               title="Click to edit prompt and regenerate"
             >
               <div className="w-0.5 min-h-[1.25rem] rounded-full bg-primary/20 group-hover/prompt:bg-primary/45 transition-colors shrink-0 mt-0.5" />
-              <span className="font-display italic text-sm text-muted-foreground/40 group-hover/prompt:text-muted-foreground/65 truncate transition-colors">
+              <span className="font-display italic text-sm text-muted-foreground group-hover/prompt:text-muted-foreground truncate transition-colors">
                 {generatedFrom || fragment.description}
               </span>
               <RefreshCw className="size-3 shrink-0 mt-1 opacity-0 group-hover/prompt:opacity-40 transition-opacity" />
               {hasMultiple && (
-                <span className="text-[10px] font-mono text-muted-foreground/20 shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
+                <span className="text-[10px] font-mono text-muted-foreground shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
               )}
             </button>
           ) : (
             <div className="flex items-start gap-2.5">
               <div className="w-0.5 min-h-[1.25rem] rounded-full bg-border/30 shrink-0 mt-0.5" />
-              <span className="font-display italic text-sm text-muted-foreground/30 truncate">{fragment.description}</span>
+              <span className="font-display italic text-sm text-muted-foreground truncate">{fragment.description}</span>
               {hasMultiple && (
-                <span className="text-[10px] font-mono text-muted-foreground/20 shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
+                <span className="text-[10px] font-mono text-muted-foreground shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
               )}
             </div>
           )}
@@ -535,18 +535,18 @@ export function ProseBlock({
           <div className="flex flex-col items-center rounded-2xl border border-border/50 bg-popover/95 backdrop-blur-md shadow-2xl shadow-black/10 overflow-hidden min-w-0">
             {/* Info row — ID, prompt (clickable to re-run), variation, debug */}
             <div className="flex items-center gap-2 px-3 py-1.5 min-w-0 w-full">
-              <span className="text-[10px] font-mono text-muted-foreground/35 shrink-0">{fragment.id}</span>
+              <span className="text-[10px] font-mono text-muted-foreground shrink-0">{fragment.id}</span>
               {hasMultiple && (
                 <>
-                  <span className="text-muted-foreground/15 shrink-0">&middot;</span>
-                  <span className="text-[10px] font-mono text-muted-foreground/30 shrink-0">{variationIndex + 1}/{variationCount}</span>
+                  <span className="text-muted-foreground shrink-0">&middot;</span>
+                  <span className="text-[10px] font-mono text-muted-foreground shrink-0">{variationIndex + 1}/{variationCount}</span>
                 </>
               )}
               {(generatedFrom || fragment.description) && (
                 <>
-                  <span className="text-muted-foreground/15 shrink-0">&middot;</span>
+                  <span className="text-muted-foreground shrink-0">&middot;</span>
                   <button
-                    className="text-[10px] text-muted-foreground/40 italic truncate hover:text-primary/70 transition-colors text-left"
+                    className="text-[10px] text-muted-foreground italic truncate hover:text-primary/70 transition-colors text-left"
                     onClick={() => {
                       setActionMode('regenerate')
                       setActionInput(generatedFrom || fragment.description || '')
@@ -560,7 +560,7 @@ export function ProseBlock({
               <div className="ml-auto flex items-center gap-1 shrink-0">
                 {!!fragment.meta?.generatedFrom && onDebugLog && (
                   <button
-                    className="p-1 rounded-lg text-muted-foreground/30 hover:text-primary hover:bg-accent/50 transition-all"
+                    className="p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-accent/50 transition-all"
                     onClick={() => { onDebugLog(fragment.id); setShowActions(false) }}
                     title="View debug log"
                   >
@@ -580,7 +580,7 @@ export function ProseBlock({
                   value={actionInput}
                   onChange={(e) => setActionInput(e.target.value)}
                   placeholder={actionMode === 'regenerate' ? 'New direction...' : 'How to refine...'}
-                  className="w-full resize-none rounded-lg border border-border/40 bg-transparent px-3 py-2 text-sm placeholder:italic placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/30"
+                  className="w-full resize-none rounded-lg border border-border/40 bg-transparent px-3 py-2 text-sm placeholder:italic placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/30"
                   rows={2}
                   autoFocus
                   onKeyDown={(e) => {
@@ -595,12 +595,12 @@ export function ProseBlock({
                   }}
                 />
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[10px] text-muted-foreground/30">
+                  <span className="text-[10px] text-muted-foreground">
                     Esc to cancel &middot; Ctrl+Enter to {actionMode}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
-                      className="px-2.5 py-1 rounded-lg text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-all"
+                      className="px-2.5 py-1 rounded-lg text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all"
                       onClick={() => { setActionMode(null); setActionInput('') }}
                     >
                       Cancel
@@ -669,7 +669,7 @@ export function ProseBlock({
                 )}
                 <div className="w-px h-4 bg-border/30 mx-0.5" />
                 <button
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/80 transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all"
                   onClick={() => { onSelect(); setShowActions(false) }}
                 >
                   Details
@@ -678,7 +678,7 @@ export function ProseBlock({
                   <>
                     <div className="w-px h-4 bg-border/30 mx-0.5" />
                     <button
-                      className="inline-flex items-center p-1.5 rounded-xl text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all"
+                      className="inline-flex items-center p-1.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                       disabled={deleteMutation.isPending}
                       onClick={() => {
                         if (window.confirm('Remove this passage? It will be archived.')) {

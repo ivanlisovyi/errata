@@ -40,7 +40,7 @@ const variantStyles: Record<StreamMarkdownVariant, {
     codeBlock: 'block bg-muted/50 rounded px-2 py-1.5 my-1.5 text-[11px] font-mono overflow-x-auto whitespace-pre',
     codeInline: 'bg-muted/50 rounded px-1 py-0.5 text-[11px] font-mono',
     heading: 'font-semibold mb-1',
-    blockquote: 'border-l-2 border-border/50 pl-2 my-1.5 text-muted-foreground/70',
+    blockquote: 'border-l-2 border-border/50 pl-2 my-1.5 text-muted-foreground',
     hr: 'border-border/30 my-2',
     cursor: 'inline-block w-0.5 h-[1em] bg-primary/60 animate-pulse ml-px align-text-bottom',
     streamingP: 'mb-2 last:mb-0',

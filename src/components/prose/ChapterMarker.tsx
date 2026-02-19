@@ -114,7 +114,7 @@ export function ChapterMarker({
           <TooltipTrigger asChild>
             <button
               onClick={onSelect}
-              className="flex items-center justify-center size-6 rounded-md text-muted-foreground/30 hover:text-amber-400/70 hover:bg-amber-500/10 transition-colors duration-200"
+              className="flex items-center justify-center size-6 rounded-md text-muted-foreground hover:text-amber-400/70 hover:bg-amber-500/10 transition-colors duration-200"
             >
               <Pencil className="size-3" />
             </button>
@@ -127,7 +127,7 @@ export function ChapterMarker({
             <button
               onClick={() => summarizeMutation.mutate()}
               disabled={summarizeMutation.isPending}
-              className="flex items-center justify-center size-6 rounded-md text-muted-foreground/30 hover:text-amber-400/70 hover:bg-amber-500/10 transition-colors duration-200 disabled:opacity-40"
+              className="flex items-center justify-center size-6 rounded-md text-muted-foreground hover:text-amber-400/70 hover:bg-amber-500/10 transition-colors duration-200 disabled:opacity-40"
             >
               {summarizeMutation.isPending ? (
                 <Loader2 className="size-3 animate-spin" />
@@ -144,7 +144,7 @@ export function ChapterMarker({
             <TooltipTrigger asChild>
               <button
                 onClick={() => setSummaryExpanded(!summaryExpanded)}
-                className="flex items-center justify-center size-6 rounded-md text-muted-foreground/30 hover:text-amber-400/70 hover:bg-amber-500/10 transition-colors duration-200"
+                className="flex items-center justify-center size-6 rounded-md text-muted-foreground hover:text-amber-400/70 hover:bg-amber-500/10 transition-colors duration-200"
               >
                 {summaryExpanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
               </button>
@@ -157,7 +157,7 @@ export function ChapterMarker({
           <TooltipTrigger asChild>
             <button
               onClick={() => onDelete(sectionIndex)}
-              className="flex items-center justify-center size-6 rounded-md text-muted-foreground/30 hover:text-red-400/70 hover:bg-red-500/10 transition-colors duration-200"
+              className="flex items-center justify-center size-6 rounded-md text-muted-foreground hover:text-red-400/70 hover:bg-red-500/10 transition-colors duration-200"
             >
               <Trash2 className="size-3" />
             </button>
@@ -169,7 +169,7 @@ export function ChapterMarker({
       {/* Summary — collapsible */}
       {hasSummary && summaryExpanded && (
         <div className="mt-3 mx-auto max-w-md animate-in fade-in slide-in-from-top-1 duration-200">
-          <p className="text-[11px] leading-relaxed text-muted-foreground/50 italic text-center px-4">
+          <p className="text-[11px] leading-relaxed text-muted-foreground italic text-center px-4">
             {fragment.content}
           </p>
         </div>

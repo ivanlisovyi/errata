@@ -188,7 +188,7 @@ export function CropDialog({ open, onOpenChange, imageUrl, imageName, initialBou
           <DialogTitle className="text-sm font-medium flex items-center gap-2">
             <Crop className="size-4 text-muted-foreground" />
             Crop region
-            <span className="text-muted-foreground/50 font-normal">— {imageName}</span>
+            <span className="text-muted-foreground font-normal">— {imageName}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -292,7 +292,7 @@ export function CropDialog({ open, onOpenChange, imageUrl, imageName, initialBou
             {/* Coordinates readout */}
             {hasCrop && (
               <div className="flex-1 flex items-center gap-3">
-                <span className="text-[10px] font-mono text-muted-foreground/50">
+                <span className="text-[10px] font-mono text-muted-foreground">
                   {Math.round(boundary.x * 100)}%, {Math.round(boundary.y * 100)}%
                   {' '}&mdash;{' '}
                   {Math.round(boundary.width * 100)}% &times; {Math.round(boundary.height * 100)}%
@@ -301,7 +301,7 @@ export function CropDialog({ open, onOpenChange, imageUrl, imageName, initialBou
                   type="button"
                   size="sm"
                   variant="ghost"
-                  className="h-6 text-[11px] gap-1 text-muted-foreground/50 hover:text-muted-foreground"
+                  className="h-6 text-[11px] gap-1 text-muted-foreground hover:text-muted-foreground"
                   onClick={handleReset}
                 >
                   <RotateCcw className="size-3" />
