@@ -87,7 +87,7 @@ export function ProseOutlinePanel({
                 className={`flex items-center justify-center size-7 rounded-md transition-all duration-200 ${
                   open
                     ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground/25 hover:text-muted-foreground/60 hover:bg-accent/50'
+                    : 'text-muted-foreground hover:text-muted-foreground hover:bg-accent/50'
                 }`}
               >
                 <List className="size-3.5" />
@@ -102,7 +102,7 @@ export function ProseOutlinePanel({
           <>
             {/* Header */}
             <div className="shrink-0 px-4 pb-3 flex items-center justify-between">
-              <h3 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/40 font-medium">
+              <h3 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
                 Passages
               </h3>
               <Tooltip>
@@ -166,15 +166,15 @@ export function ProseOutlinePanel({
                     }`}
                   >
                     <span className={`block text-[10px] font-mono mb-0.5 ${
-                      isActive ? 'text-primary/70' : 'text-muted-foreground/25'
+                      isActive ? 'text-primary/70' : 'text-muted-foreground'
                     }`}>
                       {currentProseNumber}
                     </span>
                     {fragment.description && (
                       <span className={`block text-[10px] italic truncate mb-0.5 ${
                         isActive
-                          ? 'text-muted-foreground/70'
-                          : 'text-muted-foreground/40 group-hover/item:text-muted-foreground/60'
+                          ? 'text-muted-foreground'
+                          : 'text-muted-foreground group-hover/item:text-muted-foreground'
                       }`}>
                         {fragment.description.slice(0, 50)}{fragment.description.length > 50 ? '...' : ''}
                       </span>
@@ -182,7 +182,7 @@ export function ProseOutlinePanel({
                     <span className={`block text-[11px] leading-snug font-prose ${
                       isActive
                         ? 'text-foreground/80'
-                        : 'text-muted-foreground/45 group-hover/item:text-muted-foreground/65'
+                        : 'text-muted-foreground group-hover/item:text-muted-foreground'
                     }`}>
                       {preview(fragment.content)}
                     </span>
@@ -198,7 +198,7 @@ export function ProseOutlinePanel({
                   <button
                     onClick={onScrollToBottom}
                     data-component-id="prose-outline-scroll-bottom"
-                    className="w-full flex items-center justify-center gap-1.5 rounded-md py-1.5 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-accent/40 transition-colors"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-md py-1.5 text-muted-foreground hover:text-muted-foreground hover:bg-accent/40 transition-colors"
                   >
                     <ChevronsDown className="size-3.5" />
                     <span className="text-[10px]">Bottom</span>
@@ -268,7 +268,7 @@ export function ProseOutlinePanel({
                   <button
                     onClick={onScrollToBottom}
                     data-component-id="prose-outline-scroll-bottom"
-                    className="flex items-center justify-center w-7 h-6 rounded-md text-muted-foreground/25 hover:text-muted-foreground/60 hover:bg-accent/40 transition-colors"
+                    className="flex items-center justify-center w-7 h-6 rounded-md text-muted-foreground hover:text-muted-foreground hover:bg-accent/40 transition-colors"
                   >
                     <ChevronsDown className="size-3.5" />
                   </button>

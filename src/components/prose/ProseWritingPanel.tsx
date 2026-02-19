@@ -425,7 +425,7 @@ export function ProseWritingPanel({
   const SaveIndicator = () => {
     if (saveState === 'saving') {
       return (
-        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 animate-in fade-in duration-150">
+        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground animate-in fade-in duration-150">
           <Loader2 className="size-2.5 animate-spin" />
           <span className="hidden sm:inline">Saving</span>
         </span>
@@ -464,11 +464,11 @@ export function ProseWritingPanel({
           <div className="flex items-center gap-3 min-w-0">
             <Wand2 className="size-4 text-primary/60 shrink-0" />
             {currentFragment?.description ? (
-              <span className="font-display italic text-sm text-muted-foreground/50 truncate max-w-[40ch]">
+              <span className="font-display italic text-sm text-muted-foreground truncate max-w-[40ch]">
                 {currentFragment.description}
               </span>
             ) : (
-              <span className="font-display text-sm text-muted-foreground/25">
+              <span className="font-display text-sm text-muted-foreground">
                 Writing Panel
               </span>
             )}
@@ -483,8 +483,8 @@ export function ProseWritingPanel({
                     className={cn(
                       'size-7 flex items-center justify-center rounded-md transition-colors',
                       prevFragment
-                        ? 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/60'
-                        : 'text-muted-foreground/15 cursor-default',
+                        ? 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
+                        : 'text-muted-foreground cursor-default',
                     )}
                     onClick={navigatePrev}
                     disabled={!prevFragment}
@@ -496,7 +496,7 @@ export function ProseWritingPanel({
                   {prevFragment ? 'Previous passage (Alt+\u2191)' : 'First passage'}
                 </TooltipContent>
               </Tooltip>
-              <span className="text-[10px] font-mono text-muted-foreground/30 tabular-nums min-w-[2.5ch] text-center">
+              <span className="text-[10px] font-mono text-muted-foreground tabular-nums min-w-[2.5ch] text-center">
                 {currentProseIndex + 1}
               </span>
               <Tooltip>
@@ -505,8 +505,8 @@ export function ProseWritingPanel({
                     className={cn(
                       'size-7 flex items-center justify-center rounded-md transition-colors',
                       nextFragment
-                        ? 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/60'
-                        : 'text-muted-foreground/15 cursor-default',
+                        ? 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
+                        : 'text-muted-foreground cursor-default',
                     )}
                     onClick={navigateNext}
                     disabled={!nextFragment}
@@ -524,7 +524,7 @@ export function ProseWritingPanel({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="hidden sm:flex size-7 items-center justify-center rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-accent/60 transition-colors"
+                  className="hidden sm:flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
                   onClick={() => setSidebarCollapsed(v => !v)}
                 >
                   {sidebarCollapsed ? <PanelRightOpen className="size-3.5" /> : <PanelRightClose className="size-3.5" />}
@@ -540,7 +540,7 @@ export function ProseWritingPanel({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 px-2 text-xs gap-1.5 text-muted-foreground/60 hover:text-foreground"
+              className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
               onClick={handleSave}
               disabled={saveState === 'saving' || isTransformingSelection || !editor}
             >
@@ -549,7 +549,7 @@ export function ProseWritingPanel({
             <Button
               size="sm"
               variant="ghost"
-              className="size-7 p-0 text-muted-foreground/40 hover:text-foreground"
+              className="size-7 p-0 text-muted-foreground hover:text-foreground"
               onClick={() => {
                 if (dirtyRef.current && editor && currentFragment) {
                   const content = getEditorText()
@@ -614,7 +614,7 @@ export function ProseWritingPanel({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-2 text-[10px] gap-1 text-muted-foreground/50 hover:text-foreground"
+                      className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         editor?.commands.undo()
                         setShowTransformUndo(false)
@@ -634,7 +634,7 @@ export function ProseWritingPanel({
                       key={t.id}
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-2 text-[10px] text-muted-foreground/50 hover:text-foreground/80"
+                      className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground/80"
                       onClick={() => applySelectionTransform('custom', t.instruction, t.label)}
                       disabled={isTransformingSelection || !hasSelection}
                     >
@@ -649,9 +649,9 @@ export function ProseWritingPanel({
               {/* Reasoning stream */}
               {(isTransformingSelection || selectionTransformReasoning.trim()) && (
                 <div className="border-t border-border/50 px-2.5 py-2">
-                  <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground/50">Reasoning</p>
+                  <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">Reasoning</p>
                   <div className="max-h-36 overflow-y-auto overscroll-contain pr-1">
-                    <p className="text-[11px] leading-relaxed text-muted-foreground/70 whitespace-pre-wrap">
+                    <p className="text-[11px] leading-relaxed text-muted-foreground whitespace-pre-wrap">
                       {selectionTransformReasoning.trim() || 'Thinking\u2026'}
                     </p>
                   </div>
@@ -667,12 +667,12 @@ export function ProseWritingPanel({
               onClick={navigatePrev}
             >
               <div className="flex items-center gap-2 mb-1">
-                <ChevronUp className="size-3 text-muted-foreground/20 group-hover/ctx:text-muted-foreground/40 transition-colors" />
-                <span className="text-[10px] text-muted-foreground/20 group-hover/ctx:text-muted-foreground/40 transition-colors">
+                <ChevronUp className="size-3 text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors" />
+                <span className="text-[10px] text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors">
                   Previous passage
                 </span>
               </div>
-              <p className="font-prose text-sm leading-relaxed text-muted-foreground/15 group-hover/ctx:text-muted-foreground/30 transition-colors line-clamp-2">
+              <p className="font-prose text-sm leading-relaxed text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors line-clamp-2">
                 {contextTail(prevFragment.content)}
               </p>
               <div className="mt-2 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
@@ -689,12 +689,12 @@ export function ProseWritingPanel({
               onClick={navigateNext}
             >
               <div className="mb-1 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
-              <p className="mt-2 font-prose text-sm leading-relaxed text-muted-foreground/15 group-hover/ctx:text-muted-foreground/30 transition-colors line-clamp-2">
+              <p className="mt-2 font-prose text-sm leading-relaxed text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors line-clamp-2">
                 {contextHead(nextFragment.content)}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <ChevronDown className="size-3 text-muted-foreground/20 group-hover/ctx:text-muted-foreground/40 transition-colors" />
-                <span className="text-[10px] text-muted-foreground/20 group-hover/ctx:text-muted-foreground/40 transition-colors">
+                <ChevronDown className="size-3 text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors" />
+                <span className="text-[10px] text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors">
                   Next passage
                 </span>
               </div>
@@ -704,13 +704,13 @@ export function ProseWritingPanel({
 
         {/* Footer */}
         <div className="shrink-0 border-t border-border/30 px-4 py-2 sm:px-6 flex items-center justify-between gap-4">
-          <span className="text-[10px] text-muted-foreground/25 hidden sm:inline">
+          <span className="text-[10px] text-muted-foreground hidden sm:inline">
             Ctrl+S save &middot; Esc close &middot; Alt+&uarr;&darr; passages
           </span>
-          <span className="text-[10px] text-muted-foreground/25 sm:hidden">
+          <span className="text-[10px] text-muted-foreground sm:hidden">
             Ctrl+S &middot; Esc
           </span>
-          <span className="text-[10px] text-muted-foreground/30 font-mono tabular-nums">
+          <span className="text-[10px] text-muted-foreground font-mono tabular-nums">
             {editorStats.words.toLocaleString()}w
             &middot; {editorStats.chars.toLocaleString()}c
             &middot; ~{editorStats.tokens.toLocaleString()}t
@@ -730,26 +730,26 @@ export function ProseWritingPanel({
         {/* Sidebar header with search */}
         <div className="shrink-0 px-3 pt-4 pb-2">
           <div className="flex items-center justify-between mb-2.5">
-            <h3 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/35 font-medium">
+            <h3 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
               Passages
             </h3>
-            <span className="text-[10px] font-mono text-muted-foreground/20 tabular-nums">
+            <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
               {proseItems.length}
             </span>
           </div>
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/25" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
             <input
               ref={searchInputRef}
               type="text"
               value={sidebarSearch}
               onChange={(e) => setSidebarSearch(e.target.value)}
-              placeholder="Filter\u2026"
-              className="w-full bg-muted/30 hover:bg-muted/50 focus:bg-muted/50 border border-transparent focus:border-border/40 rounded-md pl-7 pr-2 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground/25 outline-none transition-all"
+              placeholder="Filter"
+              className="w-full bg-muted/30 hover:bg-muted/50 focus:bg-muted/50 border border-transparent focus:border-border/40 rounded-md pl-7 pr-2 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground outline-none transition-all"
             />
             {sidebarSearch && (
               <button
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 size-4 flex items-center justify-center rounded text-muted-foreground/30 hover:text-foreground transition-colors"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 size-4 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setSidebarSearch('')}
               >
                 <X className="size-2.5" />
@@ -801,13 +801,13 @@ export function ProseWritingPanel({
                   <div className="flex items-center justify-between mb-0.5">
                     <span className={cn(
                       'text-[10px] font-mono',
-                      isActive ? 'text-primary/70' : 'text-muted-foreground/20',
+                      isActive ? 'text-primary/70' : 'text-muted-foreground',
                     )}>
                       {currentProseNumber}
                     </span>
                     <span className={cn(
                       'text-[9px] font-mono tabular-nums',
-                      isActive ? 'text-primary/40' : 'text-muted-foreground/15 group-hover/item:text-muted-foreground/25',
+                      isActive ? 'text-primary/40' : 'text-muted-foreground group-hover/item:text-muted-foreground',
                     )}>
                       {wc}w
                     </span>
@@ -816,8 +816,8 @@ export function ProseWritingPanel({
                     <span className={cn(
                       'block text-[10px] italic truncate mb-0.5',
                       isActive
-                        ? 'text-muted-foreground/60'
-                        : 'text-muted-foreground/30 group-hover/item:text-muted-foreground/50',
+                        ? 'text-muted-foreground'
+                        : 'text-muted-foreground group-hover/item:text-muted-foreground',
                     )}>
                       {fragment.description.slice(0, 50)}{fragment.description.length > 50 ? '\u2026' : ''}
                     </span>
@@ -826,7 +826,7 @@ export function ProseWritingPanel({
                     'block text-[11px] leading-snug font-prose line-clamp-2',
                     isActive
                       ? 'text-foreground/70'
-                      : 'text-muted-foreground/35 group-hover/item:text-muted-foreground/55',
+                      : 'text-muted-foreground group-hover/item:text-muted-foreground',
                   )}>
                     {preview(fragment.content)}
                   </span>
@@ -835,7 +835,7 @@ export function ProseWritingPanel({
             })}
 
             {sidebarSearch && filteredItems.length === 0 && (
-              <p className="text-[11px] text-muted-foreground/25 text-center py-6 italic">
+              <p className="text-[11px] text-muted-foreground text-center py-6 italic">
                 No matches
               </p>
             )}

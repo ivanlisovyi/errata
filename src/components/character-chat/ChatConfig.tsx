@@ -126,20 +126,20 @@ export function ChatConfig({
             >
               <CharacterThumb character={ch} mediaById={mediaById} />
               <span className="font-display text-sm">{ch.name}</span>
-              <span className="text-[10px] text-muted-foreground/50 truncate ml-auto max-w-[120px]">
+              <span className="text-[10px] text-muted-foreground truncate ml-auto max-w-[120px]">
                 {ch.description}
               </span>
             </DropdownMenuItem>
           ))}
           {characters.length === 0 && (
-            <DropdownMenuItem disabled className="text-muted-foreground/40 italic text-xs">
+            <DropdownMenuItem disabled className="text-muted-foreground italic text-xs">
               No characters yet
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <span className="text-muted-foreground/20 text-xs select-none">/</span>
+      <span className="text-muted-foreground text-xs select-none">/</span>
 
       {/* Persona selector */}
       <DropdownMenu>
@@ -160,7 +160,7 @@ export function ChatConfig({
             <User className="size-3.5" />
             <div>
               <div className="text-xs">Stranger</div>
-              <div className="text-[10px] text-muted-foreground/50">Someone they just met</div>
+              <div className="text-[10px] text-muted-foreground">Someone they just met</div>
             </div>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -191,13 +191,13 @@ export function ChatConfig({
             <Sparkles className="size-3.5" />
             <div>
               <div className="text-xs">Custom persona</div>
-              <div className="text-[10px] text-muted-foreground/50">Define who you are</div>
+              <div className="text-[10px] text-muted-foreground">Define who you are</div>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <span className="text-muted-foreground/20 text-xs select-none">/</span>
+      <span className="text-muted-foreground text-xs select-none">/</span>
 
       {/* Story point picker */}
       <DropdownMenu>
@@ -214,7 +214,7 @@ export function ChatConfig({
             className="gap-2"
           >
             <span className="text-xs font-medium">Latest</span>
-            <span className="text-[10px] text-muted-foreground/50 ml-auto">All events</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">All events</span>
           </DropdownMenuItem>
           {proseEntries.length > 0 && <DropdownMenuSeparator />}
           {proseEntries.map((entry) => (
@@ -223,7 +223,7 @@ export function ChatConfig({
               onClick={() => onStoryPointChange(entry.id)}
               className="gap-2"
             >
-              <span className="text-[10px] text-muted-foreground/40 font-mono w-5 text-right shrink-0">
+              <span className="text-[10px] text-muted-foreground font-mono w-5 text-right shrink-0">
                 {entry.index}
               </span>
               <span className="text-xs truncate">{entry.name}</span>
@@ -239,7 +239,7 @@ export function ChatConfig({
       <Button
         variant="ghost"
         size="sm"
-        className="h-7 gap-1.5 text-xs text-muted-foreground/60"
+        className="h-7 gap-1.5 text-xs text-muted-foreground"
         onClick={onShowConversations}
         disabled={disabled}
       >
@@ -251,7 +251,7 @@ export function ChatConfig({
       <Button
         variant="ghost"
         size="icon"
-        className="size-7 text-muted-foreground/40 hover:text-muted-foreground"
+        className="size-7 text-muted-foreground hover:text-muted-foreground"
         onClick={onClose}
       >
         <X className="size-3.5" />

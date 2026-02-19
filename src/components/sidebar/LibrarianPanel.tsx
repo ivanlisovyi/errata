@@ -140,11 +140,11 @@ export function LibrarianPanel({ storyId }: LibrarianPanelProps) {
       <div className="shrink-0 mx-4 mb-1">
         <div className="flex items-center justify-between h-6 px-2.5 rounded-md bg-muted/40">
           <div className="flex items-center gap-1">
-            <span className="text-[10px] text-muted-foreground/60">Auto-apply suggestions</span>
+            <span className="text-[10px] text-muted-foreground">Auto-apply suggestions</span>
             <button
               type="button"
               onClick={() => openHelp('librarian#auto-suggestions')}
-              className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+              className="text-muted-foreground hover:text-primary/60 transition-colors"
               title="Learn more"
             >
               <CircleHelp className="size-2.5" />
@@ -244,14 +244,14 @@ function StatusStrip({ status, runStatus }: StatusStripProps) {
           <span className={`relative inline-flex size-2 rounded-full ${dotColor}`} />
         </span>
 
-        <span className="text-[10px] text-muted-foreground/60 tracking-wide">
+        <span className="text-[10px] text-muted-foreground tracking-wide">
           {label}
         </span>
 
         {fragmentId && (
           <>
-            <span className="text-muted-foreground/20">&middot;</span>
-            <span className="text-[10px] font-mono text-muted-foreground/40 truncate">
+            <span className="text-muted-foreground">&middot;</span>
+            <span className="text-[10px] font-mono text-muted-foreground truncate">
               {fragmentId}
             </span>
           </>
@@ -363,8 +363,8 @@ function StoryContent({ storyId, status, onOpenChat }: LibrarianPanelProps & { s
 
         {!analyses?.length && !hasMentions && !hasTimeline && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <BookOpen className="size-5 text-muted-foreground/20 mb-3" />
-            <p className="text-xs text-muted-foreground/40 italic max-w-[220px]">
+            <BookOpen className="size-5 text-muted-foreground mb-3" />
+            <p className="text-xs text-muted-foreground italic max-w-[220px]">
               Generate some prose and the librarian will track your story here.
             </p>
           </div>
@@ -378,7 +378,7 @@ function StoryContent({ storyId, status, onOpenChat }: LibrarianPanelProps & { s
               {Object.entries(status.recentMentions ?? {}).map(([charId, fragmentIds]) => (
                 <div key={charId} className="flex items-center justify-between py-1 px-2 rounded-md hover:bg-accent/30 transition-colors">
                   <span className="text-[11px] text-foreground/70">{charName(charId)}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground/35">
+                  <span className="text-[10px] font-mono text-muted-foreground">
                     {fragmentIds.length} mention{fragmentIds.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -400,7 +400,7 @@ function StoryContent({ storyId, status, onOpenChat }: LibrarianPanelProps & { s
                     <span className="relative z-10 mt-[5px] size-[7px] rounded-full bg-muted-foreground/20 ring-2 ring-background shrink-0" />
                     <div className="min-w-0">
                       <span className="text-[11px] text-foreground/65 leading-snug block">{entry.event}</span>
-                      <span className="text-[9px] font-mono text-muted-foreground/30">{entry.fragmentId}</span>
+                      <span className="text-[9px] font-mono text-muted-foreground">{entry.fragmentId}</span>
                     </div>
                   </div>
                 ))}
@@ -424,7 +424,7 @@ function StoryContent({ storyId, status, onOpenChat }: LibrarianPanelProps & { s
             ) : (
               refinableFragments.length > 0 ? (
                 <select
-                  className="w-full rounded-md border border-border/30 bg-transparent px-2 py-1.5 text-[11px] text-muted-foreground/70 hover:border-border/50 transition-colors cursor-pointer"
+                  className="w-full rounded-md border border-border/30 bg-transparent px-2 py-1.5 text-[11px] text-muted-foreground hover:border-border/50 transition-colors cursor-pointer"
                   defaultValue=""
                   onChange={(e) => {
                     const f = refinableFragments.find((f) => f.id === e.target.value)
@@ -439,7 +439,7 @@ function StoryContent({ storyId, status, onOpenChat }: LibrarianPanelProps & { s
                   ))}
                 </select>
               ) : (
-                <p className="text-[11px] text-muted-foreground/35 italic">
+                <p className="text-[11px] text-muted-foreground italic">
                   No fragments to refine yet.
                 </p>
               )
@@ -485,12 +485,12 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
                       className="w-full flex items-center gap-1.5 px-2.5 py-2 text-[11px] hover:bg-accent/30 transition-colors"
                     >
                       {expanded
-                        ? <ChevronDown className="size-3 text-muted-foreground/35 shrink-0" />
-                        : <ChevronRight className="size-3 text-muted-foreground/35 shrink-0" />
+                        ? <ChevronDown className="size-3 text-muted-foreground shrink-0" />
+                        : <ChevronRight className="size-3 text-muted-foreground shrink-0" />
                       }
                       <span className="font-mono text-foreground/65 truncate">{run.agentName}</span>
-                      <span className="text-muted-foreground/30 shrink-0">{runTime}</span>
-                      <span className="text-muted-foreground/30 shrink-0">{formatDuration(run.durationMs)}</span>
+                      <span className="text-muted-foreground shrink-0">{runTime}</span>
+                      <span className="text-muted-foreground shrink-0">{formatDuration(run.durationMs)}</span>
                       <span className={`ml-auto text-[9px] font-mono shrink-0 ${isError ? 'text-red-500/70' : 'text-emerald-500/50'}`}>
                         {run.status}
                       </span>
@@ -502,8 +502,8 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Radio className="size-5 text-muted-foreground/20 mb-3" />
-              <p className="text-xs text-muted-foreground/40 italic max-w-[220px]">
+              <Radio className="size-5 text-muted-foreground mb-3" />
+              <p className="text-xs text-muted-foreground italic max-w-[220px]">
                 No activity yet. The librarian runs automatically after each generation.
               </p>
             </div>
@@ -520,8 +520,8 @@ function ActivityContent({ storyId }: LibrarianPanelProps) {
 function SectionLabel({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1.5 pt-2.5 pb-0.5">
-      {icon && <span className="text-muted-foreground/30">{icon}</span>}
-      <h4 className="text-[9px] text-muted-foreground/40 uppercase tracking-[0.15em] font-medium">
+      {icon && <span className="text-muted-foreground">{icon}</span>}
+      <h4 className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">
         {children}
       </h4>
     </div>
@@ -555,9 +555,9 @@ function TraceTree({ run }: { run: AgentRunTraceRecord }) {
           className="flex items-start gap-1.5 text-[10px] py-0.5"
           style={{ paddingLeft: `${depth * 12 + 4}px` }}
         >
-          <span className="text-muted-foreground/25 mt-px">{depth === 0 ? '\u25CF' : '\u2514'}</span>
+          <span className="text-muted-foreground mt-px">{depth === 0 ? '\u25CF' : '\u2514'}</span>
           <span className="font-mono text-foreground/70">{node.agentName}</span>
-          <span className="text-muted-foreground/30">{formatDuration(node.durationMs)}</span>
+          <span className="text-muted-foreground">{formatDuration(node.durationMs)}</span>
           <span className={node.status === 'error' ? 'text-red-500/70' : 'text-emerald-500/50'}>
             {node.status}
           </span>
@@ -601,7 +601,7 @@ function TraceNodeOutput({ output, depth }: { output: Record<string, unknown>; d
     <div style={{ paddingLeft: `${indent}px` }} className="py-0.5">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1.5 text-[9px] text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors"
+        className="flex items-center gap-1.5 text-[9px] text-muted-foreground hover:text-muted-foreground transition-colors"
       >
         {expanded ? <ChevronDown className="size-2.5" /> : <ChevronRight className="size-2.5" />}
         <span>Output</span>
@@ -609,14 +609,14 @@ function TraceNodeOutput({ output, depth }: { output: Record<string, unknown>; d
           <Badge variant="outline" className="text-[8px] h-3 px-1">{modelId}</Badge>
         )}
         {durationMs != null && (
-          <span className="text-muted-foreground/25">{formatDuration(durationMs)}</span>
+          <span className="text-muted-foreground">{formatDuration(durationMs)}</span>
         )}
       </button>
       {expanded && (
         <div className="mt-1 space-y-1.5">
           {reasoning && (
             <TraceOutputSection icon={<Brain className="size-3 text-purple-400/60" />} label="Reasoning">
-              <p className="text-[9px] text-muted-foreground/50 leading-relaxed whitespace-pre-wrap break-words">
+              <p className="text-[9px] text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
                 {reasoning}
               </p>
             </TraceOutputSection>
@@ -631,7 +631,7 @@ function TraceNodeOutput({ output, depth }: { output: Record<string, unknown>; d
           )}
           {/* Fallback: show raw output for unknown shapes */}
           {!summary && !reasoning && !trace && (
-            <pre className="text-[9px] text-muted-foreground/40 leading-relaxed whitespace-pre-wrap break-all px-2">
+            <pre className="text-[9px] text-muted-foreground leading-relaxed whitespace-pre-wrap break-all px-2">
               {JSON.stringify(output, null, 2)}
             </pre>
           )}
@@ -650,7 +650,7 @@ function TraceOutputSection({ icon, label, children }: { icon: React.ReactNode; 
         className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] hover:bg-accent/20 transition-colors"
       >
         {icon}
-        <span className="text-muted-foreground/50">{label}</span>
+        <span className="text-muted-foreground">{label}</span>
       </button>
       {expanded && (
         <div className="border-t border-border/10 px-2 py-1.5">
@@ -706,11 +706,11 @@ function AnalysisItem({
         className="w-full flex items-center gap-1.5 px-2.5 py-2 text-[11px] hover:bg-accent/30 transition-colors"
       >
         {expanded
-          ? <ChevronDown className="size-3 text-muted-foreground/35 shrink-0" />
-          : <ChevronRight className="size-3 text-muted-foreground/35 shrink-0" />
+          ? <ChevronDown className="size-3 text-muted-foreground shrink-0" />
+          : <ChevronRight className="size-3 text-muted-foreground shrink-0" />
         }
         <span className="font-mono text-foreground/60 truncate">{summary.fragmentId}</span>
-        <span className="text-muted-foreground/30 shrink-0">{timeStr}</span>
+        <span className="text-muted-foreground shrink-0">{timeStr}</span>
         {hasBadges && (
           <div className="ml-auto flex gap-1 shrink-0">
             {summary.contradictionCount > 0 && (
@@ -731,14 +731,14 @@ function AnalysisItem({
         <div className="border-t border-border/15 px-3 py-2.5 space-y-2.5 text-[11px] bg-muted/10">
           {analysis.summaryUpdate && (
             <div>
-              <span className="text-muted-foreground/45 text-[10px]">Summary update</span>
+              <span className="text-muted-foreground text-[10px]">Summary update</span>
               <p className="text-foreground/65 leading-relaxed mt-0.5">{analysis.summaryUpdate}</p>
             </div>
           )}
 
           {analysis.structuredSummary && (
             <div className="space-y-1.5">
-              <span className="text-muted-foreground/45 text-[10px]">Structured summary</span>
+              <span className="text-muted-foreground text-[10px]">Structured summary</span>
 
               {analysis.structuredSummary.events.length > 0 && (
                 <div>
@@ -783,7 +783,7 @@ function AnalysisItem({
 
           {analysis.mentionedCharacters.length > 0 && (
             <div className="flex items-center gap-1 flex-wrap">
-              <span className="text-muted-foreground/45 text-[10px] mr-1">Characters</span>
+              <span className="text-muted-foreground text-[10px] mr-1">Characters</span>
               {analysis.mentionedCharacters.map((id) => (
                 <Badge key={id} variant="outline" className="text-[9px] h-4 px-1.5">
                   {charName(id)}
@@ -804,7 +804,7 @@ function AnalysisItem({
                       <div>
                         <p className="text-foreground/70">{c.description}</p>
                         {c.fragmentIds.length > 0 && (
-                          <p className="text-muted-foreground/40 mt-0.5 text-[10px] font-mono">
+                          <p className="text-muted-foreground mt-0.5 text-[10px] font-mono">
                             {c.fragmentIds.join(', ')}
                           </p>
                         )}
@@ -864,14 +864,14 @@ function AnalysisItem({
                         </Badge>
                       )}
                     </div>
-                    <p className="text-muted-foreground/50 mt-0.5">{s.description}</p>
+                    <p className="text-muted-foreground mt-0.5">{s.description}</p>
                     {s.targetFragmentId && (
-                      <p className="text-[9px] text-muted-foreground/35 mt-0.5 font-mono">
+                      <p className="text-[9px] text-muted-foreground mt-0.5 font-mono">
                         updates {s.targetFragmentId}
                       </p>
                     )}
                     {s.sourceFragmentId && (
-                      <p className="text-[9px] text-muted-foreground/35 mt-0.5 font-mono">
+                      <p className="text-[9px] text-muted-foreground mt-0.5 font-mono">
                         from {s.sourceFragmentId}
                       </p>
                     )}
@@ -880,7 +880,7 @@ function AnalysisItem({
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="size-5 shrink-0 text-muted-foreground/40 hover:text-foreground"
+                      className="size-5 shrink-0 text-muted-foreground hover:text-foreground"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleAcceptSuggestion(s, i)
@@ -896,7 +896,7 @@ function AnalysisItem({
 
           {analysis.timelineEvents.length > 0 && (
             <div className="space-y-1">
-              <span className="text-muted-foreground/45 text-[10px]">Timeline events</span>
+              <span className="text-muted-foreground text-[10px]">Timeline events</span>
               {analysis.timelineEvents.map((t) => (
                 <div key={`${t.position}-${t.event}`} className="flex items-center gap-1.5">
                   <Badge variant="outline" className="text-[9px] h-3.5 px-1">{t.position}</Badge>
@@ -929,11 +929,11 @@ function StoredTraceViewer({ trace }: { trace: LibrarianAnalysis['trace'] }) {
     <div>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors"
+        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-muted-foreground transition-colors"
       >
         {expanded ? <ChevronDown className="size-2.5" /> : <ChevronRight className="size-2.5" />}
         Analysis trace
-        <span className="text-muted-foreground/25">({items.length})</span>
+        <span className="text-muted-foreground">({items.length})</span>
       </button>
       {expanded && (
         <div className="mt-1.5 space-y-1">
@@ -993,12 +993,12 @@ function TraceItem({ item }: { item: CollapsedTraceItem }) {
           className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] hover:bg-accent/20 transition-colors"
         >
           <Brain className="size-3 text-purple-400/60 shrink-0" />
-          <span className="text-muted-foreground/50">Reasoning</span>
-          <span className="text-muted-foreground/25 ml-auto">{item.text.length} chars</span>
+          <span className="text-muted-foreground">Reasoning</span>
+          <span className="text-muted-foreground ml-auto">{item.text.length} chars</span>
         </button>
         {expanded && (
           <div className="border-t border-border/10 px-2 py-1.5">
-            <p className="text-[10px] text-muted-foreground/50 leading-relaxed whitespace-pre-wrap break-words">
+            <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
               {item.text}
             </p>
           </div>
@@ -1027,7 +1027,7 @@ function TraceItem({ item }: { item: CollapsedTraceItem }) {
         </button>
         {expanded && (
           <div className="border-t border-border/10 px-2 py-1.5">
-            <pre className="text-[9px] text-muted-foreground/50 leading-relaxed whitespace-pre-wrap break-all">
+            <pre className="text-[9px] text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
               {JSON.stringify(item.args, null, 2)}
             </pre>
           </div>
@@ -1040,7 +1040,7 @@ function TraceItem({ item }: { item: CollapsedTraceItem }) {
     return (
       <div className="px-2 py-0.5 flex items-center gap-1">
         <Check className="size-2.5 text-emerald-500/50" />
-        <span className="text-[9px] text-muted-foreground/35">{item.toolName} completed</span>
+        <span className="text-[9px] text-muted-foreground">{item.toolName} completed</span>
       </div>
     )
   }
@@ -1128,7 +1128,7 @@ function LiveAnalysisTrace({ storyId }: { storyId: string }) {
             )}
             <span className={`relative inline-flex size-1.5 rounded-full ${connected ? 'bg-blue-400' : 'bg-muted-foreground/30'}`} />
           </span>
-          <span className="text-[9px] text-muted-foreground/40 uppercase tracking-wider">Live Trace</span>
+          <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Live Trace</span>
         </div>
         <div className="space-y-0.5 max-h-32 overflow-y-auto">
           {items.map((item, i) => (
@@ -1145,7 +1145,7 @@ function LiveTraceItem({ item }: { item: CollapsedTraceItem }) {
     return (
       <div className="flex items-start gap-1 px-1">
         <Brain className="size-2.5 text-purple-400/50 shrink-0 mt-0.5" />
-        <p className="text-[9px] text-muted-foreground/40 leading-snug truncate">{item.text.slice(0, 120)}{item.text.length > 120 ? '\u2026' : ''}</p>
+        <p className="text-[9px] text-muted-foreground leading-snug truncate">{item.text.slice(0, 120)}{item.text.length > 120 ? '\u2026' : ''}</p>
       </div>
     )
   }
@@ -1168,7 +1168,7 @@ function LiveTraceItem({ item }: { item: CollapsedTraceItem }) {
     return (
       <div className="flex items-center gap-1 px-1">
         <Check className="size-2 text-emerald-500/40" />
-        <span className="text-[8px] text-muted-foreground/30">{item.toolName}</span>
+        <span className="text-[8px] text-muted-foreground">{item.toolName}</span>
       </div>
     )
   }

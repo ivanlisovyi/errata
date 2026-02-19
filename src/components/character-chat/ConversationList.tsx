@@ -100,7 +100,7 @@ export function ConversationList({
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 text-muted-foreground/40"
+            className="size-7 text-muted-foreground"
             onClick={onClose}
           >
             <X className="size-3.5" />
@@ -112,13 +112,13 @@ export function ConversationList({
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-3 space-y-1">
           {isLoading && (
-            <p className="text-xs text-muted-foreground/40 italic text-center py-8">Loading...</p>
+            <p className="text-xs text-muted-foreground italic text-center py-8">Loading...</p>
           )}
 
           {!isLoading && (!conversations || conversations.length === 0) && (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
-              <MessageSquare className="size-8 text-muted-foreground/15" />
-              <p className="text-xs text-muted-foreground/40 italic max-w-[200px]">
+              <MessageSquare className="size-8 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground italic max-w-[200px]">
                 No conversations yet. Start one to talk with your characters.
               </p>
             </div>
@@ -155,7 +155,7 @@ export function ConversationList({
                         </div>
                       )
                     })()}
-                    <span className="font-display text-sm text-muted-foreground/60">
+                    <span className="font-display text-sm text-muted-foreground">
                       {character?.name ?? charId}
                     </span>
                   </div>
@@ -168,22 +168,22 @@ export function ConversationList({
                     className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left
                       hover:bg-accent/50 transition-colors group"
                   >
-                    <div className="shrink-0 mt-0.5 text-muted-foreground/30">
+                    <div className="shrink-0 mt-0.5 text-muted-foreground">
                       {personaIcon(conv.persona)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2">
                         <span className="text-xs font-medium truncate">{conv.title}</span>
-                        <span className="text-[10px] text-muted-foreground/30 shrink-0 ml-auto">
+                        <span className="text-[10px] text-muted-foreground shrink-0 ml-auto">
                           {formatRelativeTime(conv.updatedAt)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] text-muted-foreground/40">
+                        <span className="text-[10px] text-muted-foreground">
                           {personaLabel(conv.persona, characters)}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/20">·</span>
-                        <span className="text-[10px] text-muted-foreground/30">
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <span className="text-[10px] text-muted-foreground">
                           {conv.messageCount} message{conv.messageCount !== 1 ? 's' : ''}
                         </span>
                       </div>
@@ -191,7 +191,7 @@ export function ConversationList({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/30 hover:text-destructive"
+                      className="size-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                       onClick={(e) => handleDelete(e, conv.id)}
                     >
                       <Trash2 className="size-3" />

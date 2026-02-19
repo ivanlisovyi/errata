@@ -299,11 +299,11 @@ export function CharacterChatView({ storyId, initialCharacterId, onClose }: Char
                 <h3 className="font-display text-xl tracking-tight mb-1">
                   {selectedCharacter.name}
                 </h3>
-                <p className="text-xs text-muted-foreground/40 italic max-w-[280px]">
+                <p className="text-xs text-muted-foreground italic max-w-[280px]">
                   {selectedCharacter.description}
                 </p>
               </div>
-              <p className="text-[11px] text-muted-foreground/25 max-w-[240px] leading-relaxed">
+              <p className="text-[11px] text-muted-foreground max-w-[240px] leading-relaxed">
                 Start a conversation. The character will respond in their voice, knowing only the story events up to your selected point.
               </p>
             </div>
@@ -312,7 +312,7 @@ export function CharacterChatView({ storyId, initialCharacterId, onClose }: Char
           {/* No character selected */}
           {messages.length === 0 && !selectedCharacter && characters.length > 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-xs text-muted-foreground/40 italic">
+              <p className="text-xs text-muted-foreground italic">
                 Select a character to begin.
               </p>
             </div>
@@ -321,7 +321,7 @@ export function CharacterChatView({ storyId, initialCharacterId, onClose }: Char
           {/* No characters in story */}
           {characters.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-xs text-muted-foreground/40 italic max-w-[240px]">
+              <p className="text-xs text-muted-foreground italic max-w-[240px]">
                 Create character fragments in your story first, then return here to chat with them.
               </p>
             </div>
@@ -395,7 +395,7 @@ export function CharacterChatView({ storyId, initialCharacterId, onClose }: Char
               }
               disabled={isStreaming || !characterId}
               className="min-h-[44px] max-h-[140px] resize-none text-[13px] bg-transparent
-                placeholder:italic placeholder:text-muted-foreground/30 flex-1 border-border/30
+                placeholder:italic placeholder:text-muted-foreground flex-1 border-border/30
                 focus-visible:ring-primary/20"
               rows={1}
               data-component-id="character-chat-input"
@@ -415,7 +415,7 @@ export function CharacterChatView({ storyId, initialCharacterId, onClose }: Char
             </Button>
           </div>
 
-          <p className="text-[10px] text-muted-foreground/20 text-center mt-2">
+          <p className="text-[10px] text-muted-foreground text-center mt-2">
             Enter to send · Shift+Enter for newline
           </p>
         </div>

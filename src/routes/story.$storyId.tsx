@@ -447,7 +447,7 @@ function StoryEditorPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-sm text-muted-foreground/50 italic">Loading story...</p>
+        <p className="text-sm text-muted-foreground italic">Loading story...</p>
       </div>
     )
   }
@@ -455,7 +455,7 @@ function StoryEditorPage() {
   if (!story) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p className="text-sm text-muted-foreground/50 italic">Story not found.</p>
+        <p className="text-sm text-muted-foreground italic">Story not found.</p>
         <Link to="/">
           <Button variant="outline" size="sm">Back to stories</Button>
         </Link>
@@ -649,7 +649,7 @@ function StoryEditorPage() {
           <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 px-16 py-12">
             <Upload className="size-8 text-primary/50" />
             <p className="text-sm font-medium text-primary/70">Drop file to import</p>
-            <p className="text-xs text-muted-foreground/50">JSON fragment, bundle, character card, or PNG</p>
+            <p className="text-xs text-muted-foreground">JSON fragment, bundle, character card, or PNG</p>
           </div>
         </div>
       )}

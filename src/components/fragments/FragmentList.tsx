@@ -211,7 +211,7 @@ export function FragmentList({
                     className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
                       sort === mode
                         ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground/50 hover:text-muted-foreground'
+                        : 'text-muted-foreground hover:text-muted-foreground'
                     }`}
                   >
                     {mode}
@@ -225,7 +225,7 @@ export function FragmentList({
             {onImportCard && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="ghost" className="size-6 text-muted-foreground/50 hover:text-foreground" onClick={onImportCard} data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'import-card-button')}>
+                  <Button size="icon" variant="ghost" className="size-6 text-muted-foreground hover:text-foreground" onClick={onImportCard} data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'import-card-button')}>
                     <UserPlus className="size-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -235,7 +235,7 @@ export function FragmentList({
             {onImport && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="ghost" className="size-6 text-muted-foreground/50 hover:text-foreground" onClick={onImport} data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'import-button')}>
+                  <Button size="icon" variant="ghost" className="size-6 text-muted-foreground hover:text-foreground" onClick={onImport} data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'import-button')}>
                     <FileDown className="size-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -244,7 +244,7 @@ export function FragmentList({
             )}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" className="size-6 text-muted-foreground/50 hover:text-foreground" onClick={onCreateNew} data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'create-button')}>
+                <Button size="icon" variant="ghost" className="size-6 text-muted-foreground hover:text-foreground" onClick={onCreateNew} data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'create-button')}>
                   <Plus className="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -256,7 +256,7 @@ export function FragmentList({
 
       {/* Pinning info */}
       <div className="px-3 py-2.5 border-b border-border/30">
-        <p className="text-[10px] text-muted-foreground/40 leading-relaxed">
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
           <Pin className="size-2.5 inline -mt-0.5 mr-0.5" />
           Pinned fragments are always sent to the model. Unpinned ones appear as a shortlist.
         </p>
@@ -265,7 +265,7 @@ export function FragmentList({
       <ScrollArea className="flex-1" data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'list-scroll')}>
         <div className="p-2 space-y-1" data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'list-items')}>
           {filtered.length === 0 && (
-            <p className="text-xs text-muted-foreground/50 py-8 text-center italic">
+            <p className="text-xs text-muted-foreground py-8 text-center italic">
               {search.trim() ? 'No matches' : 'No fragments yet'}
             </p>
           )}
@@ -339,7 +339,7 @@ export function FragmentList({
               >
                 <p className="font-medium text-sm truncate leading-tight">{fragment.name}</p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-[10px] font-mono text-muted-foreground/40">
+                  <span className="text-[10px] font-mono text-muted-foreground">
                     {fragment.id}
                   </span>
                   {fragment.sticky && (
@@ -359,7 +359,7 @@ export function FragmentList({
                   )}
                 </div>
                 {fragment.description && (
-                  <p className="text-xs text-muted-foreground/60 truncate mt-0.5">
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
                     {fragment.description}
                   </p>
                 )}

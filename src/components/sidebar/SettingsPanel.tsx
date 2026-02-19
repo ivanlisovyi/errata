@@ -60,7 +60,7 @@ function SegmentedControl<T extends string>({ value, options, onChange, disabled
           disabled={disabled}
           className={`px-2.5 text-[11px] font-medium transition-colors ${value === opt.value
               ? 'bg-foreground text-background'
-              : 'bg-transparent text-muted-foreground/50 hover:text-foreground/70'
+              : 'bg-transparent text-muted-foreground hover:text-foreground/70'
             }`}
         >
           {opt.label}
@@ -81,14 +81,14 @@ function SettingRow({ label, description, helpTopic, children }: { label: string
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); openHelp(helpTopic) }}
-              className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+              className="text-muted-foreground hover:text-primary/60 transition-colors"
               title="Learn more"
             >
               <CircleHelp className="size-3" />
             </button>
           )}
         </div>
-        {description && <p className="text-[10px] text-muted-foreground/40 mt-0.5 leading-snug">{description}</p>}
+        {description && <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{description}</p>}
       </div>
       <div className="shrink-0">{children}</div>
     </div>
@@ -112,7 +112,7 @@ function NumberStepper({ value, min, max, onChange, disabled, suffix, wide }: {
         className={`${wide ? 'w-20' : 'w-14'} h-[26px] px-2 text-[11px] font-mono text-center bg-background border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none`}
         disabled={disabled}
       />
-      {suffix && <span className="text-[10px] text-muted-foreground/35">{suffix}</span>}
+      {suffix && <span className="text-[10px] text-muted-foreground">{suffix}</span>}
     </div>
   )
 }
@@ -128,7 +128,7 @@ function FontPicker({ role, label, description, activeFont, onSelect }: {
   return (
     <div className="px-3 py-2.5">
       <p className="text-[12px] font-medium text-foreground/80 mb-0.5">{label}</p>
-      <p className="text-[10px] text-muted-foreground/40 mb-2 leading-snug">{description}</p>
+      <p className="text-[10px] text-muted-foreground mb-2 leading-snug">{description}</p>
       <div className="flex flex-wrap gap-1.5">
         {options.map((opt) => {
           const isActive = opt.name === activeFont
@@ -139,7 +139,7 @@ function FontPicker({ role, label, description, activeFont, onSelect }: {
               style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
               className={`px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150 ${isActive
                   ? 'border-foreground/25 bg-foreground/5 text-foreground shadow-[0_0_0_1px_var(--foreground)/5]'
-                  : 'border-transparent text-muted-foreground/45 hover:text-foreground/70 hover:bg-accent/30'
+                  : 'border-transparent text-muted-foreground hover:text-foreground/70 hover:bg-accent/30'
                 }`}
             >
               {opt.name}
@@ -244,11 +244,11 @@ function LLMSection({ story, globalConfig, updateMutation, onManageProviders }: 
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-2">
-        <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">LLM</label>
+        <label className="text-[10px] text-muted-foreground uppercase tracking-wider">LLM</label>
         <button
           type="button"
           onClick={() => openHelp('settings#providers')}
-          className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+          className="text-muted-foreground hover:text-primary/60 transition-colors"
           title="About model configuration"
         >
           <CircleHelp className="size-3" />
@@ -267,7 +267,7 @@ function LLMSection({ story, globalConfig, updateMutation, onManageProviders }: 
               <div className="flex items-center justify-between gap-2 mb-1.5">
                 <div className="min-w-0">
                   <p className="text-[12px] font-medium text-foreground/80">{role.label}</p>
-                  <p className="text-[10px] text-muted-foreground/40 leading-snug">{role.description}</p>
+                  <p className="text-[10px] text-muted-foreground leading-snug">{role.description}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -302,7 +302,7 @@ function LLMSection({ story, globalConfig, updateMutation, onManageProviders }: 
         <button
           type="button"
           onClick={onManageProviders}
-          className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/20 transition-colors rounded-b-lg"
+          className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground/60 hover:bg-accent/20 transition-colors rounded-b-lg"
           data-component-id="settings-manage-providers"
         >
           <span className="flex items-center gap-1.5">
@@ -415,7 +415,7 @@ export function SettingsPanel({
     <div className="p-4 space-y-4" data-component-id="settings-panel-root">
       {/* Appearance */}
       <div>
-        <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-2 block">Appearance</label>
+        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 block">Appearance</label>
         <div className="rounded-lg border border-border/30 divide-y divide-border/20">
           <SettingRow label="Theme">
             <SegmentedControl
@@ -469,7 +469,7 @@ export function SettingsPanel({
             <button
               type="button"
               onClick={() => setCustomCssPanelOpen(true)}
-              className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/20 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground/60 hover:bg-accent/20 transition-colors"
             >
               <span className="flex items-center gap-1.5">
                 <Code className="size-3" />
@@ -484,11 +484,11 @@ export function SettingsPanel({
       {/* Typography */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Typography</label>
+          <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Typography</label>
           {hasCustomFonts && (
             <button
               onClick={resetFonts}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-foreground/60 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground/60 transition-colors"
             >
               <RotateCcw className="size-2.5" />
               Reset
@@ -529,7 +529,7 @@ export function SettingsPanel({
 
       {/* Writing */}
       <div>
-        <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-2 block">Writing</label>
+        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 block">Writing</label>
         <div className="rounded-lg border border-border/30 divide-y divide-border/20">
           <button
             type="button"
@@ -538,14 +538,14 @@ export function SettingsPanel({
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <Wand2 className="size-3 text-muted-foreground/40" />
+                <Wand2 className="size-3 text-muted-foreground" />
                 <p className="text-[12px] font-medium text-foreground/80">Selection transforms</p>
               </div>
-              <p className="text-[10px] text-muted-foreground/40 mt-0.5 leading-snug">
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
                 {enabledTransformCount} custom transform{enabledTransformCount !== 1 ? 's' : ''} active
               </p>
             </div>
-            <ChevronRight className="size-3.5 text-muted-foreground/40 shrink-0" />
+            <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
           </button>
         </div>
       </div>
@@ -553,11 +553,11 @@ export function SettingsPanel({
       {/* Generation */}
       <div>
         <div className="flex items-center gap-1.5 mb-2">
-          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Generation</label>
+          <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Generation</label>
           <button
             type="button"
             onClick={() => openHelp('generation#overview')}
-            className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+            className="text-muted-foreground hover:text-primary/60 transition-colors"
             title="How generation works"
           >
             <CircleHelp className="size-3" />
@@ -597,11 +597,11 @@ export function SettingsPanel({
           </SettingRow>
           <div className="px-3 py-2.5 border-t border-border/20">
             <p className="text-[12px] font-medium text-foreground/80">Summary compaction</p>
-            <p className="text-[10px] text-muted-foreground/40 mt-0.5 leading-snug">Keeps rolling summary bounded as stories grow</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">Keeps rolling summary bounded as stories grow</p>
 
             <div className="mt-2.5 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground/55">Max characters</span>
+                <span className="text-[11px] text-muted-foreground">Max characters</span>
                 <NumberStepper
                   value={summaryCompact.maxCharacters}
                   min={100}
@@ -621,7 +621,7 @@ export function SettingsPanel({
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground/55">Target characters</span>
+                <span className="text-[11px] text-muted-foreground">Target characters</span>
                 <NumberStepper
                   value={summaryCompact.targetCharacters}
                   min={100}
@@ -659,13 +659,13 @@ export function SettingsPanel({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); openHelp('generation#context-limit') }}
-                className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+                className="text-muted-foreground hover:text-primary/60 transition-colors"
                 title="Learn more"
               >
                 <CircleHelp className="size-3" />
               </button>
             </div>
-            <p className="text-[10px] text-muted-foreground/40 mt-0.5 leading-snug">How much recent prose to include</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">How much recent prose to include</p>
             <div className="flex items-center justify-between gap-2 mt-2.5">
               <SegmentedControl
                 value={(story.settings.contextCompact?.type ?? 'proseLimit') as 'proseLimit' | 'maxTokens' | 'maxCharacters'}
@@ -719,21 +719,21 @@ export function SettingsPanel({
             data-component-id="settings-tools-toggle"
           >
           <div className="flex items-center gap-2 min-w-0">
-            <Wrench className="size-3.5 text-muted-foreground/40 shrink-0" />
+            <Wrench className="size-3.5 text-muted-foreground shrink-0" />
             <div className="text-left min-w-0">
               <p className="text-[12px] font-medium text-foreground/80">Built-in tools</p>
-              <p className="text-[10px] text-muted-foreground/40 mt-0.5">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {enabledBuiltinTools.length} of {builtinToolOptions.length} enabled
               </p>
             </div>
           </div>
-          <ChevronDown className={`size-3.5 text-muted-foreground/40 shrink-0 transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`size-3.5 text-muted-foreground shrink-0 transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {toolsOpen && (
           <div className="mt-2 rounded-lg border border-border/30 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
             <div className="px-4 py-2.5 bg-muted/30 border-b border-border/20 space-y-1.5">
-              <p className="text-[10.5px] text-muted-foreground/50 leading-snug">
+              <p className="text-[10.5px] text-muted-foreground leading-snug">
                 Tools let the model look up fragment details during generation. It can search, list, and read your characters, guidelines, and knowledge before writing.
                 These are disabled by default — sticky fragments are already included in full, and non-sticky ones appear as shortlists the model can reference. Enable tools when you want the model to dynamically search or retrieve fragments on its own.
               </p>
@@ -747,10 +747,10 @@ export function SettingsPanel({
               </button>
             </div>
             <div className="flex items-center justify-between px-4 py-1.5 border-b border-border/20">
-              <p className="text-[10px] text-muted-foreground/40">Available during generation</p>
+              <p className="text-[10px] text-muted-foreground">Available during generation</p>
               <button
                 type="button"
-                className="text-[10px] text-muted-foreground/30 hover:text-foreground/60 transition-colors"
+                className="text-[10px] text-muted-foreground hover:text-foreground/60 transition-colors"
                 onClick={() => updateMutation.mutate({ enabledBuiltinTools: [] })}
                 disabled={updateMutation.isPending || enabledBuiltinTools.length === 0}
                 data-component-id="settings-tools-disable-all"
@@ -765,7 +765,7 @@ export function SettingsPanel({
                   <div key={tool.name} className="flex items-start justify-between gap-3 px-4 py-2">
                     <div className="min-w-0">
                       <p className="text-[11px] font-mono text-foreground/70 truncate">{tool.name}</p>
-                      <p className="text-[10px] text-muted-foreground/35 mt-0.5 leading-snug">{tool.description}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{tool.description}</p>
                     </div>
                     <div className="shrink-0 mt-0.5">
                       <ToggleSwitch
@@ -794,11 +794,11 @@ export function SettingsPanel({
       {/* Plugins */}
       <div>
         <div className="flex items-center gap-1.5 mb-3">
-          <label className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Plugins</label>
+          <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Plugins</label>
           <button
             type="button"
             onClick={() => openHelp('settings#plugins')}
-            className="text-muted-foreground/25 hover:text-primary/60 transition-colors"
+            className="text-muted-foreground hover:text-primary/60 transition-colors"
             title="About plugins"
           >
             <CircleHelp className="size-3" />
@@ -835,9 +835,9 @@ export function SettingsPanel({
                     </button>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium leading-tight text-foreground/85">{plugin.name}</p>
-                      <p className="text-[11px] text-muted-foreground/45 mt-0.5 leading-snug">{plugin.description}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{plugin.description}</p>
                     </div>
-                    <span className={`text-[9px] uppercase tracking-widest mt-1 shrink-0 ${isEnabled ? 'text-foreground/50' : 'text-muted-foreground/25'
+                    <span className={`text-[9px] uppercase tracking-widest mt-1 shrink-0 ${isEnabled ? 'text-foreground/50' : 'text-muted-foreground'
                       }`}>
                       v{plugin.version}
                     </span>
@@ -849,7 +849,7 @@ export function SettingsPanel({
                       {onOpenPluginPanel && (
                         <button
                           onClick={() => onOpenPluginPanel(plugin.name)}
-                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-muted-foreground/50 hover:text-foreground/70 hover:bg-accent/40 transition-colors"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground/70 hover:bg-accent/40 transition-colors"
                         >
                           <ExternalLink className="size-3" />
                           Open panel
@@ -858,7 +858,7 @@ export function SettingsPanel({
                       {onTogglePluginSidebar && (
                         <button
                           onClick={() => onTogglePluginSidebar(plugin.name, !isSidebarVisible)}
-                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-muted-foreground/50 hover:text-foreground/70 hover:bg-accent/40 transition-colors"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground/70 hover:bg-accent/40 transition-colors"
                         >
                           {isSidebarVisible ? <Eye className="size-3" /> : <EyeOff className="size-3" />}
                           {isSidebarVisible ? 'Visible in sidebar' : 'Hidden from sidebar'}
@@ -872,15 +872,15 @@ export function SettingsPanel({
           </div>
         ) : (
           <div className="flex flex-col items-center py-6 text-center">
-            <Puzzle className="size-5 text-muted-foreground/20 mb-2" />
-            <p className="text-[11px] text-muted-foreground/35">No plugins available</p>
+            <Puzzle className="size-5 text-muted-foreground mb-2" />
+            <p className="text-[11px] text-muted-foreground">No plugins available</p>
           </div>
         )}
       </div>
 
       {/* Attribution */}
       <div className="pt-4 mt-2 border-t border-border/20">
-        <p className="text-[10px] text-muted-foreground/30 text-center leading-relaxed">
+        <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
           Errata v{__BUILD_VERSION__}
           <br />
           Built by{' '}
@@ -888,7 +888,7 @@ export function SettingsPanel({
             href="https://github.com/tealios"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-muted-foreground/50 transition-colors"
+            className="underline hover:text-muted-foreground transition-colors"
           >
             Tealios
           </a>

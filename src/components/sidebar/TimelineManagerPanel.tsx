@@ -79,7 +79,7 @@ export function TimelineManagerPanel({ storyId }: TimelineManagerPanelProps) {
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground/50">
+          <p className="text-xs text-muted-foreground">
             {branches.length} {branches.length === 1 ? 'timeline' : 'timelines'}
           </p>
           <Button
@@ -100,7 +100,7 @@ export function TimelineManagerPanel({ storyId }: TimelineManagerPanelProps) {
               value={newTimelineName}
               onChange={(e) => setNewTimelineName(e.target.value)}
               placeholder="Timeline name..."
-              className="flex-1 h-7 rounded-md border border-border/50 bg-background px-2 text-sm placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              className="flex-1 h-7 rounded-md border border-border/50 bg-background px-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && newTimelineName.trim()) {
@@ -156,7 +156,7 @@ export function TimelineManagerPanel({ storyId }: TimelineManagerPanelProps) {
                 role={!isActive ? 'button' : undefined}
                 tabIndex={!isActive ? 0 : undefined}
               >
-                <GitBranch className={`size-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground/40'}`} />
+                <GitBranch className={`size-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
 
                 <div className="flex-1 min-w-0">
                   {renamingId === branch.id ? (
@@ -179,7 +179,7 @@ export function TimelineManagerPanel({ storyId }: TimelineManagerPanelProps) {
                         {branch.name}
                       </p>
                       {parent && (
-                        <p className="text-[10px] text-muted-foreground/40 truncate">
+                        <p className="text-[10px] text-muted-foreground truncate">
                           from {parent.name}
                           {branch.forkAfterIndex !== undefined && ` at section ${branch.forkAfterIndex + 1}`}
                         </p>
@@ -194,7 +194,7 @@ export function TimelineManagerPanel({ storyId }: TimelineManagerPanelProps) {
 
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={(e) => e.stopPropagation()}>
                   <button
-                    className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-all"
+                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all"
                     onClick={() => startRename(branch)}
                     title="Rename"
                   >
@@ -202,7 +202,7 @@ export function TimelineManagerPanel({ storyId }: TimelineManagerPanelProps) {
                   </button>
                   {!isMain && (
                     <button
-                      className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all"
+                      className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                       onClick={() => {
                         if (window.confirm(`Delete timeline "${branch.name}"?`)) {
                           deleteMutation.mutate(branch.id)

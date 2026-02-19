@@ -25,7 +25,7 @@ function ToolCard({ name, description }: { name: string; description: string }) 
   return (
     <div className="rounded-md border border-border/25 bg-accent/15 px-3 py-2.5 mb-2 last:mb-0">
       <code className="text-[11.5px] font-mono font-medium text-primary/80">{name}</code>
-      <p className="text-[11.5px] text-muted-foreground/60 mt-0.5 leading-snug">{description}</p>
+      <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-snug">{description}</p>
     </div>
   )
 }
@@ -85,7 +85,7 @@ export const HELP_SECTIONS: HelpSection[] = [
             </P>
 
             <div className="mt-3 mb-3">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">The pipeline</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">The pipeline</p>
               <div className="space-y-1.5">
                 {[
                   ['1', 'Load fragments', 'All fragments are loaded and sorted by type — prose, guidelines, characters, knowledge.'],
@@ -101,7 +101,7 @@ export const HELP_SECTIONS: HelpSection[] = [
                     <span className="shrink-0 w-4 h-4 rounded-full bg-foreground/8 text-[9px] font-mono font-bold text-foreground/40 flex items-center justify-center mt-0.5">{num}</span>
                     <div className="min-w-0">
                       <span className="text-[12px] font-medium text-foreground/70">{label}</span>
-                      <p className="text-[11px] text-muted-foreground/50 leading-snug">{desc}</p>
+                      <p className="text-[11px] text-muted-foreground leading-snug">{desc}</p>
                     </div>
                   </div>
                 ))}
@@ -109,7 +109,7 @@ export const HELP_SECTIONS: HelpSection[] = [
             </div>
 
             <div className="mt-4 mb-1">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">What the model sees</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">What the model sees</p>
             </div>
             <P>
               The final prompt is two messages. The <strong className="text-foreground/75">system message</strong> contains
@@ -127,7 +127,7 @@ export const HELP_SECTIONS: HelpSection[] = [
                 'Your author input',
               ].map((item, i) => (
                 <p key={item} className="text-[11.5px] text-foreground/55 leading-snug">
-                  <span className="text-muted-foreground/30 mr-1.5">{i + 1}.</span>{item}
+                  <span className="text-muted-foreground mr-1.5">{i + 1}.</span>{item}
                 </p>
               ))}
             </div>
@@ -150,7 +150,7 @@ export const HELP_SECTIONS: HelpSection[] = [
             </P>
 
             <div className="mt-3 mb-1">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">Read tools</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Read tools</p>
               <ToolCard
                 name="getFragment(id)"
                 description="Retrieve full content of any fragment by its ID. Works across all types."
@@ -170,7 +170,7 @@ export const HELP_SECTIONS: HelpSection[] = [
             </div>
 
             <div className="mt-4 mb-1">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">Type-specific aliases</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Type-specific aliases</p>
               <P>
                 For each registered fragment type, the model also gets dedicated aliases:
               </P>
@@ -193,7 +193,7 @@ export const HELP_SECTIONS: HelpSection[] = [
             </div>
 
             <div className="mt-4 mb-1">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">Write tools (librarian only)</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Write tools (librarian only)</p>
               <P>
                 These are available to the librarian agent but not during regular generation:
               </P>
@@ -304,7 +304,7 @@ export const HELP_SECTIONS: HelpSection[] = [
                 'Micro: recent prose fragments included by your context limit.',
               ].map((item, i) => (
                 <p key={item} className="text-[11.5px] text-foreground/55 leading-snug">
-                  <span className="text-muted-foreground/30 mr-1.5">{i + 1}.</span>{item}
+                  <span className="text-muted-foreground mr-1.5">{i + 1}.</span>{item}
                 </p>
               ))}
             </div>
@@ -370,7 +370,7 @@ export const HELP_SECTIONS: HelpSection[] = [
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-foreground/65">Generate & save</span>
-                <span className="flex items-center gap-1"><Kbd>Ctrl</Kbd><span className="text-muted-foreground/30">+</span><Kbd>Enter</Kbd></span>
+                <span className="flex items-center gap-1"><Kbd>Ctrl</Kbd><span className="text-muted-foreground">+</span><Kbd>Enter</Kbd></span>
               </div>
               <div className="h-px bg-border/15" />
               <div className="flex items-center justify-between">
@@ -449,7 +449,7 @@ export const HELP_SECTIONS: HelpSection[] = [
               generation (unless you disable them).
             </P>
             <div className="mt-3 mb-1">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">System message</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">System message</p>
               <div className="space-y-1.5 mb-3">
                 {[
                   ['instructions', 'Core writing assistant instructions and output rules.'],
@@ -458,11 +458,11 @@ export const HELP_SECTIONS: HelpSection[] = [
                 ].map(([name, desc]) => (
                   <div key={name} className="flex gap-2 items-start">
                     <code className="text-[10.5px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded shrink-0 mt-px">{name}</code>
-                    <p className="text-[11.5px] text-muted-foreground/55 leading-snug">{desc}</p>
+                    <p className="text-[11.5px] text-muted-foreground leading-snug">{desc}</p>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">User message</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">User message</p>
               <div className="space-y-1.5">
                 {[
                   ['story-info', 'Story name and description.'],
@@ -474,7 +474,7 @@ export const HELP_SECTIONS: HelpSection[] = [
                 ].map(([name, desc]) => (
                   <div key={name} className="flex gap-2 items-start">
                     <code className="text-[10.5px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded shrink-0 mt-px">{name}</code>
-                    <p className="text-[11.5px] text-muted-foreground/55 leading-snug">{desc}</p>
+                    <p className="text-[11.5px] text-muted-foreground leading-snug">{desc}</p>
                   </div>
                 ))}
               </div>
@@ -518,14 +518,14 @@ export const HELP_SECTIONS: HelpSection[] = [
             <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-1.5">
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">None</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Default — the block uses its original content with no modifications.
                 </p>
               </div>
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Prepend</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Your text is inserted before the block's original content. Use this to add rules or
                   context at the top without losing the defaults.
                 </p>
@@ -533,14 +533,14 @@ export const HELP_SECTIONS: HelpSection[] = [
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Append</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Your text is added after the block's original content. Good for adding supplementary notes.
                 </p>
               </div>
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Override</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   The block's original content is entirely replaced with your text. Use this to write
                   your own system prompt or completely redefine a section.
                 </p>
@@ -586,7 +586,7 @@ export const HELP_SECTIONS: HelpSection[] = [
             <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-1.5">
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Role</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   <Mono>system</Mono> for instructions and rules the model should follow.{' '}
                   <Mono>user</Mono> for story context and reference material.
                 </p>
@@ -594,7 +594,7 @@ export const HELP_SECTIONS: HelpSection[] = [
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Type: Simple</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Plain text injected as-is. Use for static instructions, world rules, style guides,
                   or any fixed content.
                 </p>
@@ -602,7 +602,7 @@ export const HELP_SECTIONS: HelpSection[] = [
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Type: Script</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   JavaScript that runs at generation time and returns a string. Has access to story data
                   through a <Mono>ctx</Mono> parameter. The block is omitted if the script returns empty.
                 </p>
@@ -622,7 +622,7 @@ export const HELP_SECTIONS: HelpSection[] = [
               the block is handled gracefully.
             </P>
             <div className="mt-3 mb-1">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">Available on ctx</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Available on ctx</p>
               <div className="space-y-1 mb-3">
                 {[
                   ['ctx.story', 'Story metadata — name, description, summary, settings.'],
@@ -637,13 +637,13 @@ export const HELP_SECTIONS: HelpSection[] = [
                 ].map(([field, desc]) => (
                   <div key={field} className="flex gap-2 items-start">
                     <code className="text-[10.5px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded shrink-0 mt-px">{field}</code>
-                    <p className="text-[11px] text-muted-foreground/55 leading-snug">{desc}</p>
+                    <p className="text-[11px] text-muted-foreground leading-snug">{desc}</p>
                   </div>
                 ))}
               </div>
             </div>
             <div className="mt-3 mb-1">
-              <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider mb-2">Examples</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Examples</p>
               <div className="space-y-2">
                 <div className="rounded-md border border-border/25 bg-accent/15 px-3 py-2 text-[11px] font-mono text-foreground/55 leading-relaxed whitespace-pre-wrap">{`// Word count tracker
 const total = ctx.proseFragments
@@ -1058,7 +1058,7 @@ return ''`}</div>
                 'Block configuration',
               ].map((item, i) => (
                 <p key={item} className="text-[11.5px] text-foreground/55 leading-snug">
-                  <span className="text-muted-foreground/30 mr-1.5">{i + 1}.</span>{item}
+                  <span className="text-muted-foreground mr-1.5">{i + 1}.</span>{item}
                 </p>
               ))}
             </div>
@@ -1111,7 +1111,7 @@ return ''`}</div>
             <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-1.5">
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Block Editor</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Disable, reorder, and override entire context blocks (instructions, tools, story info,
                   prose, etc.). Create custom blocks with plain text or JavaScript scripts.
                 </p>
@@ -1119,7 +1119,7 @@ return ''`}</div>
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">Fragment Order</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Drag pinned fragments into a custom order and toggle their placement between system
                   and user messages.
                 </p>
@@ -1147,7 +1147,7 @@ return ''`}</div>
             <div className="rounded-md border border-border/25 bg-accent/10 px-3 py-2.5 mb-2.5 space-y-1.5">
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">beforeContext</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Runs after fragments are loaded but before messages are assembled. Plugins can
                   add, remove, or reorder fragments in the context state.
                 </p>
@@ -1155,7 +1155,7 @@ return ''`}</div>
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">beforeGeneration</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Runs after messages are assembled. Plugins can modify the final system and user
                   messages before they're sent to the model.
                 </p>
@@ -1163,7 +1163,7 @@ return ''`}</div>
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">afterGeneration</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Runs after the model responds. Plugins can transform the generated text before
                   it's saved as a fragment.
                 </p>
@@ -1171,7 +1171,7 @@ return ''`}</div>
               <div className="h-px bg-border/15" />
               <div>
                 <p className="text-[11.5px] font-medium text-foreground/65">afterSave</p>
-                <p className="text-[11px] text-muted-foreground/50 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   Runs after the prose fragment is persisted. Plugins can trigger side effects
                   like notifications or external syncs.
                 </p>

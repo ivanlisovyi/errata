@@ -249,24 +249,24 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
           >
             {isProcessing ? (
               <>
-                <Loader2 className="size-6 text-muted-foreground/50 animate-spin" />
-                <p className="text-sm text-muted-foreground/70">{status.message}</p>
+                <Loader2 className="size-6 text-muted-foreground animate-spin" />
+                <p className="text-sm text-muted-foreground">{status.message}</p>
               </>
             ) : (
               <>
-                <Upload className="size-6 text-muted-foreground/40" />
+                <Upload className="size-6 text-muted-foreground" />
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground/70">
+                  <p className="text-sm text-muted-foreground">
                     Drop a file or <span className="text-foreground/70 underline underline-offset-2">browse</span>
                   </p>
                   <div className="flex items-center justify-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground/40">
+                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                       <FileArchive className="size-3" />.zip
                     </span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground/40">
+                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                       <FileJson className="size-3" />.json
                     </span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground/40">
+                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                       <Image className="size-3" />.png
                     </span>
                   </div>
@@ -284,12 +284,12 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
           {/* URL input */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
               Or import from URL
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/30" />
+                <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                 <Input
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
@@ -320,12 +320,12 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
           )}
 
           {/* Help text */}
-          <p className="text-[11px] text-muted-foreground/35 leading-relaxed">
-            <strong className="text-muted-foreground/50">.zip</strong> — Errata story export
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <strong className="text-muted-foreground">.zip</strong> — Errata story export
             {' · '}
-            <strong className="text-muted-foreground/50">.json</strong> — SillyTavern / TavernAI character card (V2/V3)
+            <strong className="text-muted-foreground">.json</strong> — SillyTavern / TavernAI character card (V2/V3)
             {' · '}
-            <strong className="text-muted-foreground/50">.png</strong> — Character card with embedded data
+            <strong className="text-muted-foreground">.png</strong> — Character card with embedded data
           </p>
         </div>
       </DialogContent>

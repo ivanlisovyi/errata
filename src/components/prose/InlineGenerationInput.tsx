@@ -183,7 +183,7 @@ export function InlineGenerationInput({
           onBlur={() => setIsFocused(false)}
           placeholder="What happens next..."
           rows={1}
-          className="w-full resize-none bg-transparent border-none outline-none px-4 pt-3.5 pb-2 font-prose text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/30 placeholder:italic disabled:opacity-40"
+          className="w-full resize-none bg-transparent border-none outline-none px-4 pt-3.5 pb-2 font-prose text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground placeholder:italic disabled:opacity-40"
           style={{ minHeight: '44px', maxHeight: '200px', overflowY: 'auto', scrollbarWidth: 'none' }}
           disabled={isGenerating}
           onKeyDown={(e) => {
@@ -245,7 +245,7 @@ export function InlineGenerationInput({
                     'size-6 flex items-center justify-center rounded-md transition-colors duration-150',
                     followGeneration
                       ? 'text-foreground/60 bg-muted/50'
-                      : 'text-muted-foreground/30 hover:text-muted-foreground/50',
+                      : 'text-muted-foreground hover:text-muted-foreground',
                   )}
                   onClick={onToggleFollowGeneration}
                   data-component-id="inline-generation-follow-toggle"
@@ -264,7 +264,7 @@ export function InlineGenerationInput({
           {/* Right: Write/Stop button + shortcut hint */}
           <div className="flex items-center gap-2.5">
             {!isGenerating && (
-              <span className="text-[10px] text-muted-foreground/30 font-sans select-none hidden sm:inline">
+              <span className="text-[10px] text-muted-foreground font-sans select-none hidden sm:inline">
                 Ctrl+Enter
               </span>
             )}

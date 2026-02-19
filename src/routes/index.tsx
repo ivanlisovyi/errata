@@ -437,7 +437,7 @@ function StoryListPage() {
                   <button
                     type="button"
                     onClick={() => setShowOptions(!showOptions)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
                   >
                     <ChevronRight className={`size-3 transition-transform ${showOptions ? 'rotate-90' : ''}`} />
                     Options
@@ -530,7 +530,7 @@ function StoryListPage() {
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Librarian</label>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground/70">Auto-apply suggestions</span>
+                          <span className="text-xs text-muted-foreground">Auto-apply suggestions</span>
                           <button
                             type="button"
                             onClick={() => setAutoApplyLibrarian(!autoApplyLibrarian)}
@@ -571,7 +571,7 @@ function StoryListPage() {
 
         {stories && stories.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="font-display text-2xl italic text-muted-foreground/60 mb-2">
+            <p className="font-display text-2xl italic text-muted-foreground mb-2">
               Begin something new.
             </p>
             <p className="text-sm text-muted-foreground mb-8 max-w-xs">
@@ -605,7 +605,7 @@ function StoryListPage() {
           <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 px-16 py-12">
             <Upload className="size-8 text-primary/50" />
             <p className="text-sm font-medium text-primary/70">Drop to import</p>
-            <p className="text-xs text-muted-foreground/50">Story archive (.zip), character card (.json / .png)</p>
+            <p className="text-xs text-muted-foreground">Story archive (.zip), character card (.json / .png)</p>
           </div>
         </div>
       )}
@@ -616,7 +616,7 @@ function StoryListPage() {
       <button
         data-component-id="onboarding-launch-button"
         onClick={() => setManualWizard(true)}
-        className="fixed bottom-4 left-4 sm:bottom-4 sm:left-4 flex items-center gap-1.5 text-[11px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors safe-area-bottom"
+        className="fixed bottom-4 left-4 sm:bottom-4 sm:left-4 flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors safe-area-bottom"
       >
         <Sparkles className="size-3" />
         Setup wizard
@@ -668,7 +668,7 @@ function StoryCard({ story, onDelete }: { story: StoryMeta; onDelete: () => void
             {story.name}
           </h2>
           {story.description && (
-            <p className="text-sm text-muted-foreground/70 mt-1 line-clamp-2 font-prose">
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2 font-prose">
               {story.description}
             </p>
           )}
@@ -678,33 +678,33 @@ function StoryCard({ story, onDelete }: { story: StoryMeta; onDelete: () => void
             {hasStats ? (
               <>
                 {stats.prose > 0 && (
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/45" title={`${stats.prose} passage${stats.prose !== 1 ? 's' : ''}`}>
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${stats.prose} passage${stats.prose !== 1 ? 's' : ''}`}>
                     <BookOpen className="size-3" />
                     {stats.prose}
                   </span>
                 )}
                 {stats.characters > 0 && (
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/45" title={`${stats.characters} character${stats.characters !== 1 ? 's' : ''}`}>
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${stats.characters} character${stats.characters !== 1 ? 's' : ''}`}>
                     <Users className="size-3" />
                     {stats.characters}
                   </span>
                 )}
                 {stats.knowledge > 0 && (
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/45" title={`${stats.knowledge} knowledge`}>
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${stats.knowledge} knowledge`}>
                     <Globe className="size-3" />
                     {stats.knowledge}
                   </span>
                 )}
                 {stats.guidelines > 0 && (
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/45" title={`${stats.guidelines} guideline${stats.guidelines !== 1 ? 's' : ''}`}>
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${stats.guidelines} guideline${stats.guidelines !== 1 ? 's' : ''}`}>
                     <Scroll className="size-3" />
                     {stats.guidelines}
                   </span>
                 )}
-                <span className="text-muted-foreground/20">·</span>
+                <span className="text-muted-foreground">·</span>
               </>
             ) : null}
-            <span className="text-[11px] text-muted-foreground/35">
+            <span className="text-[11px] text-muted-foreground">
               {new Date(story.updatedAt).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',

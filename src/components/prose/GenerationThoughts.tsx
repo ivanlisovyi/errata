@@ -54,7 +54,7 @@ export function GenerationThoughts({
                   label="Thinking"
                   status={isThinking && i === steps.length - 1 ? 'active' : 'complete'}
                 >
-                  <div className="text-[10px] text-muted-foreground/40 italic font-mono whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto">
+                  <div className="text-[10px] text-muted-foreground italic font-mono whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto">
                     {step.text}
                   </div>
                 </ChainOfThoughtStep>
@@ -75,7 +75,7 @@ export function GenerationThoughts({
                     <span className="font-mono text-xs">
                       {formatToolName(step.toolName)}
                       {Object.keys(step.args).length > 0 && (
-                        <span className="text-muted-foreground/40 ml-1.5">
+                        <span className="text-muted-foreground ml-1.5">
                           {Object.entries(step.args)
                             .slice(0, 2)
                             .map(([k, v]) => `${k}=${typeof v === 'string' ? v.slice(0, 30) : JSON.stringify(v).slice(0, 30)}`)

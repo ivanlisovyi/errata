@@ -71,7 +71,7 @@ export function ProseActionInput({
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder={placeholder}
-        className="min-h-[56px] max-h-[120px] resize-none text-sm bg-transparent border-border/40 placeholder:italic placeholder:text-muted-foreground/40"
+        className="min-h-[56px] max-h-[120px] resize-none text-sm bg-transparent border-border/40 placeholder:italic placeholder:text-muted-foreground"
         disabled={isLoading}
         autoFocus
         onKeyDown={(e) => {
@@ -89,7 +89,7 @@ export function ProseActionInput({
         <p className="text-sm text-destructive mt-2">{error}</p>
       )}
       <div className="flex items-center justify-between mt-2.5">
-        <span className="text-[10px] text-muted-foreground/40">
+        <span className="text-[10px] text-muted-foreground">
           Esc to cancel &middot; Ctrl+Enter to submit
         </span>
         <div className="flex gap-1.5">

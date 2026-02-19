@@ -42,7 +42,7 @@ export function VariationSwitcher({ storyId, sectionIndex, entry }: VariationSwi
         <Button
           variant="ghost"
           size="sm"
-          className="h-5 px-1.5 text-[10px] gap-1 text-muted-foreground/60 hover:text-muted-foreground"
+          className="h-5 px-1.5 text-[10px] gap-1 text-muted-foreground hover:text-muted-foreground"
           data-component-id="variation-switcher-trigger"
         >
           <History className="size-3" />
@@ -65,7 +65,7 @@ export function VariationSwitcher({ storyId, sectionIndex, entry }: VariationSwi
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-muted-foreground/50">
+                  <span className="text-xs font-mono text-muted-foreground">
                     #{idx + 1}
                   </span>
                   {isActive && (
@@ -77,7 +77,7 @@ export function VariationSwitcher({ storyId, sectionIndex, entry }: VariationSwi
                 <p className="text-xs text-muted-foreground mt-0.5 truncate">
                   {fragment.description || fragment.name}
                 </p>
-                <p className="text-[10px] text-muted-foreground/50">
+                <p className="text-[10px] text-muted-foreground">
                   {new Date(fragment.createdAt).toLocaleDateString()}
                 </p>
               </div>

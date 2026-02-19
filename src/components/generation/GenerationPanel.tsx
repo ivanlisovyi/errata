@@ -134,7 +134,7 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Describe what should happen next in the story..."
-              className="min-h-[80px] resize-none text-sm bg-transparent placeholder:italic placeholder:text-muted-foreground/40"
+              className="min-h-[80px] resize-none text-sm bg-transparent placeholder:italic placeholder:text-muted-foreground"
               disabled={isGenerating}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -177,7 +177,7 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
                   </>
                 )}
               </div>
-              <span className="text-[10px] text-muted-foreground/40">
+              <span className="text-[10px] text-muted-foreground">
                 Ctrl+Enter to generate & save
               </span>
             </div>

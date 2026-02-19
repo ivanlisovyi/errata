@@ -58,11 +58,11 @@ export function ArchivePanel({ storyId }: ArchivePanelProps) {
       <ScrollArea className="flex-1" data-component-id="archive-scroll">
         <div className="px-3 pb-3 space-y-1">
           {isLoading && (
-            <p className="text-xs text-muted-foreground/50 text-center py-8">Loading...</p>
+            <p className="text-xs text-muted-foreground text-center py-8">Loading...</p>
           )}
 
           {!isLoading && filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/40" data-component-id="archive-empty">
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground" data-component-id="archive-empty">
               <Archive className="size-8 mb-2" />
               <p className="text-xs">No archived fragments</p>
             </div>
@@ -78,7 +78,7 @@ export function ArchivePanel({ storyId }: ArchivePanelProps) {
                 <p className="text-sm font-medium truncate">{fragment.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <Badge variant="secondary" className="text-[10px] h-4">{fragment.type}</Badge>
-                  <span className="text-[10px] font-mono text-muted-foreground/40">{fragment.id}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">{fragment.id}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
