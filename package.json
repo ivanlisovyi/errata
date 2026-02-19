@@ -4,17 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 7739",
-    "dev:share": "bun scripts/proxy-with-qr.mjs",
-    "build": "vite build",
+    "dev": "bun install --frozen-lockfile && vite dev --port 7739",
+    "dev:share": "bun install --frozen-lockfile && bun scripts/proxy-with-qr.mjs",
+    "build": "bun install --frozen-lockfile && vite build",
     "new:plugin": "bun scripts/new-plugin.mjs",
-    "build:binary": "bun scripts/build-binary.mjs",
+    "build:binary": "bun install --frozen-lockfile && bun scripts/build-binary.mjs",
     "package:binary": "bun scripts/package-binary.mjs",
     "release:binary": "bun run build:binary && bun run package:binary",
-    "stress:backend": "bun scripts/backend-stress-harness.ts",
-    "preview": "vite preview",
-    "test": "vitest run --config vitest.config.ts",
-    "test:watch": "vitest --config vitest.config.ts"
+    "stress:backend": "bun install --frozen-lockfile && bun scripts/backend-stress-harness.ts",
+    "preview": "bun install --frozen-lockfile && vite preview",
+    "test": "bun install --frozen-lockfile && vitest run --config vitest.config.ts",
+    "test:watch": "bun install --frozen-lockfile && vitest --config vitest.config.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.30",
