@@ -1,6 +1,9 @@
 import { Elysia } from 'elysia'
 import { getStory } from '../fragments/storage'
 import { agentBlockRegistry } from '../agents/agent-block-registry'
+import { modelRoleRegistry } from '../agents/model-role-registry'
+import { ensureCoreAgentsRegistered } from '../agents/register-core'
+import { listActiveAgents } from '../agents/active-registry'
 import { compileBlocks } from '../llm/context-builder'
 import { applyBlockConfig } from '../blocks/apply'
 import { CustomBlockDefinitionSchema } from '../blocks/schema'
@@ -16,8 +19,19 @@ import {
 
 export function agentBlockRoutes(dataDir: string) {
   return new Elysia()
+    // List currently running agents for a story
+    .get('/stories/:storyId/active-agents', ({ params }) => {
+      return listActiveAgents(params.storyId)
+    })
+
+    // List all registered model roles (auto-discovered from agents)
+    .get('/model-roles', () => {
+      ensureCoreAgentsRegistered()
+      return modelRoleRegistry.list()
+    })
     // List all registered agent block definitions (auto-discovered)
     .get('/agent-blocks', () => {
+      ensureCoreAgentsRegistered()
       return agentBlockRegistry.list().map(def => ({
         agentName: def.agentName,
         displayName: def.displayName,

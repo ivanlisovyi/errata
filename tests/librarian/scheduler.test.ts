@@ -55,6 +55,7 @@ describe('librarian scheduler', () => {
         timelineEvents: [],
       },
       trace: [],
+      activityId: 'act-test',
     })
   })
 

@@ -380,6 +380,64 @@ code {
   animation: tavern-card-reveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* ── Agent activity wisps ────────────────────────────── */
+
+@keyframes wisp-enter {
+  0% { opacity: 0; transform: scale(0) translateY(8px); }
+  60% { opacity: 1; transform: scale(1.15) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes wisp-exit {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0); }
+}
+
+@keyframes wisp-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes wisp-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes wisp-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@utility animate-wisp-enter {
+  animation: wisp-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@utility animate-wisp-exit {
+  animation: wisp-exit 0.3s ease-in both;
+}
+
+@utility animate-wisp-breathe {
+  animation: wisp-breathe 2.8s ease-in-out infinite;
+}
+
+@utility animate-wisp-float {
+  animation: wisp-float 3.5s ease-in-out infinite;
+}
+
+@utility animate-wisp-gradient {
+  background: linear-gradient(
+    270deg,
+    var(--wisp-color),
+    color-mix(in oklch, var(--wisp-color) 60%, white),
+    var(--wisp-color),
+    color-mix(in oklch, var(--wisp-color) 70%, black),
+    var(--wisp-color)
+  );
+  background-size: 300% 300%;
+  animation: wisp-gradient 4s ease infinite;
+}
+
 /* ── Character mention highlights ────────────────────── */
 
 .mention-highlight {

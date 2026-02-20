@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { getStory, getFragment } from '../fragments/storage'
 import { invokeAgent } from '../agents'
+import { registerActiveAgent, unregisterActiveAgent } from '../agents/active-registry'
 import {
   saveConversation as saveCharacterConversation,
   getConversation as getCharacterConversation,
@@ -117,8 +118,11 @@ export function characterChatRoutes(dataDir: string) {
         const { eventStream, completion } = chatOutput as AgentStreamResult
         requestLogger.info('Agent trace (character-chat)', { trace })
 
+        const chatActivityId = registerActiveAgent(params.storyId, 'character-chat.chat')
+
         // Persist conversation after completion (in background)
         completion.then(async (result) => {
+          unregisterActiveAgent(chatActivityId)
           requestLogger.info('Character chat completed', {
             stepCount: result.stepCount,
             finishReason: result.finishReason,
@@ -144,6 +148,7 @@ export function characterChatRoutes(dataDir: string) {
           }
           await saveCharacterConversation(dataDir, params.storyId, updatedConv)
         }).catch((err) => {
+          unregisterActiveAgent(chatActivityId)
           requestLogger.error('Character chat completion error', { error: err instanceof Error ? err.message : String(err) })
         })
 

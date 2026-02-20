@@ -40,6 +40,7 @@ import { Upload, BookOpen, MessageSquare } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { TimelineTabs } from '@/components/prose/TimelineTabs'
 import { CharacterChatView } from '@/components/character-chat/CharacterChatView'
+import { AgentActivityIndicator } from '@/components/AgentActivityIndicator'
 import { useTimelineBar } from '@/lib/theme'
 import { initClientPluginPanels } from '@/lib/plugin-panel-init'
 
@@ -512,6 +513,9 @@ function StoryEditorPage() {
         <div className="md:hidden absolute top-3 left-3 z-20">
           <SidebarTrigger className="size-9 bg-background/80 backdrop-blur-sm border border-border/40 shadow-sm" />
         </div>
+
+        {/* Floating agent activity wisps */}
+        <AgentActivityIndicator storyId={storyId} />
 
         {/* Timeline tabs — shown when multiple timelines exist and bar is visible */}
         {timelineBarVisible && branchesIndex && branchesIndex.branches.length > 1 && (

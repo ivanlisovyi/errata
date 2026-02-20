@@ -2,6 +2,7 @@ import { createLogger } from '../logging'
 import { agentRegistry } from './registry'
 import { ensureCoreAgentsRegistered } from './register-core'
 import { recordAgentRun } from './traces'
+import { registerActiveAgent, unregisterActiveAgent } from './active-registry'
 import type {
   AgentCallOptions,
   AgentInvocationContext,
@@ -203,6 +204,8 @@ export async function invokeAgent<TOutput = unknown>(args: {
     options,
   }
 
+  const activityId = registerActiveAgent(args.storyId, args.agentName)
+
   try {
     const result = await invokeInternal<TOutput>({
       dataDir: args.dataDir,
@@ -233,6 +236,7 @@ export async function invokeAgent<TOutput = unknown>(args: {
       runId: result.runId,
       output: result.output,
       trace: runtime.trace,
+      activityId,
     }
   } catch (error) {
     const sortedTrace = [...runtime.trace].sort((a, b) => a.startedAt.localeCompare(b.startedAt))
@@ -251,5 +255,7 @@ export async function invokeAgent<TOutput = unknown>(args: {
       trace: sortedTrace,
     })
     throw error
+  } finally {
+    unregisterActiveAgent(activityId)
   }
 }

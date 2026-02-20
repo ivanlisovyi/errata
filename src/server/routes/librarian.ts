@@ -8,6 +8,7 @@ import {
 import { triggerLibrarian, getLibrarianRuntimeStatus } from '../librarian/scheduler'
 import { createSSEStream } from '../librarian/analysis-stream'
 import { invokeAgent, listAgentRuns } from '../agents'
+import { registerActiveAgent, unregisterActiveAgent } from '../agents/active-registry'
 import {
   getState as getLibrarianState,
   listAnalyses as listLibrarianAnalyses,
@@ -145,8 +146,12 @@ export function librarianRoutes(dataDir: string) {
         const { eventStream, completion } = refineOutput as AgentStreamResult
         requestLogger.info('Agent trace (refine)', { trace })
 
+        // Track streaming phase as active agent
+        const streamActivityId = registerActiveAgent(params.storyId, 'librarian.refine')
+
         // Log completion in background
         completion.then((result) => {
+          unregisterActiveAgent(streamActivityId)
           requestLogger.info('Refinement completed', {
             fragmentId: body.fragmentId,
             stepCount: result.stepCount,
@@ -154,6 +159,7 @@ export function librarianRoutes(dataDir: string) {
             toolCallCount: result.toolCalls.length,
           })
         }).catch((err) => {
+          unregisterActiveAgent(streamActivityId)
           requestLogger.error('Refinement completion error', { error: err instanceof Error ? err.message : String(err) })
         })
 
@@ -216,7 +222,10 @@ export function librarianRoutes(dataDir: string) {
         const { eventStream, completion } = transformOutput as AgentStreamResult
         requestLogger.info('Agent trace (prose-transform)', { trace })
 
+        const transformActivityId = registerActiveAgent(params.storyId, 'librarian.prose-transform')
+
         completion.then((result) => {
+          unregisterActiveAgent(transformActivityId)
           requestLogger.info('Prose transform completed', {
             fragmentId: body.fragmentId,
             operation: body.operation,
@@ -226,6 +235,7 @@ export function librarianRoutes(dataDir: string) {
             reasoningLength: result.reasoning.trim().length,
           })
         }).catch((err) => {
+          unregisterActiveAgent(transformActivityId)
           requestLogger.error('Prose transform completion error', {
             error: err instanceof Error ? err.message : String(err),
           })
@@ -290,8 +300,11 @@ export function librarianRoutes(dataDir: string) {
         const { eventStream, completion } = chatOutput as AgentStreamResult
         requestLogger.info('Agent trace (chat)', { trace })
 
+        const chatActivityId = registerActiveAgent(params.storyId, 'librarian.chat')
+
         // Persist chat history after completion (in background)
         completion.then(async (result) => {
+          unregisterActiveAgent(chatActivityId)
           requestLogger.info('Librarian chat completed', {
             stepCount: result.stepCount,
             finishReason: result.finishReason,
@@ -308,6 +321,7 @@ export function librarianRoutes(dataDir: string) {
           ]
           await saveLibrarianChatHistory(dataDir, params.storyId, fullHistory)
         }).catch((err) => {
+          unregisterActiveAgent(chatActivityId)
           requestLogger.error('Librarian chat completion error', { error: err instanceof Error ? err.message : String(err) })
         })
 
