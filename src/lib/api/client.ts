@@ -108,11 +108,13 @@ export async function fetchGetEventStream(path: string): Promise<ReadableStream<
 export async function fetchEventStream(
   path: string,
   body: Record<string, unknown>,
+  signal?: AbortSignal,
 ): Promise<ReadableStream<ChatEvent>> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal,
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))

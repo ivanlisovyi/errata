@@ -33,6 +33,7 @@ import { collectPluginToolsWithOrigin } from '../plugins/tools'
 import { triggerLibrarian } from '../librarian/scheduler'
 import { getAgentBlockConfig } from '../agents/agent-block-storage'
 import { invokeAgent } from '../agents/runner'
+import { registerActiveAgent, unregisterActiveAgent } from '../agents/active-registry'
 import { createLogger } from '../logging'
 import type { Fragment } from '../fragments/schema'
 import type { SuggestDirectionsResult } from '../directions/suggest'
@@ -186,8 +187,10 @@ export function generationRoutes(dataDir: string) {
         tools,
         maxSteps: story.settings.maxSteps ?? 10,
       })
+      const abortController = new AbortController()
       const result = await writerAgent.stream({
         messages: modelMessages,
+        abortSignal: abortController.signal,
       })
 
       // Build NDJSON event stream from fullStream (same pattern as librarian chat)
@@ -198,12 +201,15 @@ export function generationRoutes(dataDir: string) {
       const toolCalls: ToolCallLog[] = []
       let lastFinishReason = 'unknown'
       let stepCount = 0
+      let wasAborted = false
 
       // Completion promise resolved when the stream ends — used by save path
       let completionResolve: ((val: void) => void) | null = null
       if (body.saveResult) {
         new Promise<void>((resolve) => { completionResolve = resolve })
       }
+
+      const genActivityId = registerActiveAgent(params.storyId, 'generation')
 
       const eventStream = new ReadableStream<Uint8Array>({
         async start(controller) {
@@ -270,11 +276,30 @@ export function generationRoutes(dataDir: string) {
             }) + '\n'))
             controller.close()
           } catch (err) {
-            controller.error(err)
+            wasAborted = abortController.signal.aborted
+            if (wasAborted) {
+              requestLogger.info('Generation aborted by client', { textLength: fullText.length })
+              lastFinishReason = 'stop'
+              try {
+                controller.enqueue(encoder.encode(JSON.stringify({
+                  type: 'finish',
+                  finishReason: 'stop',
+                  stepCount,
+                  stopped: true,
+                }) + '\n'))
+                controller.close()
+              } catch {
+                // Controller may already be closed
+              }
+            } else {
+              controller.error(err)
+            }
+          } finally {
+            unregisterActiveAgent(genActivityId)
           }
 
-          // Run save operation after stream completes
-          if (body.saveResult) {
+          // Run save operation after stream completes (skip if aborted with no text)
+          if (body.saveResult && !(wasAborted && !fullText.trim())) {
             try {
               const durationMs = Date.now() - startTime
               requestLogger.info('LLM generation completed', { durationMs, textLength: fullText.length })
@@ -421,6 +446,9 @@ export function generationRoutes(dataDir: string) {
             }
             completionResolve?.()
           }
+        },
+        cancel() {
+          abortController.abort()
         },
       })
 

@@ -1,15 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { PenLine, ChevronsDown } from 'lucide-react'
+import { PenLine, ChevronsDown, ArrowRight, Pause, Compass, RefreshCw, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { SuggestionDirection } from '@/lib/api/types'
 
 export type ThoughtStep =
   | { type: 'reasoning'; text: string }
   | { type: 'tool-call'; id: string; toolName: string; args: Record<string, unknown> }
   | { type: 'tool-result'; id: string; toolName: string; result: unknown }
+
+type InputMode = 'freeform' | 'guided'
 
 interface InlineGenerationInputProps {
   storyId: string
@@ -22,6 +25,11 @@ interface InlineGenerationInputProps {
   onGenerationComplete: () => void
   onGenerationError: () => void
 }
+
+const STORAGE_KEY = 'errata:generation-mode'
+
+const DEFAULT_CONTINUE_INSTRUCTION = 'Continue the story naturally. Write the next scene, advancing the plot and developing characters.'
+const DEFAULT_SCENE_SETTING_INSTRUCTION = "Continue the story without advancing the plot. Focus on atmosphere, internal thoughts, sensory details, or character moments. Don't introduce new events or move the story forward."
 
 export function InlineGenerationInput({
   storyId,
@@ -39,6 +47,78 @@ export function InlineGenerationInput({
   const [error, setError] = useState<string | null>(null)
   const [isFocused, setIsFocused] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+
+  // Mode state with localStorage persistence
+  const [mode, setMode] = useState<InputMode>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      return stored === 'guided' ? 'guided' : 'freeform'
+    } catch {
+      return 'freeform'
+    }
+  })
+
+  // Suggestion state
+  const [suggestions, setSuggestions] = useState<SuggestionDirection[]>([])
+  const [manualSuggestions, setManualSuggestions] = useState<SuggestionDirection[] | null>(null)
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false)
+  const [suggestionError, setSuggestionError] = useState<string | null>(null)
+
+  // Poll librarian status to detect when analysis completes
+  const { data: librarianStatus } = useQuery({
+    queryKey: ['librarian-status', storyId],
+    queryFn: () => api.librarian.getStatus(storyId),
+    refetchInterval: 5_000,
+  })
+
+  const prevRunStatusRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    const prev = prevRunStatusRef.current
+    const curr = librarianStatus?.runStatus
+    prevRunStatusRef.current = curr
+    // When analysis transitions from running → idle/error, refresh analyses and prose fragments
+    // (librarian writes annotations to fragment.meta, so prose fragments must be re-fetched)
+    if (prev === 'running' && (curr === 'idle' || curr === 'error')) {
+      setManualSuggestions(null)
+      queryClient.invalidateQueries({ queryKey: ['librarian-analyses', storyId] })
+      queryClient.invalidateQueries({ queryKey: ['fragments', storyId, 'prose'] })
+    }
+  }, [librarianStatus?.runStatus, queryClient, storyId])
+
+  // Query latest analysis for auto-populated directions
+  const { data: analysesList } = useQuery({
+    queryKey: ['librarian-analyses', storyId],
+    queryFn: () => api.librarian.listAnalyses(storyId),
+  })
+
+  const latestAnalysisId = analysesList?.[0]?.directionsCount ? analysesList[0].id : null
+
+  const { data: latestAnalysis } = useQuery({
+    queryKey: ['librarian-analysis', storyId, latestAnalysisId],
+    queryFn: () => api.librarian.getAnalysis(storyId, latestAnalysisId!),
+    enabled: !!latestAnalysisId,
+    staleTime: 60_000,
+  })
+
+  const analysisDirections = useMemo(
+    () => latestAnalysis?.directions ?? [],
+    [latestAnalysis?.directions],
+  )
+
+  // Merge: manual suggestions take priority, fall back to analysis directions
+  useEffect(() => {
+    if (manualSuggestions) {
+      setSuggestions(manualSuggestions)
+    } else if (analysisDirections.length > 0) {
+      setSuggestions(analysisDirections)
+    }
+  }, [manualSuggestions, analysisDirections])
+
+  const handleModeChange = (newMode: InputMode) => {
+    setMode(newMode)
+    try { localStorage.setItem(STORAGE_KEY, newMode) } catch {}
+  }
 
   // Provider quick-switch queries
   const { data: story } = useQuery({
@@ -50,8 +130,12 @@ export function InlineGenerationInput({
     queryFn: () => api.config.getProviders(),
   })
   const providerMutation = useMutation({
-    mutationFn: (data: { providerId?: string | null; modelId?: string | null }) =>
-      api.settings.update(storyId, data),
+    mutationFn: (data: { providerId: string | null; modelId: string | null }) => {
+      const overrides = story?.settings.modelOverrides ?? {}
+      return api.settings.update(storyId, {
+        modelOverrides: { ...overrides, generation: { providerId: data.providerId, modelId: data.modelId } },
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['story', storyId] })
     },
@@ -65,14 +149,17 @@ export function InlineGenerationInput({
     el.style.height = Math.min(el.scrollHeight, 200) + 'px'
   }, [input])
 
-  const handleGenerate = async () => {
-    if (!input.trim() || isGenerating) return
+  const handleGenerateWithInput = useCallback(async (generationInput: string) => {
+    if (!generationInput.trim() || isGenerating) return
 
     onGenerationStart()
     setError(null)
 
+    const ac = new AbortController()
+    abortRef.current = ac
+
     try {
-      const stream = await api.generation.generateAndSave(storyId, input)
+      const stream = await api.generation.generateAndSave(storyId, generationInput, ac.signal)
 
       const reader = stream.getReader()
       let accumulatedText = ''
@@ -89,7 +176,6 @@ export function InlineGenerationInput({
           accumulatedText += value.text
         } else if (value.type === 'reasoning') {
           accumulatedReasoning += value.text
-          // Update or append the current reasoning step
           const last = thoughtSteps[thoughtSteps.length - 1]
           if (last && last.type === 'reasoning') {
             last.text = accumulatedReasoning
@@ -98,7 +184,6 @@ export function InlineGenerationInput({
           }
           thoughtsDirty = true
         } else if (value.type === 'tool-call') {
-          // Reset reasoning accumulator so next reasoning chunk starts fresh
           accumulatedReasoning = ''
           thoughtSteps.push({ type: 'tool-call', id: value.id, toolName: value.toolName, args: value.args })
           thoughtsDirty = true
@@ -107,7 +192,6 @@ export function InlineGenerationInput({
           thoughtsDirty = true
         }
 
-        // Throttle state updates to animation frames (~60fps max)
         if (!rafScheduled) {
           rafScheduled = true
           const textSnapshot = accumulatedText
@@ -125,29 +209,54 @@ export function InlineGenerationInput({
       onGenerationStream(accumulatedText)
       if (thoughtSteps.length > 0) onGenerationThoughts?.([...thoughtSteps])
 
-      // Invalidate queries to refresh the prose view
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
       await queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
 
-      // Clear input after successful generation
       setInput('')
       onGenerationComplete()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed')
-      onGenerationError()
+      // User-initiated abort — not an error
+      if (ac.signal.aborted) {
+        await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
+        await queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
+        onGenerationComplete()
+      } else {
+        setError(err instanceof Error ? err.message : 'Generation failed')
+        onGenerationError()
+      }
+    } finally {
+      abortRef.current = null
     }
+  }, [storyId, isGenerating, onGenerationStart, onGenerationStream, onGenerationThoughts, onGenerationComplete, onGenerationError, queryClient])
+
+  const handleGenerate = () => {
+    handleGenerateWithInput(input)
   }
 
   const handleStop = () => {
-    onGenerationError()
+    abortRef.current?.abort()
+  }
+
+  const handleFetchSuggestions = async () => {
+    setIsFetchingSuggestions(true)
+    setSuggestionError(null)
+    try {
+      const result = await api.generation.suggestDirections(storyId)
+      setManualSuggestions(result.suggestions)
+    } catch (err) {
+      setSuggestionError(err instanceof Error ? err.message : 'Failed to load suggestions')
+    } finally {
+      setIsFetchingSuggestions(false)
+    }
   }
 
   // Resolve current model label
+  const generationProviderId = story?.settings.modelOverrides?.generation?.providerId ?? null
   const modelLabel = (() => {
     if (!globalConfig) return null
     const providers = globalConfig.providers.filter(p => p.enabled)
-    if (story?.settings.providerId) {
-      const p = providers.find(p => p.id === story.settings.providerId)
+    if (generationProviderId) {
+      const p = providers.find(p => p.id === generationProviderId)
       if (p) return p.defaultModel
     }
     const defaultP = globalConfig.defaultProviderId
@@ -159,40 +268,179 @@ export function InlineGenerationInput({
   return (
     <div className="relative mt-2" data-component-id="inline-generation-root">
       {/* Error */}
-      {error && (
+      {(error || suggestionError) && (
         <div className="text-sm text-destructive mb-3 font-sans">
-          {error}
+          {error || suggestionError}
         </div>
       )}
 
       {/* Unified input container */}
       <div
-        className={`relative rounded-xl border transition-all duration-300 ${
-          isFocused
+        className={cn(
+          'relative rounded-xl border transition-all duration-300',
+          mode === 'freeform' && isFocused
             ? 'border-primary/25 shadow-[0_0_0_1px_var(--primary)/8%,0_2px_12px_-2px_var(--primary)/6%] bg-card/60'
-            : 'border-border/30 bg-card/20 hover:border-border/50 hover:bg-card/30'
-        }`}
+            : 'border-border/30 bg-card/20 hover:border-border/50 hover:bg-card/30',
+        )}
       >
-        {/* Textarea */}
-        <textarea
-          ref={textareaRef}
-          data-component-id="inline-generation-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholder="What happens next..."
-          rows={1}
-          className="w-full resize-none bg-transparent border-none outline-none px-4 pt-3.5 pb-2 font-prose text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground placeholder:italic disabled:opacity-40"
-          style={{ minHeight: '44px', maxHeight: '200px', overflowY: 'auto', scrollbarWidth: 'none' }}
-          disabled={isGenerating}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-              e.preventDefault()
-              handleGenerate()
-            }
-          }}
-        />
+        {/* Mode toggle */}
+        <div className="flex items-center gap-0.5 px-3 pt-2.5 pb-1">
+          <button
+            type="button"
+            onClick={() => handleModeChange('freeform')}
+            className={cn(
+              'px-2.5 py-1 text-[11px] font-sans rounded-md transition-all duration-200',
+              mode === 'freeform'
+                ? 'text-foreground/80 bg-muted/60 font-medium'
+                : 'text-muted-foreground hover:text-foreground/60 hover:bg-muted/30',
+            )}
+          >
+            Freeform
+          </button>
+          <button
+            type="button"
+            onClick={() => handleModeChange('guided')}
+            className={cn(
+              'px-2.5 py-1 text-[11px] font-sans rounded-md transition-all duration-200',
+              mode === 'guided'
+                ? 'text-foreground/80 bg-muted/60 font-medium'
+                : 'text-muted-foreground hover:text-foreground/60 hover:bg-muted/30',
+            )}
+          >
+            Guided
+          </button>
+        </div>
+
+        {/* Freeform mode — original textarea */}
+        {mode === 'freeform' && (
+          <textarea
+            ref={textareaRef}
+            data-component-id="inline-generation-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder="What happens next..."
+            rows={1}
+            className="w-full resize-none bg-transparent border-none outline-none px-4 pt-1.5 pb-2 font-prose text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground placeholder:italic disabled:opacity-40"
+            style={{ minHeight: '44px', maxHeight: '200px', overflowY: 'auto', scrollbarWidth: 'none' }}
+            disabled={isGenerating}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault()
+                handleGenerate()
+              }
+            }}
+          />
+        )}
+
+        {/* Guided mode */}
+        {mode === 'guided' && (
+          <div className="px-3 pt-1.5 pb-2">
+            {/* Quick action buttons */}
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                disabled={isGenerating}
+                onClick={() => handleGenerateWithInput(story?.settings.guidedContinuePrompt || DEFAULT_CONTINUE_INSTRUCTION)}
+                className={cn(
+                  'group flex-1 flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border transition-all duration-200 text-left',
+                  'border-border/30 hover:border-primary/30 hover:bg-primary/[0.04]',
+                  'disabled:opacity-40 disabled:pointer-events-none',
+                )}
+              >
+                <div className="shrink-0 size-7 rounded-md bg-primary/10 flex items-center justify-center transition-colors group-hover:bg-primary/15">
+                  <ArrowRight className="size-3.5 text-primary/70" />
+                </div>
+                <div>
+                  <div className="text-[13px] font-medium text-foreground/85 font-sans leading-tight">Continue</div>
+                  <div className="text-[10.5px] text-muted-foreground leading-snug mt-0.5">Advance the plot naturally</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                disabled={isGenerating}
+                onClick={() => handleGenerateWithInput(story?.settings.guidedSceneSettingPrompt || DEFAULT_SCENE_SETTING_INSTRUCTION)}
+                className={cn(
+                  'group flex-1 flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border transition-all duration-200 text-left',
+                  'border-border/30 hover:border-primary/30 hover:bg-primary/[0.04]',
+                  'disabled:opacity-40 disabled:pointer-events-none',
+                )}
+              >
+                <div className="shrink-0 size-7 rounded-md bg-primary/10 flex items-center justify-center transition-colors group-hover:bg-primary/15">
+                  <Pause className="size-3.5 text-primary/70" />
+                </div>
+                <div>
+                  <div className="text-[13px] font-medium text-foreground/85 font-sans leading-tight">Scene-setting</div>
+                  <div className="text-[10.5px] text-muted-foreground leading-snug mt-0.5">Atmosphere &amp; character moments</div>
+                </div>
+              </button>
+            </div>
+
+            {/* Suggest directions */}
+            {suggestions.length === 0 && !isFetchingSuggestions && (
+              <button
+                type="button"
+                disabled={isGenerating}
+                onClick={handleFetchSuggestions}
+                className={cn(
+                  'w-full flex items-center justify-center gap-2 py-2 rounded-lg transition-all duration-200',
+                  'text-[12px] font-sans text-muted-foreground hover:text-foreground/70',
+                  'border border-dashed border-border/40 hover:border-primary/25 hover:bg-primary/[0.02]',
+                  'disabled:opacity-40 disabled:pointer-events-none',
+                )}
+              >
+                <Compass className="size-3.5" />
+                Suggest directions
+              </button>
+            )}
+
+            {/* Loading state */}
+            {isFetchingSuggestions && (
+              <div className="flex items-center justify-center gap-2 py-4">
+                <Loader2 className="size-4 text-primary/50 animate-spin" />
+                <span className="text-[12px] text-muted-foreground font-sans italic">Imagining possibilities...</span>
+              </div>
+            )}
+
+            {/* Suggestion cards */}
+            {suggestions.length > 0 && !isFetchingSuggestions && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] text-muted-foreground font-sans uppercase tracking-wider">Directions</span>
+                  <button
+                    type="button"
+                    disabled={isGenerating}
+                    onClick={handleFetchSuggestions}
+                    className="size-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground/60 transition-colors disabled:opacity-30"
+                  >
+                    <RefreshCw className="size-3" />
+                  </button>
+                </div>
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    disabled={isGenerating}
+                    onClick={() => { setManualSuggestions(null); setSuggestions([]); handleGenerateWithInput(s.instruction) }}
+                    className={cn(
+                      'group w-full text-left px-3.5 py-2.5 rounded-lg border transition-all duration-200',
+                      'border-border/25 hover:border-primary/25 bg-card/30 hover:bg-primary/[0.03]',
+                      'disabled:opacity-40 disabled:pointer-events-none',
+                    )}
+                  >
+                    <div className="text-[13px] font-medium text-foreground/80 font-sans leading-snug group-hover:text-foreground/90 transition-colors">
+                      {s.title}
+                    </div>
+                    <div className="text-[11.5px] text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">
+                      {s.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Bottom toolbar */}
         <div className="flex items-center justify-between px-3 pb-2.5 pt-0.5">
@@ -202,7 +450,7 @@ export function InlineGenerationInput({
               <div className="relative group/model">
                 <select
                   data-component-id="inline-generation-provider-select"
-                  value={story?.settings.providerId ?? ''}
+                  value={generationProviderId ?? ''}
                   onChange={(e) => {
                     const providerId = e.target.value || null
                     providerMutation.mutate({ providerId, modelId: null })
@@ -263,7 +511,7 @@ export function InlineGenerationInput({
 
           {/* Right: Write/Stop button + shortcut hint */}
           <div className="flex items-center gap-2.5">
-            {!isGenerating && (
+            {mode === 'freeform' && !isGenerating && (
               <span className="text-[10px] text-muted-foreground font-sans select-none hidden sm:inline">
                 Ctrl+Enter
               </span>
@@ -279,7 +527,7 @@ export function InlineGenerationInput({
                 <span className="size-1.5 bg-destructive rounded-[2px]" />
                 Stop
               </Button>
-            ) : (
+            ) : mode === 'freeform' ? (
               <Button
                 size="sm"
                 className="h-7 text-xs gap-1.5 rounded-lg font-medium"
@@ -290,7 +538,7 @@ export function InlineGenerationInput({
                 <PenLine className="size-3" />
                 Write
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
