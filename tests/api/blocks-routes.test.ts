@@ -174,4 +174,45 @@ describe('Block API routes', () => {
     )
     expect(res.status).toBe(404)
   })
+
+  // eval-script endpoint tests
+  it('POST /blocks/eval-script returns result for valid script', async () => {
+    const storyId = await createStory()
+    const res = await apiJson(`/stories/${storyId}/blocks/eval-script`, {
+      content: 'return `Story: ${ctx.story.name}`',
+    })
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.result).toBe('Story: Test')
+    expect(data.error).toBeNull()
+  })
+
+  it('POST /blocks/eval-script returns error for throwing script', async () => {
+    const storyId = await createStory()
+    const res = await apiJson(`/stories/${storyId}/blocks/eval-script`, {
+      content: 'throw new Error("boom")',
+    })
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.result).toBeNull()
+    expect(data.error).toContain('boom')
+  })
+
+  it('POST /blocks/eval-script returns null result for empty-string return', async () => {
+    const storyId = await createStory()
+    const res = await apiJson(`/stories/${storyId}/blocks/eval-script`, {
+      content: 'return ""',
+    })
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.result).toBeNull()
+    expect(data.error).toBeNull()
+  })
+
+  it('POST /blocks/eval-script returns 404 for missing story', async () => {
+    const res = await apiJson('/stories/nonexistent/blocks/eval-script', {
+      content: 'return "hello"',
+    })
+    expect(res.status).toBe(404)
+  })
 })

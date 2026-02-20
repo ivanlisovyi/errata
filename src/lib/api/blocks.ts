@@ -30,4 +30,10 @@ export const blocks = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  evalScript: (storyId: string, content: string) =>
+    apiFetch<{ result: string | null; error: string | null }>(
+      `/stories/${storyId}/blocks/eval-script`,
+      { method: 'POST', body: JSON.stringify({ content }) },
+    ),
 }

@@ -90,6 +90,36 @@ export function blockRoutes(dataDir: string) {
       return config
     })
 
+    .post('/stories/:storyId/blocks/eval-script', async ({ params, body, set }) => {
+      const story = await getStory(dataDir, params.storyId)
+      if (!story) {
+        set.status = 404
+        return { error: 'Story not found' }
+      }
+      const { content } = body as { content?: string }
+      if (typeof content !== 'string') {
+        set.status = 422
+        return { error: 'Missing content field' }
+      }
+      const ctxState = await buildContextState(dataDir, params.storyId, '(preview)')
+      const scriptContext = {
+        ...ctxState,
+        getFragment: (id: string) => getFragment(dataDir, params.storyId, id),
+      }
+      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+      try {
+        const fn = new AsyncFunction('ctx', content)
+        const result = await fn(scriptContext)
+        if (typeof result !== 'string' || result.trim() === '') {
+          return { result: null, error: null }
+        }
+        return { result, error: null }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        return { result: null, error: msg }
+      }
+    })
+
     .patch('/stories/:storyId/blocks/config', async ({ params, body, set }) => {
       const story = await getStory(dataDir, params.storyId)
       if (!story) {
