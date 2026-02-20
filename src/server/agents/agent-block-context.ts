@@ -5,6 +5,9 @@ import type { Fragment, StoryMeta } from '../fragments/schema'
  * Superset of data — each agent uses the fields it needs.
  */
 export interface AgentBlockContext {
+  /** Fetch any fragment by ID (async). Available in script blocks as ctx.getFragment(id). */
+  getFragment?: (id: string) => Promise<Fragment | null>
+
   // Common (from ContextBuildState)
   story: StoryMeta
   proseFragments: Fragment[]

@@ -1,11 +1,15 @@
 import type { ContextBlock } from '../llm/context-builder'
 import type { BlockConfig, CustomBlockDefinition } from './schema'
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+
 /**
  * Evaluates a custom block definition into a ContextBlock.
- * Simple blocks use content as-is; script blocks execute the content as a function body.
+ * Simple blocks use content as-is; script blocks execute the content as an
+ * async function body so they can `await` helpers like `ctx.getFragment(id)`.
  */
-function evaluateCustomBlock(def: CustomBlockDefinition, scriptContext: object): ContextBlock | null {
+async function evaluateCustomBlock(def: CustomBlockDefinition, scriptContext: object): Promise<ContextBlock | null> {
   if (def.type === 'simple') {
     return {
       id: def.id,
@@ -17,10 +21,10 @@ function evaluateCustomBlock(def: CustomBlockDefinition, scriptContext: object):
     }
   }
 
-  // Script block: execute content as a function body with ctx parameter
+  // Script block: execute content as an async function body with ctx parameter
   try {
-    const fn = new Function('ctx', def.content)
-    const result = fn(scriptContext)
+    const fn = new AsyncFunction('ctx', def.content)
+    const result = await fn(scriptContext)
 
     if (typeof result !== 'string' || result.trim() === '') return null
 
@@ -53,11 +57,11 @@ function evaluateCustomBlock(def: CustomBlockDefinition, scriptContext: object):
  * 4. Apply individual order overrides
  * 5. Remove disabled blocks
  */
-export function applyBlockConfig(
+export async function applyBlockConfig(
   blocks: ContextBlock[],
   config: BlockConfig,
   scriptContext: object,
-): ContextBlock[] {
+): Promise<ContextBlock[]> {
   let result = [...blocks]
 
   // 1. Evaluate and insert enabled custom blocks
@@ -67,7 +71,7 @@ export function applyBlockConfig(
     const override = config.overrides[def.id]
     if (override?.enabled === false) continue
 
-    const block = evaluateCustomBlock(def, scriptContext)
+    const block = await evaluateCustomBlock(def, scriptContext)
     if (block) {
       result.push(block)
     }

@@ -44,14 +44,14 @@ function emptyConfig(): BlockConfig {
 }
 
 describe('applyBlockConfig', () => {
-  it('passes through blocks unchanged with empty config', () => {
+  it('passes through blocks unchanged with empty config', async () => {
     const blocks = makeBlocks()
-    const result = applyBlockConfig(blocks, emptyConfig(), makeState())
+    const result = await applyBlockConfig(blocks, emptyConfig(), makeState())
     expect(result).toHaveLength(4)
     expect(result.map(b => b.id)).toEqual(['instructions', 'tools', 'story-info', 'author-input'])
   })
 
-  it('inserts simple custom blocks', () => {
+  it('inserts simple custom blocks', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-test01',
@@ -65,14 +65,14 @@ describe('applyBlockConfig', () => {
       overrides: {},
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     const custom = result.find(b => b.id === 'cb-test01')
     expect(custom).toBeDefined()
     expect(custom!.content).toBe('Custom content here')
     expect(custom!.source).toBe('custom')
   })
 
-  it('evaluates script custom blocks', () => {
+  it('evaluates script custom blocks', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-script',
@@ -86,13 +86,38 @@ describe('applyBlockConfig', () => {
       overrides: {},
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     const script = result.find(b => b.id === 'cb-script')
     expect(script).toBeDefined()
     expect(script!.content).toBe('Story: Test Story')
   })
 
-  it('handles script errors gracefully', () => {
+  it('supports async getFragment in script blocks', async () => {
+    const mockFragment = { id: 'ch-abc123', name: 'Alice', content: 'A curious girl' }
+    const state = {
+      ...makeState(),
+      getFragment: async (id: string) => id === 'ch-abc123' ? mockFragment : null,
+    }
+    const config: BlockConfig = {
+      customBlocks: [{
+        id: 'cb-async',
+        name: 'Async Script',
+        role: 'system',
+        order: 150,
+        enabled: true,
+        type: 'script',
+        content: 'const f = await ctx.getFragment("ch-abc123"); return f ? f.name : "not found"',
+      }],
+      overrides: {},
+      blockOrder: [],
+    }
+    const result = await applyBlockConfig(makeBlocks(), config, state)
+    const block = result.find(b => b.id === 'cb-async')
+    expect(block).toBeDefined()
+    expect(block!.content).toBe('Alice')
+  })
+
+  it('handles script errors gracefully', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-broken',
@@ -106,13 +131,13 @@ describe('applyBlockConfig', () => {
       overrides: {},
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     const broken = result.find(b => b.id === 'cb-broken')
     expect(broken).toBeDefined()
     expect(broken!.content).toContain('Script error')
   })
 
-  it('skips script blocks that return empty string', () => {
+  it('skips script blocks that return empty string', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-empty',
@@ -126,11 +151,11 @@ describe('applyBlockConfig', () => {
       overrides: {},
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     expect(result.find(b => b.id === 'cb-empty')).toBeUndefined()
   })
 
-  it('applies content override', () => {
+  it('applies content override', async () => {
     const config: BlockConfig = {
       customBlocks: [],
       overrides: {
@@ -138,12 +163,12 @@ describe('applyBlockConfig', () => {
       },
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     const inst = result.find(b => b.id === 'instructions')
     expect(inst!.content).toBe('New instructions')
   })
 
-  it('applies content prepend', () => {
+  it('applies content prepend', async () => {
     const config: BlockConfig = {
       customBlocks: [],
       overrides: {
@@ -151,12 +176,12 @@ describe('applyBlockConfig', () => {
       },
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     const inst = result.find(b => b.id === 'instructions')
     expect(inst!.content).toBe('IMPORTANT:\nYou are a writing assistant.')
   })
 
-  it('applies content append', () => {
+  it('applies content append', async () => {
     const config: BlockConfig = {
       customBlocks: [],
       overrides: {
@@ -164,29 +189,29 @@ describe('applyBlockConfig', () => {
       },
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     const inst = result.find(b => b.id === 'instructions')
     expect(inst!.content).toBe('You are a writing assistant.\nBe creative.')
   })
 
-  it('removes disabled blocks', () => {
+  it('removes disabled blocks', async () => {
     const config: BlockConfig = {
       customBlocks: [],
       overrides: { tools: { enabled: false } },
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     expect(result.find(b => b.id === 'tools')).toBeUndefined()
     expect(result).toHaveLength(3)
   })
 
-  it('applies blockOrder reordering', () => {
+  it('applies blockOrder reordering', async () => {
     const config: BlockConfig = {
       customBlocks: [],
       overrides: {},
       blockOrder: ['tools', 'instructions', 'author-input', 'story-info'],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     // tools gets order=0, instructions gets order=1
     const tools = result.find(b => b.id === 'tools')!
     const instructions = result.find(b => b.id === 'instructions')!
@@ -195,7 +220,7 @@ describe('applyBlockConfig', () => {
     expect(tools.order).toBeLessThan(instructions.order)
   })
 
-  it('skips disabled custom blocks', () => {
+  it('skips disabled custom blocks', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-dis001',
@@ -209,11 +234,11 @@ describe('applyBlockConfig', () => {
       overrides: {},
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     expect(result.find(b => b.id === 'cb-dis001')).toBeUndefined()
   })
 
-  it('disables custom blocks via override', () => {
+  it('disables custom blocks via override', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-over01',
@@ -227,11 +252,11 @@ describe('applyBlockConfig', () => {
       overrides: { 'cb-over01': { enabled: false } },
       blockOrder: [],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
     expect(result.find(b => b.id === 'cb-over01')).toBeUndefined()
   })
 
-  it('combines multiple transformations', () => {
+  it('combines multiple transformations', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-combo1',
@@ -248,7 +273,7 @@ describe('applyBlockConfig', () => {
       },
       blockOrder: ['cb-combo1', 'instructions', 'story-info', 'author-input'],
     }
-    const result = applyBlockConfig(makeBlocks(), config, makeState())
+    const result = await applyBlockConfig(makeBlocks(), config, makeState())
 
     // tools should be removed
     expect(result.find(b => b.id === 'tools')).toBeUndefined()

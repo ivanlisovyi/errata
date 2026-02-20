@@ -634,6 +634,7 @@ export const HELP_SECTIONS: HelpSection[] = [
                   ['ctx.knowledgeShortlist', 'Non-pinned knowledge.'],
                   ['ctx.characterShortlist', 'Non-pinned characters.'],
                   ['ctx.authorInput', 'The author\'s current direction.'],
+                  ['ctx.getFragment(id)', 'Fetch any fragment by ID (async — use await).'],
                 ].map(([field, desc]) => (
                   <div key={field} className="flex gap-2 items-start">
                     <code className="text-[10.5px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded shrink-0 mt-px">{field}</code>
@@ -659,6 +660,10 @@ const n = ctx.proseFragments.length
 if (n < 3) return 'Early story — establish setting.'
 if (n > 15) return 'Move toward resolution.'
 return ''`}</div>
+                <div className="rounded-md border border-border/25 bg-accent/15 px-3 py-2 text-[11px] font-mono text-foreground/55 leading-relaxed whitespace-pre-wrap">{`// Fetch a specific fragment by ID
+const frag = await ctx.getFragment('kn-abc123')
+if (!frag) return ''
+return \`Reminder: \${frag.content}\``}</div>
               </div>
             </div>
             <Tip>

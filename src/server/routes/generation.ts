@@ -171,7 +171,10 @@ export function generationRoutes(dataDir: string) {
 
       let blocks = createDefaultBlocks(ctxState, extraTools.length > 0 ? { extraTools } : undefined)
       const blockConfig = await getBlockConfig(dataDir, params.storyId)
-      blocks = applyBlockConfig(blocks, blockConfig, ctxState)
+      blocks = await applyBlockConfig(blocks, blockConfig, {
+        ...ctxState,
+        getFragment: (id: string) => getFragment(dataDir, params.storyId, id),
+      })
       blocks = await runBeforeBlocks(enabledPlugins, blocks)
       let messages = compileBlocks(blocks)
       messages = await runBeforeGeneration(enabledPlugins, messages)
