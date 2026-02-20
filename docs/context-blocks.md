@@ -260,8 +260,9 @@ The `ctx` object contains:
 | `ctx.knowledgeShortlist` | `Fragment[]` | Non-pinned knowledge (shown as shortlist) |
 | `ctx.characterShortlist` | `Fragment[]` | Non-pinned characters (shown as shortlist) |
 | `ctx.authorInput` | `string` | The author's current input/direction |
+| `ctx.getFragment(id)` | `async (id: string) => Fragment \| null` | Fetch any fragment by ID (async — use `await`) |
 
-**Return value:** The function must return a `string`. If it returns a non-string, an empty string, or a whitespace-only string, the block is silently omitted from context. If the script throws an error, the block is included with a `[Script error in custom block "name"]` placeholder so the user can see something went wrong.
+**Return value:** The function must return a `string`. Scripts can be `async` — the runner `await`s the result. If it returns a non-string, an empty string, or a whitespace-only string, the block is silently omitted from context. If the script throws an error, the block is included with a `[Script error in custom block "name"]` placeholder so the user can see something went wrong.
 
 **Script examples:**
 
@@ -363,6 +364,7 @@ All endpoints are under `/api/stories/:storyId/blocks`.
 | `PUT` | `/blocks/custom/:blockId` | Updates a custom block (body: partial fields) |
 | `DELETE` | `/blocks/custom/:blockId` | Deletes a custom block and cleans up its overrides/ordering |
 | `PATCH` | `/blocks/config` | Updates overrides and/or block order (body: `{ overrides?, blockOrder? }`) |
+| `POST` | `/blocks/eval-script` | Evaluates a script block body against current story data and returns `{ result, error }` |
 
 ### GET /blocks response
 
@@ -444,7 +446,8 @@ Changes save on blur (unfocus), not on every keystroke.
 When a custom block is expanded:
 1. The block **type** is shown (simple / script).
 2. A **textarea** for editing the block content (saves on blur).
-3. A **Delete** button to remove the block.
+3. For **script** blocks: a **live preview** panel shows the evaluated output in real time (debounced). Evaluation uses the `POST /blocks/eval-script` endpoint. A collapsible **Fragment Reference** panel lists all available fragment IDs for easy copy-paste into scripts.
+4. A **Delete** button to remove the block.
 
 ### Creating custom blocks
 

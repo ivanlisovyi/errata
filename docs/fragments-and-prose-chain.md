@@ -259,10 +259,10 @@ All endpoints are prefixed with `/api`. Request/response bodies are JSON.
 
 | Method | Path | Body | Response |
 |---|---|---|---|
-| `POST` | `/stories` | `{ name, description }` | `StoryMeta` |
+| `POST` | `/stories` | `{ name, description, coverImage? }` | `StoryMeta` |
 | `GET` | `/stories` | — | `StoryMeta[]` |
 | `GET` | `/stories/:storyId` | — | `StoryMeta` |
-| `PUT` | `/stories/:storyId` | `{ name, description, summary? }` | `StoryMeta` |
+| `PUT` | `/stories/:storyId` | `{ name, description, summary?, coverImage? }` | `StoryMeta` |
 | `DELETE` | `/stories/:storyId` | — | `{ ok: true }` |
 | `PATCH` | `/stories/:storyId/settings` | Partial settings object | `StoryMeta` |
 

@@ -178,6 +178,17 @@ The librarian analyze agent uses the **agent block system** for context assembly
 
 The same block system is used by `librarian.chat`, `librarian.refine`, and `librarian.prose-transform` agents.
 
+## Direction Suggestions
+
+After each analysis, the librarian can produce **direction suggestions** — possible next steps for the story. The `directions.suggest` agent uses the full story context to generate titled suggestion cards, each with a description and a ready-to-use writing instruction.
+
+- Agent module: `src/server/directions/suggest.ts`
+- Block definitions: `src/server/directions/blocks.ts`
+- Librarian tool: `suggestDirections` registered in `src/server/librarian/analysis-tools.ts`
+- Directions from the latest analysis are surfaced in the generation input's **guided mode**
+
+Mentions and knowledge suggestions are deduplicated across multi-turn tool calls to prevent duplicate entries when the librarian's analysis spans several steps.
+
 ## Known Limitations
 
 - LLM compaction quality depends on the configured librarian model and prompt adherence.

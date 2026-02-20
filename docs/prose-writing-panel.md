@@ -85,6 +85,23 @@ The status bar shows real-time statistics for the current passage:
 - Paragraph count
 - Estimated reading time
 
+## Dialogue Formatting
+
+Prose blocks automatically italicize quoted dialogue for visual distinction. This uses `formatDialogue` from `src/lib/character-mentions.ts`, composed with mention highlighting via `composeTextTransforms`. The formatting is display-only — the underlying fragment content is unchanged.
+
+## Generation Abort
+
+Generation can be aborted mid-stream. The `InlineGenerationInput` component provides a pause button during active generation. The abort signal is propagated from the client through `AbortController` to the server stream. Any text produced before the abort is saved as a partial prose fragment.
+
+## Guided Mode
+
+The generation input supports two modes, toggled via a compass icon:
+
+- **Freeform** — standard text input for custom author directions.
+- **Guided** — displays direction suggestion cards from the librarian's latest analysis. Clicking a card fills the generation input with its instruction. A refresh button requests new suggestions on demand.
+
+Mode preference is persisted in `localStorage`.
+
 ## Cover Image Banner
 
 When a story has a cover image set, `ProseChainView` renders a banner at the top of the scroll area above the prose chain. The banner displays the cover image with a gradient overlay fading into the background. The cover image is passed to the component via the `coverImage` prop from the story route.

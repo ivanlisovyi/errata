@@ -386,6 +386,76 @@ export const HELP_SECTIONS: HelpSection[] = [
         ),
       },
       {
+        id: 'guided-mode',
+        title: 'Guided mode',
+        content: (
+          <>
+            <P>
+              The generation input has two modes, toggled with the compass icon:
+            </P>
+            <P>
+              <strong className="text-foreground/75">Freeform</strong> — Type your own direction for the next
+              generation. This is the default.
+            </P>
+            <P>
+              <strong className="text-foreground/75">Guided</strong> — The librarian suggests several
+              possible story directions based on the current narrative. Each suggestion is a card with a
+              title, description, and a ready-to-use writing instruction. Click a card to use it as your
+              generation input, or click the refresh button to request new suggestions.
+            </P>
+            <Tip>
+              Guided suggestions are generated from your latest librarian analysis. If none appear,
+              run a generation first so the librarian has context to work with. You can also manually
+              refresh suggestions at any time.
+            </Tip>
+          </>
+        ),
+      },
+      {
+        id: 'aborting',
+        title: 'Aborting generation',
+        content: (
+          <>
+            <P>
+              While generation is in progress, click the <strong className="text-foreground/75">pause button</strong> to
+              abort it. Any text the model has already produced is saved as a partial prose fragment, so you don't
+              lose what was written before the abort.
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'agent-indicator',
+        title: 'Agent activity',
+        content: (
+          <>
+            <P>
+              The animated orbs in the story editor show which background agents are currently running.
+              Each agent type has a distinct color — hover over an orb to see which agent it is and
+              what it's doing.
+            </P>
+            <P>
+              Common agents: the <strong className="text-foreground/75">Librarian</strong> (analyzing,
+              refining, chatting), <strong className="text-foreground/75">Character Chat</strong>,
+              <strong className="text-foreground/75"> Directions</strong> (suggesting), and
+              the <strong className="text-foreground/75">Writer</strong> (generating prose).
+            </P>
+          </>
+        ),
+      },
+      {
+        id: 'dialogue-formatting',
+        title: 'Dialogue formatting',
+        content: (
+          <>
+            <P>
+              Quoted dialogue in prose blocks is automatically italicized for visual distinction.
+              This is a display-only transform — the underlying text is unchanged.
+            </P>
+          </>
+        ),
+      },
+      {
         id: 'debug-panel',
         title: 'Debug panel',
         content: (
@@ -666,9 +736,18 @@ if (!frag) return ''
 return \`Reminder: \${frag.content}\``}</div>
               </div>
             </div>
+            <div className="mt-3 mb-1">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Live preview</p>
+              <P>
+                The script editor shows a live output preview as you type — your script is evaluated
+                against the current story data with a short debounce. A collapsible{' '}
+                <strong className="text-foreground/75">Fragment Reference</strong> panel lists all
+                available fragment IDs so you can copy them into your script.
+              </P>
+            </div>
             <Tip>
               If a script throws an error, the block shows a "[Script error]" message in the prompt so
-              you can spot the problem. Check the Preview to verify scripts work as expected.
+              you can spot the problem. The live preview catches errors immediately as you edit.
             </Tip>
           </>
         ),
@@ -1123,7 +1202,7 @@ return \`Reminder: \${frag.content}\``}</div>
             <P>
               The home page displays your stories as a responsive grid of portrait cards.
               Stories with cover images show the image as a background; stories without one get a
-              generated gradient based on their ID.
+              unique guilloche pattern — a decorative SVG generated deterministically from the story ID.
             </P>
             <P>
               Each card shows the story name, description, fragment counts (prose, characters,
