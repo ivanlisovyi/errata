@@ -1,4 +1,4 @@
-import { type ReactNode, createElement } from 'react'
+import { type ReactNode, createElement, Children, isValidElement, cloneElement } from 'react'
 import { hashString, CHARACTER_MENTION_COLORS } from './fragment-visuals'
 
 export interface Annotation {
@@ -103,4 +103,45 @@ export function buildAnnotationHighlighter(
 
     return parts
   }
+}
+
+/** Italicize dialogue enclosed in double quotes (ASCII " or curly \u201c\u201d) */
+export function formatDialogue(text: string): ReactNode {
+  const regex = /[""\u201c](?:[^""\u201c\u201d])*?[""\u201d]/g
+  let lastIndex = 0
+  const parts: ReactNode[] = []
+  let key = 0
+
+  for (const match of text.matchAll(regex)) {
+    const start = match.index!
+    if (start > lastIndex) parts.push(text.slice(lastIndex, start))
+    parts.push(createElement('em', { key: key++ }, match[0]))
+    lastIndex = start + match[0].length
+  }
+
+  if (parts.length === 0) return text
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex))
+  return parts
+}
+
+/** Compose two text transforms: apply `first`, then apply `second` to any remaining string children */
+export function composeTextTransforms(
+  first: (text: string) => ReactNode,
+  second: (text: string) => ReactNode,
+): (text: string) => ReactNode {
+  return (text: string) => {
+    const result = first(text)
+    if (typeof result === 'string') return second(result)
+    return applyToStringChildren(result, second)
+  }
+}
+
+function applyToStringChildren(node: ReactNode, transform: (text: string) => ReactNode): ReactNode {
+  return Children.map(node, child => {
+    if (typeof child === 'string') return transform(child)
+    if (isValidElement(child) && (child.props as Record<string, unknown>).children) {
+      return cloneElement(child, {}, applyToStringChildren((child.props as Record<string, unknown>).children as ReactNode, transform))
+    }
+    return child
+  })
 }

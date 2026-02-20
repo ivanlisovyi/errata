@@ -6,7 +6,7 @@ import { StreamMarkdown } from '@/components/ui/stream-markdown'
 import { ChevronRail } from './ChevronRail'
 import { GenerationThoughts } from './GenerationThoughts'
 import { type ThoughtStep } from './InlineGenerationInput'
-import { buildAnnotationHighlighter, type Annotation } from '@/lib/character-mentions'
+import { buildAnnotationHighlighter, formatDialogue, composeTextTransforms, type Annotation } from '@/lib/character-mentions'
 import { RefreshCw, Sparkles, Undo2, PenLine, Bug, Trash2, GitBranch, MessageSquare } from 'lucide-react'
 
 interface ProseBlockProps {
@@ -73,8 +73,12 @@ export function ProseBlock({
     queryFn: () => api.config.getProviders(),
   })
   const providerMutation = useMutation({
-    mutationFn: (data: { providerId?: string | null; modelId?: string | null }) =>
-      api.settings.update(storyId, data),
+    mutationFn: (data: { providerId: string | null; modelId: string | null }) => {
+      const overrides = story?.settings.modelOverrides ?? {}
+      return api.settings.update(storyId, {
+        modelOverrides: { ...overrides, generation: { providerId: data.providerId, modelId: data.modelId } },
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['story', storyId] })
     },
@@ -354,11 +358,14 @@ export function ProseBlock({
     }
   }
 
-  // Build mention highlighter from annotations
+  // Build text transform: dialogue italics + optional mention highlighting
   const annotations = fragment.meta?.annotations as Annotation[] | undefined
   const textTransform = useMemo(() => {
-    if (!mentionsEnabled || !annotations || !onClickMention) return undefined
-    return buildAnnotationHighlighter(annotations, onClickMention, mentionColors) ?? undefined
+    const mentionHighlighter = mentionsEnabled && annotations && onClickMention
+      ? buildAnnotationHighlighter(annotations, onClickMention, mentionColors)
+      : null
+    if (mentionHighlighter) return composeTextTransforms(formatDialogue, mentionHighlighter)
+    return formatDialogue
   }, [mentionsEnabled, annotations, onClickMention, mentionColors])
 
   return (
@@ -394,7 +401,7 @@ export function ProseBlock({
                   {/* Model quick-switch */}
                   {globalConfig && (
                     <select
-                      value={story?.settings.providerId ?? ''}
+                      value={story?.settings.modelOverrides?.generation?.providerId ?? ''}
                       onChange={(e) => {
                         const providerId = e.target.value || null
                         providerMutation.mutate({ providerId, modelId: null })
