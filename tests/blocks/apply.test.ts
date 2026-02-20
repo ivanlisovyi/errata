@@ -117,7 +117,7 @@ describe('applyBlockConfig', () => {
     expect(block!.content).toBe('Alice')
   })
 
-  it('handles script errors gracefully', async () => {
+  it('handles script errors gracefully and includes error message', async () => {
     const config: BlockConfig = {
       customBlocks: [{
         id: 'cb-broken',
@@ -135,6 +135,7 @@ describe('applyBlockConfig', () => {
     const broken = result.find(b => b.id === 'cb-broken')
     expect(broken).toBeDefined()
     expect(broken!.content).toContain('Script error')
+    expect(broken!.content).toContain('boom')
   })
 
   it('skips script blocks that return empty string', async () => {

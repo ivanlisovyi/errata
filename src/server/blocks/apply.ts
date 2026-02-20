@@ -36,13 +36,14 @@ async function evaluateCustomBlock(def: CustomBlockDefinition, scriptContext: ob
       order: def.order,
       source: 'custom',
     }
-  } catch {
+  } catch (err) {
     // Script errors produce an error block so users can see what went wrong
+    const msg = err instanceof Error ? err.message : String(err)
     return {
       id: def.id,
       name: def.name,
       role: def.role,
-      content: `[Script error in custom block "${def.name}"]`,
+      content: `[Script error in "${def.name}": ${msg}]`,
       order: def.order,
       source: 'custom',
     }
