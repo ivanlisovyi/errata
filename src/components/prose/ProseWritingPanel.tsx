@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -35,21 +35,25 @@ interface ProseWritingPanelProps {
   onFragmentChange: (id: string) => void
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-}
-
-function plainTextToHtml(content: string): string {
-  if (!content.trim()) return '<p></p>'
-  return content
-    .split('\n\n')
-    .map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll('\n', '<br />')}</p>`)
-    .join('')
+/** Build ProseMirror JSON directly — avoids DOM parsing overhead of HTML path */
+function plainTextToDoc(content: string): Record<string, unknown> {
+  if (!content.trim()) return { type: 'doc', content: [{ type: 'paragraph' }] }
+  return {
+    type: 'doc',
+    content: content.split('\n\n').map((para) => {
+      if (!para) return { type: 'paragraph' }
+      const lines = para.split('\n')
+      if (lines.length === 1) {
+        return { type: 'paragraph', content: [{ type: 'text', text: lines[0] }] }
+      }
+      const inline: Record<string, unknown>[] = []
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i]) inline.push({ type: 'text', text: lines[i] })
+        if (i < lines.length - 1) inline.push({ type: 'hardBreak' })
+      }
+      return { type: 'paragraph', content: inline.length > 0 ? inline : [] }
+    }),
+  }
 }
 
 function wordCount(text: string): number {
@@ -62,6 +66,70 @@ function readingTime(words: number): string {
   if (minutes < 1) return '<1m'
   return `${minutes}m`
 }
+
+function preview(content: string): string {
+  const line = content.replace(/\n+/g, ' ').trim()
+  return line.length > 60 ? line.slice(0, 60) + '\u2026' : line
+}
+
+const PassageItem = memo(function PassageItem({
+  fragment,
+  isActive,
+  proseNumber,
+  onSwitch,
+}: {
+  fragment: Fragment
+  isActive: boolean
+  proseNumber: number
+  onSwitch: (id: string) => void
+}) {
+  const wc = wordCount(fragment.content)
+  return (
+    <button
+      data-passage-id={fragment.id}
+      onClick={() => onSwitch(fragment.id)}
+      className={cn(
+        'w-full text-left rounded-lg px-2.5 py-2 mb-0.5 transition-all duration-150 group/item',
+        isActive
+          ? 'bg-primary/[0.08] ring-1 ring-primary/15'
+          : 'hover:bg-accent/50',
+      )}
+    >
+      <div className="flex items-center justify-between mb-0.5">
+        <span className={cn(
+          'text-[10px] font-mono',
+          isActive ? 'text-primary/70' : 'text-muted-foreground',
+        )}>
+          {proseNumber}
+        </span>
+        <span className={cn(
+          'text-[9px] font-mono tabular-nums',
+          isActive ? 'text-primary/40' : 'text-muted-foreground group-hover/item:text-muted-foreground',
+        )}>
+          {wc}w
+        </span>
+      </div>
+      {fragment.description && (
+        <span className={cn(
+          'block text-[10px] italic truncate mb-0.5',
+          isActive
+            ? 'text-muted-foreground'
+            : 'text-muted-foreground group-hover/item:text-muted-foreground',
+        )}>
+          {fragment.description.slice(0, 50)}{fragment.description.length > 50 ? '\u2026' : ''}
+        </span>
+      )}
+      <span className={cn(
+        'block text-[11px] leading-snug font-prose line-clamp-2',
+        isActive
+          ? 'text-foreground/70'
+          : 'text-muted-foreground group-hover/item:text-muted-foreground',
+      )}>
+        {preview(fragment.content)}
+      </span>
+    </button>
+  )
+})
 
 export function ProseWritingPanel({
   storyId,
@@ -77,7 +145,6 @@ export function ProseWritingPanel({
   const [showTransformUndo, setShowTransformUndo] = useState(false)
   const [writingTransforms] = useWritingTransforms()
   const enabledTransforms = writingTransforms.filter(t => t.enabled)
-  const activeItemRef = useRef<HTMLButtonElement>(null)
   const sidebarScrollRef = useRef<HTMLDivElement>(null)
   const dirtyRef = useRef(false)
   const savingFragmentRef = useRef<string | null>(null)
@@ -188,7 +255,7 @@ export function ProseWritingPanel({
         horizontalRule: false,
       }),
     ],
-    content: plainTextToHtml(currentFragment?.content ?? ''),
+    content: plainTextToDoc(currentFragment?.content ?? ''),
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -206,7 +273,7 @@ export function ProseWritingPanel({
   useEffect(() => {
     if (!editor || !currentFragment) return
     if (savingFragmentRef.current === fragmentId) return
-    editor.commands.setContent(plainTextToHtml(currentFragment.content), { emitUpdate: false })
+    editor.commands.setContent(plainTextToDoc(currentFragment.content), { emitUpdate: false })
     dirtyRef.current = false
     setSaveState('idle')
     setSelectionTransformReasoning('')
@@ -261,6 +328,11 @@ export function ProseWritingPanel({
     onFragmentChange(targetId)
   }, [fragmentId, editor, currentFragment, getEditorText, updateMutation, onFragmentChange])
 
+  // Stable ref so memoized sidebar items don't re-render when the callback identity changes
+  const passageSwitchRef = useRef(handlePassageSwitch)
+  passageSwitchRef.current = handlePassageSwitch
+  const stablePassageSwitch = useCallback((id: string) => passageSwitchRef.current(id), [])
+
   // Navigate to prev/next passage
   const navigatePrev = useCallback(() => {
     if (prevFragment) handlePassageSwitch(prevFragment.id)
@@ -304,9 +376,8 @@ export function ProseWritingPanel({
 
   // Scroll active sidebar item into view
   useEffect(() => {
-    if (activeItemRef.current) {
-      activeItemRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-    }
+    const el = sidebarScrollRef.current?.querySelector(`[data-passage-id="${fragmentId}"]`) as HTMLElement | null
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [fragmentId])
 
   // Cleanup timers
@@ -399,13 +470,7 @@ export function ProseWritingPanel({
     update()
     editor.on('update', update)
     return () => { editor.off('update', update) }
-  }, [editor])
-
-  // Sidebar helpers
-  const preview = (content: string) => {
-    const line = content.replace(/\n+/g, ' ').trim()
-    return line.length > 60 ? line.slice(0, 60) + '\u2026' : line
-  }
+  }, [editor, fragmentId])
 
   // Context strip helper — truncate to last ~120 chars of content
   const contextTail = (content: string) => {
@@ -419,7 +484,18 @@ export function ProseWritingPanel({
     return clean.slice(0, 140) + '\u2026'
   }
 
-  let proseCounter = 0
+  // Pre-compute prose numbers so sidebar items can be memoized
+  const proseNumberMap = useMemo(() => {
+    const map = new Map<string, number>()
+    let counter = 0
+    for (const f of orderedItems) {
+      if (f.type !== 'marker') {
+        counter++
+        map.set(f.id, counter)
+      }
+    }
+    return map
+  }, [orderedItems])
 
   // Save state indicator
   const SaveIndicator = () => {
@@ -761,10 +837,7 @@ export function ProseWritingPanel({
         <ScrollArea ref={sidebarScrollRef} className="flex-1 min-h-0">
           <div className="px-1.5 pb-2">
             {filteredItems.map((fragment) => {
-              const isActive = fragment.id === fragmentId
-              const isMarker = fragment.type === 'marker'
-
-              if (isMarker) {
+              if (fragment.type === 'marker') {
                 return (
                   <div
                     key={fragment.id}
@@ -782,55 +855,14 @@ export function ProseWritingPanel({
                 )
               }
 
-              proseCounter++
-              const currentProseNumber = proseCounter
-              const wc = wordCount(fragment.content)
-
               return (
-                <button
+                <PassageItem
                   key={fragment.id}
-                  ref={isActive ? activeItemRef : undefined}
-                  onClick={() => handlePassageSwitch(fragment.id)}
-                  className={cn(
-                    'w-full text-left rounded-lg px-2.5 py-2 mb-0.5 transition-all duration-150 group/item',
-                    isActive
-                      ? 'bg-primary/[0.08] ring-1 ring-primary/15'
-                      : 'hover:bg-accent/50',
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className={cn(
-                      'text-[10px] font-mono',
-                      isActive ? 'text-primary/70' : 'text-muted-foreground',
-                    )}>
-                      {currentProseNumber}
-                    </span>
-                    <span className={cn(
-                      'text-[9px] font-mono tabular-nums',
-                      isActive ? 'text-primary/40' : 'text-muted-foreground group-hover/item:text-muted-foreground',
-                    )}>
-                      {wc}w
-                    </span>
-                  </div>
-                  {fragment.description && (
-                    <span className={cn(
-                      'block text-[10px] italic truncate mb-0.5',
-                      isActive
-                        ? 'text-muted-foreground'
-                        : 'text-muted-foreground group-hover/item:text-muted-foreground',
-                    )}>
-                      {fragment.description.slice(0, 50)}{fragment.description.length > 50 ? '\u2026' : ''}
-                    </span>
-                  )}
-                  <span className={cn(
-                    'block text-[11px] leading-snug font-prose line-clamp-2',
-                    isActive
-                      ? 'text-foreground/70'
-                      : 'text-muted-foreground group-hover/item:text-muted-foreground',
-                  )}>
-                    {preview(fragment.content)}
-                  </span>
-                </button>
+                  fragment={fragment}
+                  isActive={fragment.id === fragmentId}
+                  proseNumber={proseNumberMap.get(fragment.id) ?? 0}
+                  onSwitch={stablePassageSwitch}
+                />
               )
             })}
 
