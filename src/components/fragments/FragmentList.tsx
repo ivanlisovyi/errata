@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { Plus, Pin, FileDown, UserPlus } from 'lucide-react'
+import { Plus, Pin, GripVertical, FileDown, UserPlus } from 'lucide-react'
 
 interface FragmentListProps {
   storyId: string
@@ -42,22 +42,34 @@ function BubbleSvgShape({ b }: { b: Bubble; i: number }) {
 
 interface FragmentRowProps {
   fragment: Fragment
+  index: number
   selected: boolean
+  isDragging: boolean
+  canDrag: boolean
   showType: boolean
   mediaById: Map<string, Fragment>
   onSelect: (fragment: Fragment) => void
   onPin: (fragment: Fragment) => void
   pinPending: boolean
+  onDragStart: (index: number) => void
+  onDragEnter: (index: number) => void
+  onDragEnd: () => void
 }
 
 const FragmentRow = memo(function FragmentRow({
   fragment,
+  index,
   selected,
+  isDragging,
+  canDrag,
   showType,
   mediaById,
   onSelect,
   onPin,
   pinPending,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
 }: FragmentRowProps) {
   const visual = useMemo(() => resolveFragmentVisual(fragment, mediaById), [fragment, mediaById])
   const bubbleSet = useMemo(
@@ -70,10 +82,26 @@ const FragmentRow = memo(function FragmentRow({
   return (
     <div
       data-component-id={fragmentComponentId(fragment, 'list-item')}
-      className={`group flex items-start gap-2.5 rounded-lg px-2.5 py-2.5 text-sm transition-colors duration-100 hover:bg-accent/50 ${
+      draggable={canDrag}
+      onDragStart={() => onDragStart(index)}
+      onDragEnter={() => onDragEnter(index)}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => e.preventDefault()}
+      className={`group flex items-start gap-2.5 rounded-lg px-2.5 py-2.5 text-sm transition-all duration-150 hover:bg-accent/50 ${
         selected ? 'bg-accent' : ''
-      }`}
+      } ${isDragging ? 'opacity-40 scale-[0.97]' : ''}`}
     >
+      {/* Drag handle */}
+      {canDrag && (
+        <div
+          role="presentation"
+          className="shrink-0 pt-0.5 cursor-grab opacity-0 group-hover:opacity-50 transition-opacity duration-150"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="size-3.5 text-muted-foreground" data-component-id={fragmentComponentId(fragment, 'drag-handle')} />
+        </div>
+      )}
+
       {visual.imageUrl ? (
         boundary && boundary.width < 1 && boundary.height < 1 ? (
           <div
@@ -172,6 +200,9 @@ export function FragmentList({
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortMode>('order')
   const queryClient = useQueryClient()
+  const dragItem = useRef<number | null>(null)
+  const dragOverItem = useRef<number | null>(null)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
 
   const { data: fragments, isLoading } = useQuery({
     queryKey: ['fragments', storyId, type, allowedTypes?.join(',') ?? 'all'],
@@ -211,6 +242,20 @@ export function FragmentList({
     },
   })
 
+  const reorderMutation = useMutation({
+    mutationFn: (items: Array<{ id: string; order: number }>) =>
+      api.fragments.reorder(storyId, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['fragments', storyId],
+        predicate: (q) => {
+          const typeSlot = q.queryKey[2]
+          return typeSlot === undefined || typeSlot === type
+        },
+      })
+    },
+  })
+
   // Stable callback refs so FragmentRow memo is never defeated
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
@@ -225,6 +270,7 @@ export function FragmentList({
   }, [])
 
   const showType = type === undefined || !!allowedTypes?.length
+  const canDrag = sort === 'order' && !search.trim()
 
   const filtered = useMemo(() => {
     if (!fragments) return []
@@ -276,6 +322,39 @@ export function FragmentList({
     }
     return map
   }, [imageFragments, iconFragments])
+
+  // Drag handlers — matching BlockEditorPanel pattern
+  const handleDragStart = useCallback((index: number) => {
+    dragItem.current = index
+    setDragIndex(index)
+  }, [])
+
+  const handleDragEnter = useCallback((index: number) => {
+    dragOverItem.current = index
+  }, [])
+
+  const filteredRef = useRef(filtered)
+  filteredRef.current = filtered
+  const reorderMutateRef = useRef(reorderMutation.mutate)
+  reorderMutateRef.current = reorderMutation.mutate
+
+  const handleDragEnd = useCallback(() => {
+    if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
+      setDragIndex(null)
+      return
+    }
+
+    const reordered = [...filteredRef.current]
+    const [removed] = reordered.splice(dragItem.current, 1)
+    reordered.splice(dragOverItem.current, 0, removed)
+
+    const items = reordered.map((f, i) => ({ id: f.id, order: i }))
+    reorderMutateRef.current(items)
+
+    dragItem.current = null
+    dragOverItem.current = null
+    setDragIndex(null)
+  }, [])
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground p-4">Loading...</p>
@@ -366,16 +445,22 @@ export function FragmentList({
               {search.trim() ? 'No matches' : 'No fragments yet'}
             </p>
           )}
-          {filtered.map((fragment) => (
+          {filtered.map((fragment, index) => (
             <FragmentRow
               key={fragment.id}
               fragment={fragment}
+              index={index}
               selected={selectedId === fragment.id}
+              isDragging={dragIndex === index}
+              canDrag={canDrag}
               showType={showType}
               mediaById={mediaById}
               onSelect={stableOnSelect}
               onPin={stableOnPin}
               pinPending={pinMutation.isPending}
+              onDragStart={handleDragStart}
+              onDragEnter={handleDragEnter}
+              onDragEnd={handleDragEnd}
             />
           ))}
         </div>
