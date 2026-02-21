@@ -10,7 +10,7 @@ import {
 import { registry } from '../fragments/registry'
 import type { LibrarianAnalysis } from './storage'
 
-type KnowledgeSuggestion = LibrarianAnalysis['knowledgeSuggestions'][number]
+type FragmentSuggestion = LibrarianAnalysis['fragmentSuggestions'][number]
 
 interface ApplySuggestionResult {
   fragmentId: string
@@ -24,7 +24,7 @@ function normalizeName(name: string): string {
 
 function resolveSourceFragmentId(
   analysis: LibrarianAnalysis,
-  suggestion: KnowledgeSuggestion,
+  suggestion: FragmentSuggestion,
 ): string | null {
   return suggestion.sourceFragmentId ?? analysis.fragmentId ?? null
 }
@@ -33,7 +33,7 @@ async function findSuggestionFragment(
   dataDir: string,
   storyId: string,
   analysis: LibrarianAnalysis,
-  suggestion: KnowledgeSuggestion,
+  suggestion: FragmentSuggestion,
 ): Promise<Fragment | null> {
   if (suggestion.targetFragmentId) {
     const target = await getFragment(dataDir, storyId, suggestion.targetFragmentId)
@@ -61,7 +61,7 @@ async function findSuggestionFragment(
   return matching[0] ?? null
 }
 
-export async function applyKnowledgeSuggestion(args: {
+export async function applyFragmentSuggestion(args: {
   dataDir: string
   storyId: string
   analysis: LibrarianAnalysis
@@ -69,7 +69,7 @@ export async function applyKnowledgeSuggestion(args: {
   reason: 'manual-accept' | 'auto-apply'
 }): Promise<ApplySuggestionResult> {
   const { dataDir, storyId, analysis, suggestionIndex, reason } = args
-  const suggestion = analysis.knowledgeSuggestions[suggestionIndex]
+  const suggestion = analysis.fragmentSuggestions[suggestionIndex]
   if (!suggestion) {
     throw new Error('Invalid suggestion index')
   }

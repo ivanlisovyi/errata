@@ -311,7 +311,7 @@ async function seedStory(dataDir: string, options: HarnessOptions): Promise<{
       },
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     }
     await saveAnalysis(dataDir, storyId, analysis)
@@ -359,7 +359,7 @@ async function seedStory(dataDir: string, options: HarnessOptions): Promise<{
         },
         mentionedCharacters: [],
         contradictions: [],
-        knowledgeSuggestions: [],
+        fragmentSuggestions: [],
         timelineEvents: [],
       }
       await saveAnalysis(dataDir, storyId, analysis)

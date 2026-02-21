@@ -21,7 +21,19 @@ export interface LibrarianAnalysis {
     description: string
     fragmentIds: string[]
   }>
-  knowledgeSuggestions: Array<{
+  fragmentSuggestions: Array<{
+    type: 'character' | 'knowledge'
+    targetFragmentId?: string
+    name: string
+    description: string
+    content: string
+    sourceFragmentId?: string
+    accepted?: boolean
+    autoApplied?: boolean
+    createdFragmentId?: string
+  }>
+  /** @deprecated Use fragmentSuggestions. Kept for backward compat with stored JSON. */
+  knowledgeSuggestions?: Array<{
     type: 'character' | 'knowledge'
     targetFragmentId?: string
     name: string
@@ -247,7 +259,19 @@ export async function getAnalysis(
   const path = await analysisPath(dataDir, storyId, analysisId)
   if (!existsSync(path)) return null
   const raw = await readFile(path, 'utf-8')
-  return JSON.parse(raw) as LibrarianAnalysis
+  return normalizeAnalysis(JSON.parse(raw))
+}
+
+/** Migrate old knowledgeSuggestions → fragmentSuggestions on read */
+function normalizeAnalysis(data: Record<string, unknown>): LibrarianAnalysis {
+  const analysis = data as unknown as LibrarianAnalysis
+  if (!analysis.fragmentSuggestions && analysis.knowledgeSuggestions) {
+    analysis.fragmentSuggestions = analysis.knowledgeSuggestions
+  }
+  if (!analysis.fragmentSuggestions) {
+    analysis.fragmentSuggestions = []
+  }
+  return analysis
 }
 
 export async function listAnalyses(
@@ -263,14 +287,14 @@ export async function listAnalyses(
   for (const entry of entries) {
     if (!entry.endsWith('.json')) continue
     const raw = await readFile(join(dir, entry), 'utf-8')
-    const analysis = JSON.parse(raw) as LibrarianAnalysis
+    const analysis = normalizeAnalysis(JSON.parse(raw))
     summaries.push({
       id: analysis.id,
       createdAt: analysis.createdAt,
       fragmentId: analysis.fragmentId,
       contradictionCount: analysis.contradictions.length,
-      suggestionCount: analysis.knowledgeSuggestions.length,
-      pendingSuggestionCount: analysis.knowledgeSuggestions.filter((s) => !s.accepted).length,
+      suggestionCount: analysis.fragmentSuggestions.length,
+      pendingSuggestionCount: analysis.fragmentSuggestions.filter((s) => !s.accepted).length,
       timelineEventCount: analysis.timelineEvents.length,
       directionsCount: analysis.directions?.length ?? 0,
       hasTrace: !!analysis.trace?.length,

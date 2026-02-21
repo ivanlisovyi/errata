@@ -13,7 +13,7 @@ describe('analysis-tools', () => {
       })
       expect(collector.mentions).toEqual([])
       expect(collector.contradictions).toEqual([])
-      expect(collector.knowledgeSuggestions).toEqual([])
+      expect(collector.fragmentSuggestions).toEqual([])
       expect(collector.timelineEvents).toEqual([])
     })
   })
@@ -26,8 +26,9 @@ describe('analysis-tools', () => {
         'updateSummary',
         'reportMentions',
         'reportContradictions',
-        'suggestKnowledge',
+        'suggestFragment',
         'reportTimeline',
+        'updateFragment',
         'suggestDirections',
       ])
     })
@@ -113,10 +114,10 @@ describe('analysis-tools', () => {
       expect(collector.contradictions[0].description).toBe('Eye color mismatch')
     })
 
-    it('suggestKnowledge accumulates suggestions', async () => {
+    it('suggestFragment accumulates suggestions', async () => {
       const collector = createEmptyCollector()
       const tools = createAnalysisTools(collector)
-      await tools.suggestKnowledge.execute!({
+      await tools.suggestFragment.execute!({
         suggestions: [{
           type: 'knowledge',
           name: 'Valdris',
@@ -124,14 +125,14 @@ describe('analysis-tools', () => {
           content: 'Valdris is ancient.',
         }],
       }, { toolCallId: 'a', messages: [], abortSignal: undefined as unknown as AbortSignal })
-      expect(collector.knowledgeSuggestions).toHaveLength(1)
-      expect(collector.knowledgeSuggestions[0].name).toBe('Valdris')
+      expect(collector.fragmentSuggestions).toHaveLength(1)
+      expect(collector.fragmentSuggestions[0].name).toBe('Valdris')
     })
 
-    it('suggestKnowledge handles targetFragmentId', async () => {
+    it('suggestFragment handles targetFragmentId', async () => {
       const collector = createEmptyCollector()
       const tools = createAnalysisTools(collector)
-      await tools.suggestKnowledge.execute!({
+      await tools.suggestFragment.execute!({
         suggestions: [{
           type: 'character',
           targetFragmentId: 'ch-001',
@@ -140,8 +141,8 @@ describe('analysis-tools', () => {
           content: 'Alice is now a warrior.',
         }],
       }, { toolCallId: 'a', messages: [], abortSignal: undefined as unknown as AbortSignal })
-      expect(collector.knowledgeSuggestions[0].targetFragmentId).toBe('ch-001')
-      expect(collector.knowledgeSuggestions[0].type).toBe('character')
+      expect(collector.fragmentSuggestions[0].targetFragmentId).toBe('ch-001')
+      expect(collector.fragmentSuggestions[0].type).toBe('character')
     })
 
     it('reportTimeline accumulates timeline events', async () => {

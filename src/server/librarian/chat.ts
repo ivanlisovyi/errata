@@ -88,7 +88,7 @@ async function librarianChatInner(
           summary: analysis.summaryUpdate,
           mentionCount: analysis.mentionedCharacters.length,
           contradictionCount: analysis.contradictions.length,
-          suggestionCount: analysis.knowledgeSuggestions.length,
+          suggestionCount: analysis.fragmentSuggestions.length,
           timelineEventCount: analysis.timelineEvents.length,
         }
       } catch (err) {

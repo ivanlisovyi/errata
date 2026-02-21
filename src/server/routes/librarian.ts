@@ -18,7 +18,7 @@ import {
   saveChatHistory as saveLibrarianChatHistory,
   clearChatHistory as clearLibrarianChatHistory,
 } from '../librarian/storage'
-import { applyKnowledgeSuggestion } from '../librarian/suggestions'
+import { applyFragmentSuggestion } from '../librarian/suggestions'
 import { createLogger } from '../logging'
 import { encodeStream } from './encode-stream'
 import type { AgentStreamResult } from '../agents/stream-types'
@@ -86,12 +86,12 @@ export function librarianRoutes(dataDir: string) {
         return { error: 'Analysis not found' }
       }
       const index = parseInt(params.index, 10)
-      if (isNaN(index) || index < 0 || index >= analysis.knowledgeSuggestions.length) {
+      if (isNaN(index) || index < 0 || index >= analysis.fragmentSuggestions.length) {
         set.status = 422
         return { error: 'Invalid suggestion index' }
       }
 
-      const result = await applyKnowledgeSuggestion({
+      const result = await applyFragmentSuggestion({
         dataDir,
         storyId: params.storyId,
         analysis,
@@ -99,9 +99,9 @@ export function librarianRoutes(dataDir: string) {
         reason: 'manual-accept',
       })
 
-      analysis.knowledgeSuggestions[index].accepted = true
-      analysis.knowledgeSuggestions[index].autoApplied = false
-      analysis.knowledgeSuggestions[index].createdFragmentId = result.fragmentId
+      analysis.fragmentSuggestions[index].accepted = true
+      analysis.fragmentSuggestions[index].autoApplied = false
+      analysis.fragmentSuggestions[index].createdFragmentId = result.fragmentId
       await saveLibrarianAnalysis(dataDir, params.storyId, analysis)
       return {
         analysis,

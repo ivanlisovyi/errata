@@ -44,7 +44,7 @@ function makeAnalysis(overrides: Partial<LibrarianAnalysis> = {}): LibrarianAnal
     summaryUpdate: 'Something happened.',
     mentionedCharacters: ['ch-0001'],
     contradictions: [],
-    knowledgeSuggestions: [],
+    fragmentSuggestions: [],
     timelineEvents: [],
     ...overrides,
   }
@@ -66,7 +66,7 @@ describe('librarian API routes', () => {
       id: storyId,
       name: 'Librarian API Test',
       description: 'Testing librarian routes',
-    coverImage: null,
+      coverImage: null,
       summary: '',
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
@@ -196,7 +196,7 @@ describe('librarian API routes', () => {
     it('marks a suggestion as accepted and creates a fragment', async () => {
       await saveAnalysis(dataDir, storyId, makeAnalysis({
         id: 'analysis-accept',
-        knowledgeSuggestions: [
+        fragmentSuggestions: [
           { type: 'knowledge', name: 'Dragon Lore', description: 'Dragons breathe fire', content: 'Full details about dragons.' },
           { type: 'character', name: 'Hero', description: 'Main character', content: 'Hero backstory.' },
         ],
@@ -209,9 +209,9 @@ describe('librarian API routes', () => {
       )
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.analysis.knowledgeSuggestions[0].accepted).toBe(true)
-      expect(data.analysis.knowledgeSuggestions[0].autoApplied).toBe(false)
-      expect(data.analysis.knowledgeSuggestions[1].accepted).toBeUndefined()
+      expect(data.analysis.fragmentSuggestions[0].accepted).toBe(true)
+      expect(data.analysis.fragmentSuggestions[0].autoApplied).toBe(false)
+      expect(data.analysis.fragmentSuggestions[1].accepted).toBeUndefined()
       expect(data.createdFragmentId).toBeTruthy()
 
       const created = await getFragment(dataDir, storyId, data.createdFragmentId)
@@ -242,7 +242,7 @@ describe('librarian API routes', () => {
 
       await saveAnalysis(dataDir, storyId, makeAnalysis({
         id: 'analysis-target-update',
-        knowledgeSuggestions: [
+        fragmentSuggestions: [
           {
             type: 'knowledge',
             targetFragmentId: 'kn-0001',
@@ -280,7 +280,7 @@ describe('librarian API routes', () => {
     it('returns 422 for invalid suggestion index', async () => {
       await saveAnalysis(dataDir, storyId, makeAnalysis({
         id: 'analysis-badidx',
-        knowledgeSuggestions: [
+        fragmentSuggestions: [
           { type: 'knowledge', name: 'Test', description: 'Test', content: 'Test' },
         ],
       }))
@@ -298,7 +298,7 @@ describe('librarian API routes', () => {
     it('returns 422 for negative index', async () => {
       await saveAnalysis(dataDir, storyId, makeAnalysis({
         id: 'analysis-negidx',
-        knowledgeSuggestions: [
+        fragmentSuggestions: [
           { type: 'knowledge', name: 'Test', description: 'Test', content: 'Test' },
         ],
       }))

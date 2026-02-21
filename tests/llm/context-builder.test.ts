@@ -402,7 +402,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary A',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, story.id, {
@@ -412,7 +412,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary B',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, story.id, {
@@ -422,7 +422,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary D',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
 
@@ -459,7 +459,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Only after A.',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
 
@@ -499,7 +499,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary A',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, story.id, {
@@ -509,7 +509,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary B',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, story.id, {
@@ -519,7 +519,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary C2',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
 
@@ -555,7 +555,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary A',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, story.id, {
@@ -565,7 +565,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary B old',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, story.id, {
@@ -575,7 +575,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary B new',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
 
@@ -611,7 +611,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary A',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, story.id, {
@@ -621,7 +621,7 @@ describe('context-builder', () => {
       summaryUpdate: 'Summary B',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
 

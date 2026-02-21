@@ -51,7 +51,7 @@ describe('librarian scheduler', () => {
         summaryUpdate: '',
         mentionedCharacters: [],
         contradictions: [],
-        knowledgeSuggestions: [],
+        fragmentSuggestions: [],
         timelineEvents: [],
       },
       trace: [],

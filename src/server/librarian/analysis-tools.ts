@@ -1,5 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod/v4'
+import { getFragment, updateFragmentVersioned } from '../fragments/storage'
 
 // --- Collector ---
 
@@ -12,7 +13,7 @@ export interface AnalysisCollector {
   }
   mentions: Array<{ characterId: string; text: string }>
   contradictions: Array<{ description: string; fragmentIds: string[] }>
-  knowledgeSuggestions: Array<{
+  fragmentSuggestions: Array<{
     type: 'character' | 'knowledge'
     targetFragmentId?: string
     name: string
@@ -33,7 +34,7 @@ export function createEmptyCollector(): AnalysisCollector {
     },
     mentions: [],
     contradictions: [],
-    knowledgeSuggestions: [],
+    fragmentSuggestions: [],
     timelineEvents: [],
     directions: [],
   }
@@ -98,7 +99,7 @@ export const updateSummaryInputSchema = z.object({
 
 // --- Tools ---
 
-export function createAnalysisTools(collector: AnalysisCollector) {
+export function createAnalysisTools(collector: AnalysisCollector, opts?: { dataDir: string; storyId: string }) {
   return {
     updateSummary: tool({
       description: 'Set or update the summary for this prose fragment. Describes what happened in the new prose. Last call wins.',
@@ -153,7 +154,7 @@ export function createAnalysisTools(collector: AnalysisCollector) {
       },
     }),
 
-    suggestKnowledge: tool({
+    suggestFragment: tool({
       description: 'Suggest creating or updating character/knowledge fragments based on new information in the prose. Each character or knowledge entry should appear only once.',
       inputSchema: z.object({
         suggestions: z.array(z.object({
@@ -167,13 +168,13 @@ export function createAnalysisTools(collector: AnalysisCollector) {
       execute: async ({ suggestions }) => {
         // Deduplicate by type+name (case-insensitive), keeping the last (most complete) entry
         const seen = new Set(
-          collector.knowledgeSuggestions.map(s => `${s.type}:${s.name.trim().toLowerCase()}`),
+          collector.fragmentSuggestions.map(s => `${s.type}:${s.name.trim().toLowerCase()}`),
         )
         for (const s of suggestions) {
           const key = `${s.type}:${s.name.trim().toLowerCase()}`
           if (seen.has(key)) continue
           seen.add(key)
-          collector.knowledgeSuggestions.push(s)
+          collector.fragmentSuggestions.push(s)
         }
         return { ok: true }
       },
@@ -190,6 +191,30 @@ export function createAnalysisTools(collector: AnalysisCollector) {
       execute: async ({ events }) => {
         collector.timelineEvents.push(...events)
         return { ok: true }
+      },
+    }),
+
+    updateFragment: tool({
+      description: 'Directly update an existing fragment by ID. Use this to correct or enrich character, knowledge, or guideline fragments based on new information from the prose.',
+      inputSchema: z.object({
+        fragmentId: z.string().describe('The ID of the fragment to update (e.g. ch-abc, kn-xyz)'),
+        name: z.string().optional().describe('New name for the fragment'),
+        description: z.string().max(250).optional().describe('New description (max 250 chars)'),
+        content: z.string().optional().describe('New content. Retain important established facts.'),
+      }),
+      execute: async ({ fragmentId, name, description, content }) => {
+        if (!opts) return { error: 'updateFragment not available in this context' }
+        const existing = await getFragment(opts.dataDir, opts.storyId, fragmentId)
+        if (!existing) return { error: `Fragment ${fragmentId} not found` }
+        if (existing.type === 'prose') return { error: 'Cannot update prose fragments via this tool' }
+        const updates: Record<string, string> = {}
+        if (name !== undefined) updates.name = name
+        if (description !== undefined) updates.description = description
+        if (content !== undefined) updates.content = content
+        if (Object.keys(updates).length === 0) return { error: 'No fields to update' }
+        const updated = await updateFragmentVersioned(opts.dataDir, opts.storyId, fragmentId, updates, { reason: 'librarian-analysis' })
+        if (!updated) return { error: `Failed to update fragment ${fragmentId}` }
+        return { ok: true, fragmentId: updated.id }
       },
     }),
 

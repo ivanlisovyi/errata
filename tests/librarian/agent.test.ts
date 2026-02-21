@@ -364,7 +364,7 @@ describe('librarian agent', () => {
       summaryUpdate: 'Old version should not be used.',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
     await saveAnalysis(dataDir, storyId, {
@@ -374,7 +374,7 @@ describe('librarian agent', () => {
       summaryUpdate: 'New version should be used.',
       mentionedCharacters: [],
       contradictions: [],
-      knowledgeSuggestions: [],
+      fragmentSuggestions: [],
       timelineEvents: [],
     })
 
@@ -490,7 +490,7 @@ describe('librarian agent', () => {
     mockStreamWithToolCalls([
       { toolName: 'updateSummary', args: { summary: 'An ancient city called Valdris was revealed.' } },
       {
-        toolName: 'suggestKnowledge',
+        toolName: 'suggestFragment',
         args: {
           suggestions: [{
             type: 'knowledge',
@@ -503,9 +503,9 @@ describe('librarian agent', () => {
     ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
-    expect(analysis.knowledgeSuggestions).toHaveLength(1)
-    expect(analysis.knowledgeSuggestions[0].name).toBe('Valdris')
-    expect(analysis.knowledgeSuggestions[0].sourceFragmentId).toBe('pr-0001')
+    expect(analysis.fragmentSuggestions).toHaveLength(1)
+    expect(analysis.fragmentSuggestions[0].name).toBe('Valdris')
+    expect(analysis.fragmentSuggestions[0].sourceFragmentId).toBe('pr-0001')
   })
 
   it('auto-applies suggestions and updates existing suggestion fragments', async () => {
@@ -528,7 +528,7 @@ describe('librarian agent', () => {
     mockStreamWithToolCalls([
       { toolName: 'updateSummary', args: { summary: 'Valdris appears in old records.' } },
       {
-        toolName: 'suggestKnowledge',
+        toolName: 'suggestFragment',
         args: {
           suggestions: [{
             type: 'knowledge',
@@ -541,15 +541,15 @@ describe('librarian agent', () => {
     ])
 
     const first = await runLibrarian(dataDir, storyId, 'pr-0001')
-    expect(first.knowledgeSuggestions[0].accepted).toBe(true)
-    expect(first.knowledgeSuggestions[0].autoApplied).toBe(true)
-    const createdId = first.knowledgeSuggestions[0].createdFragmentId
+    expect(first.fragmentSuggestions[0].accepted).toBe(true)
+    expect(first.fragmentSuggestions[0].autoApplied).toBe(true)
+    const createdId = first.fragmentSuggestions[0].createdFragmentId
     expect(createdId).toBeTruthy()
 
     mockStreamWithToolCalls([
       { toolName: 'updateSummary', args: { summary: 'Valdris defenses were revealed.' } },
       {
-        toolName: 'suggestKnowledge',
+        toolName: 'suggestFragment',
         args: {
           suggestions: [{
             type: 'knowledge',
@@ -562,9 +562,9 @@ describe('librarian agent', () => {
     ])
 
     const second = await runLibrarian(dataDir, storyId, 'pr-0002')
-    expect(second.knowledgeSuggestions[0].accepted).toBe(true)
-    expect(second.knowledgeSuggestions[0].autoApplied).toBe(true)
-    expect(second.knowledgeSuggestions[0].createdFragmentId).toBe(createdId)
+    expect(second.fragmentSuggestions[0].accepted).toBe(true)
+    expect(second.fragmentSuggestions[0].autoApplied).toBe(true)
+    expect(second.fragmentSuggestions[0].createdFragmentId).toBe(createdId)
 
     const suggestionFragment = await getFragment(dataDir, storyId, createdId!)
     expect(suggestionFragment).toBeTruthy()
@@ -596,7 +596,7 @@ describe('librarian agent', () => {
     mockStreamWithToolCalls([
       { toolName: 'updateSummary', args: { summary: 'Valdris defenses were revealed.' } },
       {
-        toolName: 'suggestKnowledge',
+        toolName: 'suggestFragment',
         args: {
           suggestions: [{
             type: 'knowledge',
@@ -610,9 +610,9 @@ describe('librarian agent', () => {
     ])
 
     const analysis = await runLibrarian(dataDir, storyId, 'pr-0001')
-    expect(analysis.knowledgeSuggestions[0].accepted).toBe(true)
-    expect(analysis.knowledgeSuggestions[0].autoApplied).toBe(true)
-    expect(analysis.knowledgeSuggestions[0].createdFragmentId).toBe('kn-0001')
+    expect(analysis.fragmentSuggestions[0].accepted).toBe(true)
+    expect(analysis.fragmentSuggestions[0].autoApplied).toBe(true)
+    expect(analysis.fragmentSuggestions[0].createdFragmentId).toBe('kn-0001')
 
     const updated = await getFragment(dataDir, storyId, 'kn-0001')
     expect(updated).toBeTruthy()

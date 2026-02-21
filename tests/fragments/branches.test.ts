@@ -393,7 +393,7 @@ describe('branches', () => {
         summaryUpdate: 'Alice arrived at the castle.',
         mentionedCharacters: ['ch-alice'],
         contradictions: [],
-        knowledgeSuggestions: [],
+        fragmentSuggestions: [],
         timelineEvents: [{ event: 'Alice arrives', position: 'during' }],
       }
       await saveAnalysis(dataDir, TEST_STORY_ID, analysis)

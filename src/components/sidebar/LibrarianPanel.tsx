@@ -692,7 +692,7 @@ function AnalysisItem({
     },
   })
 
-  const handleAcceptSuggestion = (_suggestion: LibrarianAnalysis['knowledgeSuggestions'][number], index: number) => {
+  const handleAcceptSuggestion = (_suggestion: LibrarianAnalysis['fragmentSuggestions'][number], index: number) => {
     acceptMutation.mutate(index)
   }
 
@@ -831,10 +831,10 @@ function AnalysisItem({
             </div>
           )}
 
-          {analysis.knowledgeSuggestions.length > 0 && (
+          {analysis.fragmentSuggestions.length > 0 && (
             <div className="space-y-1.5">
               <span className="text-primary/70 text-[10px] font-medium">Suggestions</span>
-              {analysis.knowledgeSuggestions.map((s, i) => (
+              {analysis.fragmentSuggestions.map((s, i) => (
                 <div
                   key={`${s.type ?? 'knowledge'}-${s.name}`}
                   className={`rounded-md p-2 flex items-start justify-between gap-1 ${

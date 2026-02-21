@@ -21,7 +21,7 @@ function makeAnalysis(overrides: Partial<LibrarianAnalysis> = {}): LibrarianAnal
     summaryUpdate: 'The hero entered the cave.',
     mentionedCharacters: ['ch-0001'],
     contradictions: [],
-    knowledgeSuggestions: [],
+    fragmentSuggestions: [],
     timelineEvents: [],
     ...overrides,
   }
@@ -88,7 +88,7 @@ describe('librarian storage', () => {
         contradictions: [
           { description: 'Eye color changed', fragmentIds: ['pr-0001', 'pr-0002'] },
         ],
-        knowledgeSuggestions: [
+        fragmentSuggestions: [
           { type: 'knowledge' as const, name: 'Cave', description: 'The dark cave', content: 'A cave in the mountains' },
         ],
         timelineEvents: [

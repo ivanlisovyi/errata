@@ -107,7 +107,7 @@ export function registerLibrarianAgents(): void {
     displayName: 'Librarian Analyze',
     description: 'Analyzes prose fragments for continuity signals and summary updates.',
     createDefaultBlocks: createLibrarianAnalyzeBlocks,
-    availableTools: ['updateSummary', 'reportMentions', 'reportContradictions', 'suggestKnowledge', 'reportTimeline', 'suggestDirections'],
+    availableTools: ['updateSummary', 'reportMentions', 'reportContradictions', 'suggestFragment', 'updateFragment', 'reportTimeline', 'suggestDirections'],
     buildPreviewContext: buildAnalyzePreviewContext,
   })
 

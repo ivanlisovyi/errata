@@ -11,7 +11,7 @@ import {
   saveState,
   type LibrarianAnalysis,
 } from './storage'
-import { applyKnowledgeSuggestion } from './suggestions'
+import { applyFragmentSuggestion } from './suggestions'
 import { createLogger } from '../logging'
 import { createToolAgent } from '../agents/create-agent'
 import { compileAgentContext } from '../agents/compile-agent-context'
@@ -214,7 +214,7 @@ async function runLibrarianInner(
 
   // Create collector and analysis tools
   const collector = createEmptyCollector()
-  const analysisTools = createAnalysisTools(collector)
+  const analysisTools = createAnalysisTools(collector, { dataDir, storyId })
 
   // Compile context via block system
   const compiled = await compileAgentContext(dataDir, storyId, 'librarian.analyze', blockContext, analysisTools)
@@ -331,7 +331,7 @@ async function runLibrarianInner(
     mentions: collector.mentions.length,
     mentionedCharacters: mentionedCharacterIds.length,
     contradictions: collector.contradictions.length,
-    knowledgeSuggestions: collector.knowledgeSuggestions.length,
+    fragmentSuggestions: collector.fragmentSuggestions.length,
     timelineEvents: collector.timelineEvents.length,
   })
 
@@ -347,7 +347,7 @@ async function runLibrarianInner(
     mentions: collector.mentions,
     contradictions: collector.contradictions,
     timelineEvents: collector.timelineEvents,
-    knowledgeSuggestions: collector.knowledgeSuggestions.map((suggestion) => ({
+    fragmentSuggestions: collector.fragmentSuggestions.map((suggestion) => ({
       ...suggestion,
       sourceFragmentId: fragmentId,
     })),
@@ -356,22 +356,22 @@ async function runLibrarianInner(
   }
 
   const autoApplySuggestions = story.settings?.autoApplyLibrarianSuggestions === true
-  if (autoApplySuggestions && analysis.knowledgeSuggestions.length > 0) {
+  if (autoApplySuggestions && analysis.fragmentSuggestions.length > 0) {
     requestLogger.info('Auto-applying librarian suggestions', {
-      suggestionCount: analysis.knowledgeSuggestions.length,
+      suggestionCount: analysis.fragmentSuggestions.length,
     })
-    for (let index = 0; index < analysis.knowledgeSuggestions.length; index += 1) {
+    for (let index = 0; index < analysis.fragmentSuggestions.length; index += 1) {
       try {
-        const result = await applyKnowledgeSuggestion({
+        const result = await applyFragmentSuggestion({
           dataDir,
           storyId,
           analysis,
           suggestionIndex: index,
           reason: 'auto-apply',
         })
-        analysis.knowledgeSuggestions[index].accepted = true
-        analysis.knowledgeSuggestions[index].autoApplied = true
-        analysis.knowledgeSuggestions[index].createdFragmentId = result.fragmentId
+        analysis.fragmentSuggestions[index].accepted = true
+        analysis.fragmentSuggestions[index].autoApplied = true
+        analysis.fragmentSuggestions[index].createdFragmentId = result.fragmentId
       } catch (error) {
         requestLogger.error('Failed to auto-apply suggestion', {
           suggestionIndex: index,
