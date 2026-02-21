@@ -15,6 +15,7 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
+    silent: 'passed-only',
     mockReset: true,
     restoreMocks: true,
     clearMocks: true,
