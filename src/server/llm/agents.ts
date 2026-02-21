@@ -88,7 +88,7 @@ export function registerGenerationBlocks(): void {
     agentName: 'prewriter',
     displayName: 'Prewriter',
     description: 'Creates a focused writing brief from full story context.',
-    availableTools: [],
+    availableTools: getAvailableTools(),
     createDefaultBlocks: createPrewriterBlocks,
     buildPreviewContext: buildPrewriterPreviewContext,
   })

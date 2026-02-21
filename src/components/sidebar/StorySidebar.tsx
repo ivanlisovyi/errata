@@ -36,7 +36,6 @@ import {
   Home,
   CircleHelp,
   GitBranch,
-  Bot,
 } from 'lucide-react'
 import { useHelp } from '@/hooks/use-help'
 import { componentId } from '@/lib/dom-ids'
@@ -50,7 +49,6 @@ export type SidebarSection =
   | 'archive'
   | 'branches'
   | 'context-order'
-  | 'block-editor'
   | 'agent-context'
   | 'settings'
   | 'agent-activity'
@@ -233,10 +231,10 @@ export function StorySidebar({
                 <>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      isActive={activeSection === 'block-editor'}
-                      onClick={() => handleToggle('block-editor')}
+                      isActive={activeSection === 'agent-context'}
+                      onClick={() => handleToggle('agent-context')}
                       tooltip="Block Editor"
-                      data-component-id="sidebar-section-block-editor"
+                      data-component-id="sidebar-section-agent-context"
                     >
                       <Layers className="size-4" />
                       <span>Block Editor</span>
@@ -253,19 +251,6 @@ export function StorySidebar({
                     >
                       <ArrowUpDown className="size-4" />
                       <span>Fragment Order</span>
-                      <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={activeSection === 'agent-context'}
-                      onClick={() => handleToggle('agent-context')}
-                      tooltip="Agent Context"
-                      data-component-id="sidebar-section-agent-context"
-                    >
-                      <Bot className="size-4" />
-                      <span>Agent Context</span>
                       <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                     </SidebarMenuButton>
                   </SidebarMenuItem>

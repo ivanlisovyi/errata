@@ -297,9 +297,9 @@ describe('prewriter', () => {
       // Two ToolLoopAgent instances: prewriter + writer
       expect(mockAgentCtor).toHaveBeenCalledTimes(2)
 
-      // Prewriter agent should have toolChoice='none'
+      // Prewriter agent should have toolChoice='auto' (has tools)
       const prewriterConfig = mockAgentCtor.mock.calls[0][0] as any
-      expect(prewriterConfig.toolChoice).toBe('none')
+      expect(prewriterConfig.toolChoice).toBe('auto')
 
       // Writer agent should have toolChoice='auto'
       const writerConfig = mockAgentCtor.mock.calls[1][0] as any

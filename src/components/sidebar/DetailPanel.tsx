@@ -5,7 +5,6 @@ import type { SidebarSection } from './StorySidebar'
 import { getPluginPanel } from '@/lib/plugin-panels'
 import { FragmentList } from '@/components/fragments/FragmentList'
 import { ContextOrderPanel } from '@/components/fragments/ContextOrderPanel'
-import { BlockEditorPanel } from '@/components/blocks/BlockEditorPanel'
 import { AgentContextPanel } from '@/components/agents/AgentContextPanel'
 import { StoryInfoPanel } from './StoryInfoPanel'
 import { SettingsPanel } from './SettingsPanel'
@@ -54,8 +53,7 @@ const SECTION_TITLES: Record<string, string> = {
   archive: 'Archive',
   branches: 'Timelines',
   'context-order': 'Fragment Order',
-  'block-editor': 'Block Editor',
-  'agent-context': 'Agent Context',
+  'agent-context': 'Block Editor',
   settings: 'Settings',
   'agent-activity': 'Librarian',
 }
@@ -153,10 +151,6 @@ export function DetailPanel({
             pluginSidebarVisibility={pluginSidebarVisibility}
           />
         </ScrollArea>
-      )}
-
-      {activeSection === 'block-editor' && (
-        <BlockEditorPanel storyId={storyId} />
       )}
 
       {activeSection === 'agent-context' && (

@@ -241,17 +241,22 @@ export function generationRoutes(dataDir: string) {
           try {
             // Run prewriter inside the stream so events are streamed live
             let writerMessages = modelMessages
+            let prewriterStepCount = 0
             if (isPrewriterMode) {
               emit({ type: 'phase', phase: 'prewriting' })
 
               const prewriterActivityId = registerActiveAgent(params.storyId, 'prewriter')
               try {
+                const configuredMax = story.settings.maxSteps ?? 10
+                const prewriterMaxSteps = Math.max(1, Math.floor(configuredMax / 2))
                 const prewriterResult = await runPrewriter({
                   dataDir,
                   storyId: params.storyId,
                   compiledMessages: messages,
                   authorInput: effectiveInput,
                   mode,
+                  tools,
+                  maxSteps: prewriterMaxSteps,
                   abortSignal: abortController.signal,
                   onEvent: (event) => {
                     if (event.type === 'text') {
@@ -267,7 +272,8 @@ export function generationRoutes(dataDir: string) {
                 prewriterModel = prewriterResult.model
                 prewriterUsage = prewriterResult.usage
                 prewriterLogMessages = prewriterResult.messages
-                requestLogger.info('Prewriter completed', { briefLength: prewriterBrief.length, durationMs: prewriterDurationMs })
+                prewriterStepCount = prewriterResult.stepCount
+                requestLogger.info('Prewriter completed', { briefLength: prewriterBrief.length, durationMs: prewriterDurationMs, stepCount: prewriterStepCount })
 
                 // Build stripped writer context with only prose + brief + custom blocks
                 const writerBlocks = createWriterBriefBlocks(ctxState.proseFragments, prewriterResult.brief, toolLinesList)
@@ -286,10 +292,14 @@ export function generationRoutes(dataDir: string) {
               emit({ type: 'phase', phase: 'writing' })
             }
 
+            const configuredMaxSteps = story.settings.maxSteps ?? 10
+            const writerMaxSteps = isPrewriterMode
+              ? Math.max(1, configuredMaxSteps - prewriterStepCount)
+              : configuredMaxSteps
             const writerAgent = createWriterAgent({
               model,
               tools,
-              maxSteps: story.settings.maxSteps ?? 10,
+              maxSteps: writerMaxSteps,
             })
             const result = await writerAgent.stream({
               messages: writerMessages,

@@ -1,4 +1,4 @@
-import { ToolLoopAgent, stepCountIs } from 'ai'
+import { ToolLoopAgent, stepCountIs, type ToolSet } from 'ai'
 import { getModel } from './client'
 import { compileBlocks, type ContextBlock, type ContextMessage } from './context-builder'
 import { compileAgentContext } from '../agents/compile-agent-context'
@@ -46,6 +46,8 @@ character direction to capture each character faithfully.`
 export type PrewriterEvent =
   | { type: 'reasoning'; text: string }
   | { type: 'text'; text: string }
+  | { type: 'tool-call'; id: string; toolName: string; args: Record<string, unknown> }
+  | { type: 'tool-result'; id: string; toolName: string; result: unknown }
 
 export interface RunPrewriterArgs {
   dataDir: string
@@ -53,6 +55,8 @@ export interface RunPrewriterArgs {
   compiledMessages: ContextMessage[]
   authorInput: string
   mode: 'generate' | 'regenerate' | 'refine'
+  tools?: ToolSet
+  maxSteps?: number
   abortSignal?: AbortSignal
   onEvent?: (event: PrewriterEvent) => void
 }
@@ -62,6 +66,7 @@ export interface PrewriterResult {
   reasoning: string
   messages: Array<{ role: string; content: string }>
   customBlocks: ContextBlock[]
+  stepCount: number
   durationMs: number
   model: string
   usage?: TokenUsage
@@ -73,7 +78,7 @@ export interface PrewriterResult {
  * that the writer will use instead of the full context.
  */
 export async function runPrewriter(args: RunPrewriterArgs): Promise<PrewriterResult> {
-  const { dataDir, storyId, compiledMessages, authorInput, mode, abortSignal, onEvent } = args
+  const { dataDir, storyId, compiledMessages, authorInput, mode, tools, maxSteps = 3, abortSignal, onEvent } = args
   const requestLogger = logger.child({ storyId })
 
   const startTime = Date.now()
@@ -128,15 +133,17 @@ export async function runPrewriter(args: RunPrewriterArgs): Promise<PrewriterRes
 
   const prewriterMessages = compileBlocks(prewriterBlocks)
 
+  const hasTools = tools && Object.keys(tools).length > 0
   const agent = new ToolLoopAgent({
     model,
-    tools: {},
-    toolChoice: 'none' as const,
-    stopWhen: stepCountIs(1),
+    tools: hasTools ? tools : {},
+    toolChoice: hasTools ? 'auto' : 'none' as const,
+    stopWhen: stepCountIs(maxSteps),
   })
 
   let fullText = ''
   let fullReasoning = ''
+  let stepCount = 0
   const result = await agent.stream({
     messages: prewriterMessages,
     abortSignal,
@@ -152,6 +159,22 @@ export async function runPrewriter(args: RunPrewriterArgs): Promise<PrewriterRes
       const text = (p.text ?? '') as string
       fullReasoning += text
       onEvent?.({ type: 'reasoning', text })
+    } else if (part.type === 'tool-call') {
+      onEvent?.({
+        type: 'tool-call',
+        id: p.toolCallId as string,
+        toolName: p.toolName as string,
+        args: (p.input ?? {}) as Record<string, unknown>,
+      })
+    } else if (part.type === 'tool-result') {
+      onEvent?.({
+        type: 'tool-result',
+        id: p.toolCallId as string,
+        toolName: (p.toolName as string) ?? '',
+        result: p.output,
+      })
+    } else if (part.type === 'finish') {
+      stepCount++
     }
   }
 
@@ -180,7 +203,9 @@ export async function runPrewriter(args: RunPrewriterArgs): Promise<PrewriterRes
   // Collect custom blocks from the prewriter's agent block config so they can be forwarded to the writer
   const customBlocks = prewriterBlocks.filter(b => b.source === 'custom')
 
-  return { brief: fullText, reasoning: fullReasoning, messages: serializedMessages, customBlocks, durationMs, model: modelId, usage }
+  requestLogger.info('Prewriter steps used', { stepCount })
+
+  return { brief: fullText, reasoning: fullReasoning, messages: serializedMessages, customBlocks, stepCount, durationMs, model: modelId, usage }
 }
 
 /**
