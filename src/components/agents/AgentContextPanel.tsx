@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { BlockCreateDialog } from '@/components/blocks/BlockCreateDialog'
 import { BlockContentView } from '@/components/blocks/BlockContentView'
+import { ScriptBlockEditor, FragmentReference } from '@/components/blocks/ScriptBlockEditor'
 import { cn } from '@/lib/utils'
 
 interface AgentContextPanelProps {
@@ -566,21 +567,35 @@ function AgentBlockEditor({ storyId, agentName, agents, onBack }: AgentBlockEdit
                             </Badge>
                           </div>
 
-                          <BlurSaveTextarea
-                            value={block.customDef.content}
-                            onSave={(val) => {
-                              updateCustomMutation.mutate({
-                                blockId: block.id,
-                                updates: { content: val },
-                              })
-                            }}
-                            className={cn(
-                              'text-xs min-h-[80px] resize-y border-border/30 focus:border-border/60',
-                              isScript && 'font-mono bg-muted/20',
-                            )}
-                            rows={4}
-                            placeholder={isScript ? 'return `...`' : 'Block content...'}
-                          />
+                          {isScript ? (
+                            <>
+                              <ScriptBlockEditor
+                                storyId={storyId}
+                                blockId={block.id}
+                                value={block.customDef.content}
+                                onSave={(val) => {
+                                  updateCustomMutation.mutate({
+                                    blockId: block.id,
+                                    updates: { content: val },
+                                  })
+                                }}
+                              />
+                              <FragmentReference storyId={storyId} />
+                            </>
+                          ) : (
+                            <BlurSaveTextarea
+                              value={block.customDef.content}
+                              onSave={(val) => {
+                                updateCustomMutation.mutate({
+                                  blockId: block.id,
+                                  updates: { content: val },
+                                })
+                              }}
+                              className="text-xs min-h-[80px] resize-y border-border/30 focus:border-border/60"
+                              rows={4}
+                              placeholder="Block content..."
+                            />
+                          )}
 
                           <div className="flex justify-end">
                             <Button
