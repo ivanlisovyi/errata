@@ -256,6 +256,19 @@ export function FragmentList({
     },
   })
 
+  // --- Stable callback refs so FragmentRow memo is never defeated ---
+  const onSelectRef = useRef(onSelect)
+  onSelectRef.current = onSelect
+  const stableOnSelect = useCallback((fragment: Fragment) => {
+    onSelectRef.current(fragment)
+  }, [])
+
+  const pinMutateRef = useRef(pinMutation.mutate)
+  pinMutateRef.current = pinMutation.mutate
+  const stableOnPin = useCallback((fragment: Fragment) => {
+    pinMutateRef.current(fragment)
+  }, [])
+
   const filtered = useMemo(() => {
     if (!fragments) return []
     let list = [...fragments]
@@ -318,6 +331,11 @@ export function FragmentList({
     dragOverItem.current = index
   }, [])
 
+  const filteredRef = useRef(filtered)
+  filteredRef.current = filtered
+  const reorderMutateRef = useRef(reorderMutation.mutate)
+  reorderMutateRef.current = reorderMutation.mutate
+
   const handleDragEnd = useCallback((e: React.DragEvent) => {
     // If an external drop target (e.g. archive) accepted the drop, skip reorder
     if (e.dataTransfer.dropEffect !== 'none') {
@@ -330,17 +348,17 @@ export function FragmentList({
       setDragIndex(null)
       return
     }
-    const reordered = [...filtered]
+    const reordered = [...filteredRef.current]
     const [removed] = reordered.splice(dragItem.current, 1)
     reordered.splice(dragOverItem.current, 0, removed)
 
     const items = reordered.map((f, i) => ({ id: f.id, order: i }))
-    reorderMutation.mutate(items)
+    reorderMutateRef.current(items)
 
     dragItem.current = null
     dragOverItem.current = null
     setDragIndex(null)
-  }, [filtered, reorderMutation])
+  }, [])
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground p-4">Loading...</p>
@@ -442,8 +460,8 @@ export function FragmentList({
               type={type}
               allowedTypes={allowedTypes}
               mediaById={mediaById}
-              onSelect={onSelect}
-              onPin={pinMutation.mutate}
+              onSelect={stableOnSelect}
+              onPin={stableOnPin}
               pinPending={pinMutation.isPending}
               onDragStart={handleDragStart}
               onDragEnter={handleDragEnter}
