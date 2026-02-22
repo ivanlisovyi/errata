@@ -131,6 +131,39 @@ const PassageItem = memo(function PassageItem({
   )
 })
 
+function SaveIndicator({ saveState, isDirty }: { saveState: 'idle' | 'saving' | 'saved'; isDirty: boolean }) {
+  if (saveState === 'saving') {
+    return (
+      <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground animate-in fade-in duration-150">
+        <Loader2 className="size-2.5 animate-spin" />
+        <span className="hidden sm:inline">Saving</span>
+      </span>
+    )
+  }
+  if (saveState === 'saved') {
+    return (
+      <span className="flex items-center gap-1.5 text-[10px] text-emerald-500/70 animate-in fade-in duration-150">
+        <Check className="size-2.5" />
+        <span className="hidden sm:inline">Saved</span>
+      </span>
+    )
+  }
+  if (isDirty) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="flex items-center gap-1.5 text-[10px] text-amber-500/60">
+            <Circle className="size-1.5 fill-current" />
+            <span className="hidden sm:inline">Unsaved</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Ctrl+S to save</TooltipContent>
+      </Tooltip>
+    )
+  }
+  return null
+}
+
 export function ProseWritingPanel({
   storyId,
   fragmentId,
@@ -497,39 +530,7 @@ export function ProseWritingPanel({
     return map
   }, [orderedItems])
 
-  // Save state indicator
-  const SaveIndicator = () => {
-    if (saveState === 'saving') {
-      return (
-        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground animate-in fade-in duration-150">
-          <Loader2 className="size-2.5 animate-spin" />
-          <span className="hidden sm:inline">Saving</span>
-        </span>
-      )
-    }
-    if (saveState === 'saved') {
-      return (
-        <span className="flex items-center gap-1.5 text-[10px] text-emerald-500/70 animate-in fade-in duration-150">
-          <Check className="size-2.5" />
-          <span className="hidden sm:inline">Saved</span>
-        </span>
-      )
-    }
-    if (dirtyRef.current) {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="flex items-center gap-1.5 text-[10px] text-amber-500/60">
-              <Circle className="size-1.5 fill-current" />
-              <span className="hidden sm:inline">Unsaved</span>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Ctrl+S to save</TooltipContent>
-        </Tooltip>
-      )
-    }
-    return null
-  }
+  const isDirty = dirtyRef.current
 
   return (
     <div className="flex h-full" data-component-id="prose-writing-panel">
@@ -548,7 +549,7 @@ export function ProseWritingPanel({
                 Writing Panel
               </span>
             )}
-            <SaveIndicator />
+            <SaveIndicator saveState={saveState} isDirty={isDirty} />
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {/* Passage navigation */}
