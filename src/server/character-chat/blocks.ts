@@ -2,16 +2,18 @@ import type { ContextBlock } from '../llm/context-builder'
 import type { AgentBlockContext } from '../agents/agent-block-context'
 import { getStory } from '../fragments/storage'
 import { buildContextState } from '../llm/context-builder'
+import { instructionRegistry } from '../instructions'
 
 export function createCharacterChatBlocks(ctx: AgentBlockContext): ContextBlock[] {
   const blocks: ContextBlock[] = []
 
   if (ctx.character) {
+    const systemTemplate = instructionRegistry.resolve('character-chat.system', ctx.modelId)
     blocks.push({
       id: 'character',
       role: 'system',
       content: [
-        `You are roleplaying as ${ctx.character.name}. Stay in character at all times.`,
+        systemTemplate.replace(/\{\{characterName\}\}/g, ctx.character.name),
         '',
         '## Character Details',
         ctx.character.content,
@@ -73,6 +75,7 @@ export function createCharacterChatBlocks(ctx: AgentBlockContext): ContextBlock[
   }
 
   const characterName = ctx.character?.name ?? 'the character'
+  const instructionsTemplate = instructionRegistry.resolve('character-chat.instructions', ctx.modelId)
 
   blocks.push({
     id: 'story-context',
@@ -82,12 +85,7 @@ export function createCharacterChatBlocks(ctx: AgentBlockContext): ContextBlock[
       storyContextParts.join('\n'),
       '',
       '## Instructions',
-      `1. Respond as ${characterName} would, using their voice, mannerisms, and knowledge.`,
-      '2. You only know events up to the selected story point. Do not reference future events.',
-      '3. You may use tools to look up fragment details when needed, but do NOT mention your use of tools in conversation.',
-      '4. If asked about events beyond your knowledge cutoff, respond with genuine uncertainty — the character does not know.',
-      '5. Stay in character. Do not break the fourth wall unless the character would.',
-      '6. Keep responses natural and conversational.',
+      instructionsTemplate.replace(/\{\{characterName\}\}/g, characterName),
     ].join('\n'),
     order: 300,
     source: 'builtin',

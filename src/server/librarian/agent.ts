@@ -1,5 +1,6 @@
 import { getModel } from '../llm/client'
 import { ToolLoopAgent, stepCountIs } from 'ai'
+import { instructionRegistry } from '../instructions'
 import { getStory, updateStory, listFragments, getFragment, updateFragment } from '../fragments/storage'
 import { getActiveProseIds } from '../fragments/prose-chain'
 import { withBranch } from '../fragments/branches'
@@ -70,7 +71,7 @@ function compactSummaryByCharacters(summary: string, maxCharacters: number, targ
   return compacted.length <= target ? compacted : compacted.slice(-target)
 }
 
-const SUMMARY_COMPACTION_PROMPT = `You compress long rolling story summaries.
+export const SUMMARY_COMPACTION_PROMPT = `You compress long rolling story summaries.
 Keep key continuity facts, active constraints, unresolved threads, and recent causal chain.
 Do not add new facts.
 Return only compressed summary text.`
@@ -93,7 +94,7 @@ async function compactSummary(
     const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarian' })
     const agent = new ToolLoopAgent({
       model,
-      instructions: SUMMARY_COMPACTION_PROMPT,
+      instructions: instructionRegistry.resolve('librarian.summary-compaction', modelId),
       tools: {},
       toolChoice: 'none' as const,
       stopWhen: stepCountIs(1),
@@ -196,6 +197,9 @@ async function runLibrarianInner(
     }
   }
 
+  // Resolve model early so modelId is available for instruction resolution
+  const { model, modelId, providerId, config } = await getModel(dataDir, storyId, { role: 'librarian' })
+
   // Build agent block context
   const blockContext: AgentBlockContext = {
     story,
@@ -210,6 +214,7 @@ async function runLibrarianInner(
     allCharacters: characters,
     allKnowledge: knowledge,
     newProse: { id: fragment.id, content: fragment.content },
+    modelId,
   }
 
   // Create collector and analysis tools
@@ -218,9 +223,6 @@ async function runLibrarianInner(
 
   // Compile context via block system
   const compiled = await compileAgentContext(dataDir, storyId, 'librarian.analyze', blockContext, analysisTools)
-
-  // Resolve model for this story
-  const { model, modelId, providerId, config } = await getModel(dataDir, storyId, { role: 'librarian' })
 
   // Create event buffer for live streaming
   const buffer = createAnalysisBuffer(storyId)

@@ -2,9 +2,10 @@ import { z } from 'zod/v4'
 import { agentRegistry } from '../agents/registry'
 import { agentBlockRegistry } from '../agents/agent-block-registry'
 import { modelRoleRegistry } from '../agents/model-role-registry'
+import { instructionRegistry } from '../instructions'
 import type { AgentDefinition } from '../agents/types'
-import { suggestDirections } from './suggest'
-import { createDirectionsSuggestBlocks, buildDirectionsPreviewContext } from './blocks'
+import { suggestDirections, DEFAULT_SUGGEST_PROMPT } from './suggest'
+import { DIRECTIONS_SYSTEM_PROMPT, createDirectionsSuggestBlocks, buildDirectionsPreviewContext } from './blocks'
 
 const SuggestInputSchema = z.object({
   count: z.optional(z.number()),
@@ -23,6 +24,10 @@ let registered = false
 
 export function registerDirectionsAgents(): void {
   if (registered) return
+
+  // Register instruction defaults
+  instructionRegistry.registerDefault('directions.system', DIRECTIONS_SYSTEM_PROMPT.trim())
+  instructionRegistry.registerDefault('directions.suggest-template', DEFAULT_SUGGEST_PROMPT)
 
   agentRegistry.register(suggestDefinition)
 

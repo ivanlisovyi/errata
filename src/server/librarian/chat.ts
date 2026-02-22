@@ -66,6 +66,10 @@ async function librarianChatInner(
     }
   }
 
+  // Resolve model early so modelId is available for instruction resolution
+  const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarianChat' })
+  requestLogger.info('Resolved model', { modelId })
+
   // Create write-enabled fragment tools + enabled plugin tools
   const enabledPlugins = (story.settings.enabledPlugins ?? [])
     .map((name) => pluginRegistry.get(name))
@@ -117,6 +121,7 @@ async function librarianChatInner(
     characterShortlist: ctxState.characterShortlist,
     systemPromptFragments,
     pluginToolDescriptions,
+    modelId,
   }
 
   // Compile context via block system
@@ -127,10 +132,6 @@ async function librarianChatInner(
     pluginToolCount: Object.keys(pluginTools).length,
     totalToolCount: Object.keys(compiled.tools).length,
   })
-
-  // Resolve model
-  const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarianChat' })
-  requestLogger.info('Resolved model', { modelId })
 
   // Extract system instructions from compiled messages
   const systemMessage = compiled.messages.find(m => m.role === 'system')

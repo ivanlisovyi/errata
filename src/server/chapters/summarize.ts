@@ -2,11 +2,12 @@ import { ToolLoopAgent, stepCountIs } from 'ai'
 import { getModel } from '../llm/client'
 import { getFragment, updateFragment } from '../fragments/storage'
 import { getFullProseChain } from '../fragments/prose-chain'
+import { instructionRegistry } from '../instructions'
 import { createLogger } from '../logging'
 
 const logger = createLogger('chapter-summarize')
 
-const SYSTEM_PROMPT = `You are a story summarizer for a collaborative writing app.
+export const CHAPTER_SUMMARIZE_SYSTEM_PROMPT = `You are a story summarizer for a collaborative writing app.
 Given prose content from a chapter, write a concise 2 paragraph summary capturing the key events, character actions, and mood.
 Respond with only the summary text.`
 
@@ -73,7 +74,7 @@ export async function summarizeChapter(
 
   const agent = new ToolLoopAgent({
     model,
-    instructions: SYSTEM_PROMPT,
+    instructions: instructionRegistry.resolve('chapters.summarize.system', modelId),
     tools: {},
     toolChoice: 'none' as const,
     stopWhen: stepCountIs(1),

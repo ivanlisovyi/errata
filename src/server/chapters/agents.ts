@@ -1,7 +1,8 @@
 import { z } from 'zod/v4'
 import { agentRegistry } from '../agents/registry'
+import { instructionRegistry } from '../instructions'
 import type { AgentDefinition } from '../agents/types'
-import { summarizeChapter } from './summarize'
+import { summarizeChapter, CHAPTER_SUMMARIZE_SYSTEM_PROMPT } from './summarize'
 import { withBranch } from '../fragments/branches'
 
 const SummarizeInputSchema = z.object({
@@ -23,6 +24,7 @@ let registered = false
 
 export function registerChapterAgents(): void {
   if (registered) return
+  instructionRegistry.registerDefault('chapters.summarize.system', CHAPTER_SUMMARIZE_SYSTEM_PROMPT)
   agentRegistry.register(summarizeDefinition)
   registered = true
 }

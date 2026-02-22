@@ -2,6 +2,7 @@ import { ToolLoopAgent, stepCountIs, type ToolSet } from 'ai'
 import { getModel } from './client'
 import { compileBlocks, type ContextBlock, type ContextMessage } from './context-builder'
 import { compileAgentContext } from '../agents/compile-agent-context'
+import { instructionRegistry } from '../instructions'
 import { registry } from '../fragments/registry'
 import { buildContextState } from './context-builder'
 import type { AgentBlockContext } from '../agents/agent-block-context'
@@ -11,7 +12,7 @@ import { createLogger } from '../logging'
 
 const logger = createLogger('prewriter')
 
-const PREWRITER_INSTRUCTIONS = `You are a writing planner. Analyze the full story context and author's direction,
+export const PREWRITER_INSTRUCTIONS = `You are a writing planner. Analyze the full story context and author's direction,
 then produce a focused WRITING BRIEF for a prose writer.
 
 The writer will ONLY see the most recent prose (for continuity) and your brief.
@@ -96,6 +97,7 @@ export async function runPrewriter(args: RunPrewriterArgs): Promise<PrewriterRes
     knowledgeShortlist: [],
     characterShortlist: [],
     systemPromptFragments: [],
+    modelId,
   }
 
   let prewriterBlocks: ContextBlock[]
@@ -218,7 +220,7 @@ export function createPrewriterBlocks(_ctx: AgentBlockContext): ContextBlock[] {
     {
       id: 'instructions',
       role: 'system' as const,
-      content: PREWRITER_INSTRUCTIONS,
+      content: instructionRegistry.resolve('prewriter.system', _ctx.modelId),
       order: 100,
       source: 'builtin',
     },
@@ -271,18 +273,14 @@ export function createWriterBriefBlocks(
   proseFragments: Fragment[],
   brief: string,
   toolLines: string[],
+  modelId?: string,
 ): ContextBlock[] {
   const blocks: ContextBlock[] = []
 
   blocks.push({
     id: 'instructions',
     role: 'system' as const,
-    content: [
-      'You are a creative writing assistant. Follow the WRITING BRIEF below to write prose.',
-      'The brief contains everything you need: scene setup, character voices, pacing, and scope.',
-      'IMPORTANT: Output the prose directly as your text response. Do NOT use tools to write or save prose — that is handled automatically.',
-      'Only use tools to look up fragment details if the brief references specific fragment IDs you need to check.',
-    ].join('\n'),
+    content: instructionRegistry.resolve('generation.writer-brief.system', modelId),
     order: 100,
     source: 'builtin',
   })
@@ -295,7 +293,7 @@ export function createWriterBriefBlocks(
         '## Available Tools',
         'You have access to the following tools for optional lookups:',
         toolLines.join('\n'),
-        '\nOnly use these if the writing brief references fragment IDs you need to check. Focus on writing prose.',
+        '\n' + instructionRegistry.resolve('generation.writer-brief.tools-suffix', modelId),
       ].join('\n'),
       order: 200,
       source: 'builtin',

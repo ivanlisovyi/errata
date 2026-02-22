@@ -3,10 +3,11 @@ import type { AgentBlockContext } from '../agents/agent-block-context'
 import { getStory, listFragments, getFragment } from '../fragments/storage'
 import { getFragmentsByTag } from '../fragments/associations'
 import { buildContextState } from '../llm/context-builder'
+import { instructionRegistry } from '../instructions'
 
 // ─── Librarian Analyze ───
 
-const ANALYZE_SYSTEM_PROMPT = `
+export const ANALYZE_SYSTEM_PROMPT = `
 You are a librarian agent for a collaborative writing app.
 Your job is to analyze new prose fragments and maintain story continuity.
 
@@ -37,7 +38,7 @@ export function createLibrarianAnalyzeBlocks(ctx: AgentBlockContext): ContextBlo
   blocks.push({
     id: 'instructions',
     role: 'system',
-    content: ANALYZE_SYSTEM_PROMPT.trim(),
+    content: instructionRegistry.resolve('librarian.analyze.system', ctx.modelId),
     order: 100,
     source: 'builtin',
   })
@@ -138,7 +139,7 @@ export async function buildAnalyzePreviewContext(dataDir: string, storyId: strin
 
 // ─── Librarian Chat ───
 
-const CHAT_SYSTEM_PROMPT = `
+export const CHAT_SYSTEM_PROMPT = `
 You are a conversational librarian assistant for a collaborative writing app. Your job is to help the author maintain story continuity by answering questions and performing fragment edits through tools.
 Important: Follow the agent configuration.
 
@@ -173,7 +174,7 @@ Fragment ID prefixes: pr- (prose), ch- (character), gl- (guideline), kn- (knowle
 export function createLibrarianChatBlocks(ctx: AgentBlockContext): ContextBlock[] {
   const blocks: ContextBlock[] = []
 
-  let chatSystemPrompt = CHAT_SYSTEM_PROMPT.trim()
+  let chatSystemPrompt = instructionRegistry.resolve('librarian.chat.system', ctx.modelId)
   if (ctx.pluginToolDescriptions && ctx.pluginToolDescriptions.length > 0) {
     const pluginToolLines = ctx.pluginToolDescriptions.map(t => `- ${t.name} — ${t.description}`)
     chatSystemPrompt += `\n\nAdditional enabled plugin tools:\n${pluginToolLines.join('\n')}`
@@ -299,7 +300,7 @@ export async function buildChatPreviewContext(dataDir: string, storyId: string):
 
 // ─── Librarian Refine ───
 
-const REFINE_SYSTEM_PROMPT = `You are a fragment refinement agent for a collaborative writing app. Your job is to improve a specific fragment (character, guideline, or knowledge) based on the story context.
+export const REFINE_SYSTEM_PROMPT = `You are a fragment refinement agent for a collaborative writing app. Your job is to improve a specific fragment (character, guideline, or knowledge) based on the story context.
 
 Instructions:
 1. First, read the target fragment using the appropriate get tool (e.g. getCharacter, getKnowledge, getGuideline).
@@ -321,7 +322,7 @@ export function createLibrarianRefineBlocks(ctx: AgentBlockContext): ContextBloc
   blocks.push({
     id: 'instructions',
     role: 'system',
-    content: REFINE_SYSTEM_PROMPT,
+    content: instructionRegistry.resolve('librarian.refine.system', ctx.modelId),
     order: 100,
     source: 'builtin',
   })
@@ -415,7 +416,7 @@ export async function buildRefinePreviewContext(dataDir: string, storyId: string
 
 // ─── Prose Transform ───
 
-const PROSE_TRANSFORM_SYSTEM_PROMPT = `You transform selected prose spans for an author in a writing app.
+export const PROSE_TRANSFORM_SYSTEM_PROMPT = `You transform selected prose spans for an author in a writing app.
 
 Rules:
 - Follow the requested operation exactly.
@@ -429,7 +430,7 @@ export function createProseTransformBlocks(ctx: AgentBlockContext): ContextBlock
   blocks.push({
     id: 'instructions',
     role: 'system',
-    content: PROSE_TRANSFORM_SYSTEM_PROMPT,
+    content: instructionRegistry.resolve('librarian.prose-transform.system', ctx.modelId),
     order: 100,
     source: 'builtin',
   })

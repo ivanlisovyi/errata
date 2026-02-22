@@ -153,6 +153,11 @@ export function generationRoutes(dataDir: string) {
       ctxState = await runBeforeContext(enabledPlugins, ctxState)
       requestLogger.info('BeforeContext hooks completed')
 
+      // Resolve model early so modelId is available for instruction resolution
+      const { model, modelId: resolvedModelId } = await getModel(dataDir, params.storyId)
+      requestLogger.info('Resolved model', { resolvedModelId })
+      ctxState.modelId = resolvedModelId
+
       // Merge fragment tools + plugin tools, then filter by agent block config
       const fragmentTools = createFragmentTools(dataDir, params.storyId, { readOnly: true })
       const { tools: pluginTools, origins: pluginToolOrigins } = collectPluginToolsWithOrigin(enabledPlugins, dataDir, params.storyId)
@@ -196,8 +201,6 @@ export function generationRoutes(dataDir: string) {
       const modelMessages = addCacheBreakpoints(messages)
 
       requestLogger.info('Starting LLM stream...')
-      const { model, modelId: resolvedModelId } = await getModel(dataDir, params.storyId)
-      requestLogger.info('Resolved model', { resolvedModelId })
       const abortController = new AbortController()
 
       // Build tool description lines for reuse (same logic as context-builder createDefaultBlocks)
@@ -276,7 +279,7 @@ export function generationRoutes(dataDir: string) {
                 requestLogger.info('Prewriter completed', { briefLength: prewriterBrief.length, durationMs: prewriterDurationMs, stepCount: prewriterStepCount })
 
                 // Build stripped writer context with only prose + brief + custom blocks
-                const writerBlocks = createWriterBriefBlocks(ctxState.proseFragments, prewriterResult.brief, toolLinesList)
+                const writerBlocks = createWriterBriefBlocks(ctxState.proseFragments, prewriterResult.brief, toolLinesList, resolvedModelId)
 
                 // Carry over: generation custom blocks, system-placement fragments, guideline blocks,
                 // and custom blocks from the prewriter's agent block config

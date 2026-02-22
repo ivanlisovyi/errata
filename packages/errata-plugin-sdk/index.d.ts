@@ -48,6 +48,7 @@ export interface ContextBuildState {
   knowledgeShortlist: Fragment[]
   characterShortlist: Fragment[]
   authorInput: string
+  modelId?: string
 }
 
 export interface ContextMessage {

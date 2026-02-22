@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest'
+import { ensureCoreAgentsRegistered } from '@/server/agents/register-core'
 import { createTempDir, seedTestProvider, makeTestSettings } from '../setup'
 import {
   createStory,
@@ -115,6 +116,10 @@ async function parseNDJSON(res: Response): Promise<Array<Record<string, unknown>
 }
 
 describe('prewriter', () => {
+  beforeAll(() => {
+    ensureCoreAgentsRegistered()
+  })
+
   describe('createPrewriterBlocks', () => {
     it('creates expected block structure', () => {
       const ctx: AgentBlockContext = {

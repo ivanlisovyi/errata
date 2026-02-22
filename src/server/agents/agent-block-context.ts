@@ -8,6 +8,9 @@ export interface AgentBlockContext {
   /** Fetch any fragment by ID (async). Available in script blocks as ctx.getFragment(id). */
   getFragment?: (id: string) => Promise<Fragment | null>
 
+  /** Resolved model ID, used for model-aware instruction resolution. */
+  modelId?: string
+
   // Common (from ContextBuildState)
   story: StoryMeta
   proseFragments: Fragment[]

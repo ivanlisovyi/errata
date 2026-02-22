@@ -9,6 +9,7 @@ import { join } from 'node:path'
 async function ensureStartupDirectories(dataDir: string, pluginDir?: string) {
   await mkdir(dataDir, { recursive: true })
   await mkdir(join(dataDir, 'stories'), { recursive: true })
+  await mkdir(join(dataDir, 'instruction-sets'), { recursive: true })
 
   if (pluginDir) {
     await mkdir(pluginDir, { recursive: true })

@@ -3,8 +3,9 @@ import type { AgentBlockContext } from '../agents/agent-block-context'
 import { buildContextState } from '../llm/context-builder'
 import { getStory, getFragment } from '../fragments/storage'
 import { getFragmentsByTag } from '../fragments/associations'
+import { instructionRegistry } from '../instructions'
 
-const DIRECTIONS_SYSTEM_PROMPT = `You are a creative writing assistant that suggests possible story directions. Given the full story context, propose distinct and compelling directions the narrative could take. Each suggestion should have a short evocative title, a brief description, and a detailed instruction prompt suitable for a writer.`
+export const DIRECTIONS_SYSTEM_PROMPT = `You are a creative writing assistant that suggests possible story directions. Given the full story context, propose distinct and compelling directions the narrative could take. Each suggestion should have a short evocative title, a brief description, and a detailed instruction prompt suitable for a writer.`
 
 export function createDirectionsSuggestBlocks(ctx: AgentBlockContext): ContextBlock[] {
   const blocks: ContextBlock[] = []
@@ -12,7 +13,7 @@ export function createDirectionsSuggestBlocks(ctx: AgentBlockContext): ContextBl
   blocks.push({
     id: 'instructions',
     role: 'system',
-    content: DIRECTIONS_SYSTEM_PROMPT.trim(),
+    content: instructionRegistry.resolve('directions.system', ctx.modelId),
     order: 100,
     source: 'builtin',
   })

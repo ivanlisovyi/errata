@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest'
+import { ensureCoreAgentsRegistered } from '@/server/agents/register-core'
 import { createTempDir, makeTestSettings } from '../setup'
 import {
   createStory,
@@ -66,6 +67,10 @@ function makeFragment(overrides: Partial<Fragment>): Fragment {
 describe('context-builder', () => {
   let dataDir: string
   let cleanup: () => Promise<void>
+
+  beforeAll(() => {
+    ensureCoreAgentsRegistered()
+  })
 
   beforeEach(async () => {
     const tmp = await createTempDir()
@@ -742,6 +747,10 @@ describe('context-builder', () => {
 describe('context blocks', () => {
   let dataDir: string
   let cleanup: () => Promise<void>
+
+  beforeAll(() => {
+    ensureCoreAgentsRegistered()
+  })
 
   beforeEach(async () => {
     const tmp = await createTempDir()

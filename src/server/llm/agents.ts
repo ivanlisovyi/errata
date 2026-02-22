@@ -1,9 +1,16 @@
 import { agentBlockRegistry } from '../agents/agent-block-registry'
 import { modelRoleRegistry } from '../agents/model-role-registry'
+import { instructionRegistry } from '../instructions'
 import type { AgentBlockContext } from '../agents/agent-block-context'
 import { registry } from '../fragments/registry'
 import { createDefaultBlocks, buildContextState, type ContextBuildState, type ContextBlock } from './context-builder'
-import { createPrewriterBlocks, buildPrewriterPreviewContext } from './prewriter'
+import { createPrewriterBlocks, buildPrewriterPreviewContext, PREWRITER_INSTRUCTIONS } from './prewriter'
+import {
+  GENERATION_SYSTEM_PROMPT,
+  GENERATION_TOOLS_SUFFIX,
+  WRITER_BRIEF_SYSTEM_PROMPT,
+  WRITER_BRIEF_TOOLS_SUFFIX,
+} from './instruction-texts'
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
@@ -67,6 +74,13 @@ let registered = false
 
 export function registerGenerationBlocks(): void {
   if (registered) return
+
+  // Register instruction defaults
+  instructionRegistry.registerDefault('generation.system', GENERATION_SYSTEM_PROMPT)
+  instructionRegistry.registerDefault('generation.tools-suffix', GENERATION_TOOLS_SUFFIX)
+  instructionRegistry.registerDefault('generation.writer-brief.system', WRITER_BRIEF_SYSTEM_PROMPT)
+  instructionRegistry.registerDefault('generation.writer-brief.tools-suffix', WRITER_BRIEF_TOOLS_SUFFIX)
+  instructionRegistry.registerDefault('prewriter.system', PREWRITER_INSTRUCTIONS)
 
   agentBlockRegistry.register({
     agentName: 'generation',

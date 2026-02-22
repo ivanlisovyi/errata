@@ -1,5 +1,6 @@
 import { getStory, listFragments, getFragment } from '../fragments/storage'
 import { registry } from '../fragments/registry'
+import { instructionRegistry } from '../instructions'
 import { createLogger } from '../logging'
 import { getActiveProseIds, findSectionIndex, getFullProseChain } from '../fragments/prose-chain'
 import { getAnalysis, getLatestAnalysisIdsByFragment } from '../librarian/storage'
@@ -21,6 +22,7 @@ export interface ContextBuildState {
   knowledgeShortlist: Fragment[]
   characterShortlist: Fragment[]
   authorInput: string
+  modelId?: string
 }
 
 export interface ContextMessage {
@@ -492,11 +494,7 @@ export function createDefaultBlocks(state: ContextBuildState, opts: AssembleOpti
   blocks.push({
     id: 'instructions',
     role: 'system',
-    content: [
-      'You are a creative writing assistant. Your task is to write prose that continues the story based on the author\'s direction.',
-      'IMPORTANT: Output the prose directly as your text response. Do NOT use tools to write or save prose — that is handled automatically.',
-      'Only use tools to look up context you need before writing.',
-    ].join('\n'),
+    content: instructionRegistry.resolve('generation.system', state.modelId),
     order: 100,
     source: 'builtin',
   })
@@ -508,8 +506,7 @@ export function createDefaultBlocks(state: ContextBuildState, opts: AssembleOpti
       '## Available Tools',
       'You have access to the following tools:',
       toolLines.join('\n'),
-      '\nUse these tools to retrieve details about characters, guidelines, or knowledge when needed. ' +
-      'After gathering any context you need, output the prose directly as text. Do not explain what you are doing — just write the prose.',
+      '\n' + instructionRegistry.resolve('generation.tools-suffix', state.modelId),
     ].join('\n'),
     order: 200,
     source: 'builtin',

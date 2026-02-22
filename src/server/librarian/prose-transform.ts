@@ -61,6 +61,10 @@ async function transformProseSelectionInner(
     ? (opts.instruction || 'Improve the selected text.')
     : OPERATION_GUIDANCE[opts.operation]
 
+  // Resolve model early so modelId is available for instruction resolution
+  const { model, modelId } = await getModel(dataDir, storyId, { role: 'proseTransform' })
+  requestLogger.info('Resolved model', { modelId })
+
   // Build agent block context
   const blockContext: AgentBlockContext = {
     story,
@@ -78,13 +82,11 @@ async function transformProseSelectionInner(
     sourceContent,
     contextBefore: opts.contextBefore,
     contextAfter: opts.contextAfter,
+    modelId,
   }
 
   // Compile context via block system
   const compiled = await compileAgentContext(dataDir, storyId, 'librarian.prose-transform', blockContext, {})
-
-  const { model, modelId } = await getModel(dataDir, storyId, { role: 'proseTransform' })
-  requestLogger.info('Resolved model', { modelId })
 
   // Extract system instructions from compiled messages
   const systemMessage = compiled.messages.find(m => m.role === 'system')

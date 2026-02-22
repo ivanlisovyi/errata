@@ -76,7 +76,7 @@ export function agentBlockRoutes(dataDir: string) {
     })
 
     // Compile preview with real story data
-    .get('/stories/:storyId/agent-blocks/:agentName/preview', async ({ params, set }) => {
+    .get('/stories/:storyId/agent-blocks/:agentName/preview', async ({ params, query, set }) => {
       const story = await getStory(dataDir, params.storyId)
       if (!story) {
         set.status = 404
@@ -90,6 +90,9 @@ export function agentBlockRoutes(dataDir: string) {
       }
 
       const previewCtx = await def.buildPreviewContext(dataDir, params.storyId)
+      // Allow ?modelId= to preview model-specific instruction overrides
+      const modelId = (query as Record<string, string | undefined>).modelId
+      if (modelId) previewCtx.modelId = modelId
       let blocks = def.createDefaultBlocks(previewCtx)
       const config = await getAgentBlockConfig(dataDir, params.storyId, params.agentName)
       blocks = await applyBlockConfig(blocks, config, {

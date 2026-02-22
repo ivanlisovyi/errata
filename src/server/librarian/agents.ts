@@ -2,12 +2,17 @@ import { z } from 'zod/v4'
 import { agentRegistry } from '../agents/registry'
 import { agentBlockRegistry } from '../agents/agent-block-registry'
 import { modelRoleRegistry } from '../agents/model-role-registry'
+import { instructionRegistry } from '../instructions'
 import type { AgentDefinition } from '../agents/types'
 import { runLibrarian } from './agent'
 import { librarianChat } from './chat'
 import { refineFragment } from './refine'
 import { transformProseSelection } from './prose-transform'
 import {
+  ANALYZE_SYSTEM_PROMPT,
+  CHAT_SYSTEM_PROMPT,
+  REFINE_SYSTEM_PROMPT,
+  PROSE_TRANSFORM_SYSTEM_PROMPT,
   createLibrarianAnalyzeBlocks,
   buildAnalyzePreviewContext,
   createLibrarianChatBlocks,
@@ -17,6 +22,7 @@ import {
   createProseTransformBlocks,
   buildProseTransformPreviewContext,
 } from './blocks'
+import { SUMMARY_COMPACTION_PROMPT } from './agent'
 
 const AnalyzeInputSchema = z.object({
   fragmentId: z.string(),
@@ -88,6 +94,13 @@ let registered = false
 
 export function registerLibrarianAgents(): void {
   if (registered) return
+
+  // Register instruction defaults
+  instructionRegistry.registerDefault('librarian.analyze.system', ANALYZE_SYSTEM_PROMPT.trim())
+  instructionRegistry.registerDefault('librarian.chat.system', CHAT_SYSTEM_PROMPT.trim())
+  instructionRegistry.registerDefault('librarian.refine.system', REFINE_SYSTEM_PROMPT)
+  instructionRegistry.registerDefault('librarian.prose-transform.system', PROSE_TRANSFORM_SYSTEM_PROMPT)
+  instructionRegistry.registerDefault('librarian.summary-compaction', SUMMARY_COMPACTION_PROMPT)
 
   // Agent definitions
   agentRegistry.register(analyzeDefinition)

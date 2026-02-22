@@ -2,6 +2,7 @@ import { getModel } from '../llm/client'
 import { getFragment, getStory } from '../fragments/storage'
 import { buildContextState } from '../llm/context-builder'
 import { createFragmentTools } from '../llm/tools'
+import { instructionRegistry } from '../instructions'
 import { createLogger } from '../logging'
 import { createToolAgent } from '../agents/create-agent'
 import { createEventStream } from '../agents/create-event-stream'
@@ -15,14 +16,20 @@ const logger = createLogger('character-chat')
 
 export { type ChatStreamEvent, type ChatResult }
 
-function buildPersonaDescription(persona: PersonaMode, personaCharacterName?: string, personaCharacterDescription?: string): string {
+function buildPersonaDescription(persona: PersonaMode, personaCharacterName?: string, personaCharacterDescription?: string, modelId?: string): string {
   switch (persona.type) {
-    case 'character':
-      return `You are speaking with ${personaCharacterName ?? 'another character'}. ${personaCharacterDescription ?? ''}`
+    case 'character': {
+      const template = instructionRegistry.resolve('character-chat.persona.character', modelId)
+      return template
+        .replace(/\{\{personaName\}\}/g, personaCharacterName ?? 'another character')
+        .replace(/\{\{personaDescription\}\}/g, personaCharacterDescription ?? '')
+    }
     case 'stranger':
-      return 'You are speaking with a stranger you have just met. You do not know who they are.'
-    case 'custom':
-      return `You are speaking with someone described as: ${persona.prompt}`
+      return instructionRegistry.resolve('character-chat.persona.stranger', modelId)
+    case 'custom': {
+      const template = instructionRegistry.resolve('character-chat.persona.custom', modelId)
+      return template.replace(/\{\{prompt\}\}/g, persona.prompt)
+    }
   }
 }
 
@@ -74,13 +81,17 @@ async function characterChatInner(
     }
   }
 
+  // Resolve model early so modelId is available for instruction resolution
+  const { model, modelId } = await getModel(dataDir, storyId, { role: 'characterChat' })
+  requestLogger.info('Resolved model', { modelId })
+
   // Build context state limited to the story point
   const ctxState = await buildContextState(dataDir, storyId, '', {
     proseBeforeFragmentId: opts.storyPointFragmentId ?? undefined,
     summaryBeforeFragmentId: opts.storyPointFragmentId ?? undefined,
   })
 
-  const personaDescription = buildPersonaDescription(opts.persona, personaCharacterName, personaCharacterDescription)
+  const personaDescription = buildPersonaDescription(opts.persona, personaCharacterName, personaCharacterDescription, modelId)
 
   // Build agent block context
   const blockContext: AgentBlockContext = {
@@ -95,6 +106,7 @@ async function characterChatInner(
     systemPromptFragments: [],
     character,
     personaDescription,
+    modelId,
   }
 
   // Read-only fragment tools
@@ -106,10 +118,6 @@ async function characterChatInner(
   requestLogger.info('Prepared character chat tools', {
     toolCount: Object.keys(compiled.tools).length,
   })
-
-  // Resolve model
-  const { model, modelId } = await getModel(dataDir, storyId, { role: 'characterChat' })
-  requestLogger.info('Resolved model', { modelId })
 
   // Extract system instructions from compiled messages
   const systemMessage = compiled.messages.find(m => m.role === 'system')

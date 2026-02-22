@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { pluginRegistry } from './plugins/registry'
 import { getRuntimePluginUi } from './plugins/runtime-ui'
+import { instructionRegistry } from './instructions'
 import { dirname, extname, resolve } from 'node:path'
 import { existsSync } from 'node:fs'
 
@@ -101,6 +102,9 @@ export function createApp(dataDir: string = DATA_DIR) {
     .use(proseChainRoutes(dataDir))
     .use(configRoutes(dataDir))
     .use(agentBlockRoutes(dataDir))
+
+  // Load instruction overrides after agents are registered (route imports trigger agent registration)
+  instructionRegistry.loadOverridesSync(dataDir)
 
   // Mount plugin routes
   for (const plugin of pluginRegistry.listAll()) {

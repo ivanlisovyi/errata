@@ -48,6 +48,10 @@ async function refineFragmentInner(
     throw new Error(`Fragment ${opts.fragmentId} not found`)
   }
 
+  // Resolve model early so modelId is available for instruction resolution
+  const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarianRefine' })
+  requestLogger.info('Resolved model', { modelId })
+
   // Build context (exclude target fragment to avoid duplication — LLM reads it via tool)
   const ctxState = await buildContextState(dataDir, storyId, '', {
     excludeFragmentId: opts.fragmentId,
@@ -66,6 +70,7 @@ async function refineFragmentInner(
     systemPromptFragments: [],
     targetFragment: fragment,
     instructions: opts.instructions,
+    modelId,
   }
 
   // Create write-enabled fragment tools
@@ -73,10 +78,6 @@ async function refineFragmentInner(
 
   // Compile context via block system
   const compiled = await compileAgentContext(dataDir, storyId, 'librarian.refine', blockContext, allTools)
-
-  // Resolve model
-  const { model, modelId } = await getModel(dataDir, storyId, { role: 'librarianRefine' })
-  requestLogger.info('Resolved model', { modelId })
 
   // Extract system instructions from compiled messages
   const systemMessage = compiled.messages.find(m => m.role === 'system')
