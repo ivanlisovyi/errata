@@ -9,12 +9,20 @@ Join the community on Discord: https://discord.gg/ywVFKvdH49
 ## Features
 
 - **Fragment system** — everything is a fragment with tags, refs, sticky/system placement, and version history
-- **Prose chain + writing panel** — branchable prose with regenerate/refine/switch/remove and a dedicated long-form editor view
+- **Prose chain + writing panel** — branchable prose with regenerate/refine/switch/remove, selection transforms (rewrite/expand/compress), and a dedicated long-form editor view
+- **Two-phase prewriter** — optional planner agent distills full context into a focused writing brief before the writer generates, keeping output grounded while reducing token waste
+- **Per-role model selection** — assign different providers and models to generation, librarian, character chat, directions, and individual agents with automatic fallback chains
+- **Model-specific instructions** — drop JSON files to override any system prompt per model family (exact match or regex), so you can tune prompts for DeepSeek vs Anthropic vs OpenAI
+- **Story direction suggestions** — AI-generated "what happens next?" options with customizable prompt templates and guided direction mode
 - **Character Chat mode** — story-scoped chat with streaming responses, provider/model selection, and character portraits
-- **Block-based context** — visual editor for reordering, overriding, and extending LLM prompt structure
+- **Block-based context** — visual editor for reordering, overriding, and extending LLM prompt structure, including JavaScript-powered script blocks with live preview
+- **Agent context panel** — per-agent block editor for customizing any agent's prompt, disabling tools, and setting model overrides
 - **Librarian memory tools** — rolling continuity, hierarchical summaries, contradiction tracking, and summary compaction controls
 - **Universal import/export** — drag-and-drop JSON, bundle ZIPs, and SillyTavern/Tavern cards (PNG/JSON with lorebook support)
+- **Story cover images** — cover art with gallery grid layout on the story list
 - **Plugin system** — bundled + external runtime plugins with iframe UI panels
+- **Onboarding wizard + in-app help** — first-run setup flow and contextual help articles
+- **Custom CSS** — user-defined styling for theming the interface
 - **No database** — filesystem storage, compiles to a single binary
 
 ### Story Wizard
@@ -134,7 +142,9 @@ Plugins can register fragment types, LLM tools, API routes, and pipeline hooks. 
 ## Documentation
 
 - [Architecture & data model](PLAN.md)
+- [Generation pipeline](docs/generation-pipeline.md)
 - [Context block system](docs/context-blocks.md)
+- [Instruction registry](docs/instruction-registry.md)
 - [Character Chat](docs/character-chat.md)
 - [Prose Writing Panel](docs/prose-writing-panel.md)
 - [Component ID contract](docs/component-ids.md)
