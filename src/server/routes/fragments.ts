@@ -336,13 +336,18 @@ export function fragmentRoutes(dataDir: string) {
         set.status = 404
         return { error: 'Story not found' }
       }
-      for (const item of body.items) {
-        const fragment = await getFragment(dataDir, params.storyId, item.id)
+      const fragments = await Promise.all(
+        body.items.map(item => getFragment(dataDir, params.storyId, item.id))
+      )
+      const now = new Date().toISOString()
+      for (let i = 0; i < body.items.length; i++) {
+        const fragment = fragments[i]
+        const item = body.items[i]
         if (fragment && fragment.order !== item.order) {
           const updated: Fragment = {
             ...fragment,
             order: item.order,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           }
           await updateFragment(dataDir, params.storyId, updated)
         }

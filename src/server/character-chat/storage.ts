@@ -105,15 +105,23 @@ export async function listConversations(
   if (!existsSync(dir)) return []
 
   const entries = await readdir(dir)
+  const jsonFiles = entries.filter(e => e.endsWith('.json'))
+
+  const conversations = await Promise.all(
+    jsonFiles.map(async (entry) => {
+      try {
+        const raw = await readFile(join(dir, entry), 'utf-8')
+        return JSON.parse(raw) as CharacterChatConversation
+      } catch {
+        return null
+      }
+    })
+  )
+
   const summaries: CharacterChatConversationSummary[] = []
-
-  for (const entry of entries) {
-    if (!entry.endsWith('.json')) continue
-    const raw = await readFile(join(dir, entry), 'utf-8')
-    const conv = JSON.parse(raw) as CharacterChatConversation
-
+  for (const conv of conversations) {
+    if (!conv) continue
     if (characterId && conv.characterId !== characterId) continue
-
     summaries.push({
       id: conv.id,
       characterId: conv.characterId,
@@ -126,7 +134,6 @@ export async function listConversations(
     })
   }
 
-  // Sort newest first
   summaries.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   return summaries
 }

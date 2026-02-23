@@ -35,13 +35,24 @@ function branchDir(storyDir: string, branchId: string): string {
 // --- JSON helpers ---
 
 async function readJson<T>(path: string): Promise<T | null> {
-  if (!existsSync(path)) return null
-  const raw = await readFile(path, 'utf-8')
-  return JSON.parse(raw) as T
+  try {
+    const raw = await readFile(path, 'utf-8')
+    return JSON.parse(raw) as T
+  } catch {
+    return null
+  }
 }
 
 async function writeJson(path: string, data: unknown): Promise<void> {
   await writeFile(path, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+// --- Active branch cache ---
+
+const activeBranchCache = new Map<string, string>()
+
+function branchCacheKey(dataDir: string, storyId: string): string {
+  return `${dataDir}\0${storyId}`
 }
 
 // --- Default branches index ---
@@ -110,6 +121,7 @@ export async function migrateIfNeeded(dir: string): Promise<void> {
 // For tests: clear the migration cache
 export function clearMigrationCache(): void {
   migratedStories.clear()
+  activeBranchCache.clear()
 }
 
 // --- Branches Index CRUD ---
@@ -130,6 +142,7 @@ export async function getBranchesIndex(dataDir: string, storyId: string): Promis
 export async function saveBranchesIndex(dataDir: string, storyId: string, index: BranchesIndex): Promise<void> {
   const dir = storyDir(dataDir, storyId)
   await writeJson(branchesIndexPath(dir), index)
+  activeBranchCache.set(branchCacheKey(dataDir, storyId), index.activeBranchId)
 }
 
 // --- Branch scope helpers ---
@@ -166,13 +179,19 @@ export async function getContentRoot(dataDir: string, storyId: string): Promise<
   const dir = storyDir(dataDir, storyId)
   await migrateIfNeeded(dir)
 
-  // If a branch scope is active for this story, use the pinned branch
   const scope = branchScope.getStore()
   if (scope && scope.storyId === storyId) {
     return branchDir(dir, scope.branchId)
   }
 
+  const key = branchCacheKey(dataDir, storyId)
+  const cachedBranchId = activeBranchCache.get(key)
+  if (cachedBranchId) {
+    return branchDir(dir, cachedBranchId)
+  }
+
   const index = await getBranchesIndex(dataDir, storyId)
+  activeBranchCache.set(key, index.activeBranchId)
   return branchDir(dir, index.activeBranchId)
 }
 
@@ -300,4 +319,5 @@ export async function initBranches(dataDir: string, storyId: string): Promise<vo
   await mkdir(join(mainDir, 'fragments'), { recursive: true })
   await writeJson(branchesIndexPath(dir), createDefaultBranchesIndex())
   migratedStories.add(dir)
+  activeBranchCache.set(branchCacheKey(dataDir, storyId), 'main')
 }

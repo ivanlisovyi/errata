@@ -193,11 +193,12 @@ export async function buildContextState(
     throw new Error(`Story not found: ${storyId}`)
   }
 
-  // Load all fragments by type
   requestLogger.debug('Loading fragments by type...')
-  const allGuidelines = await listFragments(dataDir, storyId, 'guideline')
-  const allKnowledge = await listFragments(dataDir, storyId, 'knowledge')
-  const allCharacters = await listFragments(dataDir, storyId, 'character')
+  const [allGuidelines, allKnowledge, allCharacters] = await Promise.all([
+    listFragments(dataDir, storyId, 'guideline'),
+    listFragments(dataDir, storyId, 'knowledge'),
+    listFragments(dataDir, storyId, 'character'),
+  ])
 
   // Load prose from chain - get active prose fragment IDs
   // If no chain exists (empty array), fall back to listing all prose fragments
@@ -237,18 +238,21 @@ export async function buildContextState(
         : []
     }
 
-    // Load the actual prose fragments from chain, excluding the specified fragment
-    for (const proseId of activeProseIds) {
-      // Skip the excluded fragment
-      if (excludeFragmentId && proseId === excludeFragmentId) {
-        requestLogger.debug('Excluding fragment from context', { excludedId: excludeFragmentId })
-        continue
-      }
-      const fragment = await getFragment(dataDir, storyId, proseId)
+    const proseIdsToLoad = excludeFragmentId
+      ? activeProseIds.filter(id => id !== excludeFragmentId)
+      : activeProseIds
+    if (excludeFragmentId && proseIdsToLoad.length < activeProseIds.length) {
+      requestLogger.debug('Excluding fragment from context', { excludedId: excludeFragmentId })
+    }
+    const loadedProse = await Promise.all(
+      proseIdsToLoad.map(id => getFragment(dataDir, storyId, id))
+    )
+    for (let i = 0; i < loadedProse.length; i++) {
+      const fragment = loadedProse[i]
       if (fragment && !fragment.archived && fragment.type !== 'marker') {
         proseFragments.push(fragment)
       } else if (!fragment) {
-        requestLogger.warn('Prose fragment not found in chain', { proseId })
+        requestLogger.warn('Prose fragment not found in chain', { proseId: proseIdsToLoad[i] })
       }
     }
   }

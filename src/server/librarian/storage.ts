@@ -282,12 +282,22 @@ export async function listAnalyses(
   if (!existsSync(dir)) return []
 
   const entries = await readdir(dir)
-  const summaries: LibrarianAnalysisSummary[] = []
+  const jsonFiles = entries.filter(e => e.endsWith('.json'))
 
-  for (const entry of entries) {
-    if (!entry.endsWith('.json')) continue
-    const raw = await readFile(join(dir, entry), 'utf-8')
-    const analysis = normalizeAnalysis(JSON.parse(raw))
+  const analyses = await Promise.all(
+    jsonFiles.map(async (entry) => {
+      try {
+        const raw = await readFile(join(dir, entry), 'utf-8')
+        return normalizeAnalysis(JSON.parse(raw))
+      } catch {
+        return null
+      }
+    })
+  )
+
+  const summaries: LibrarianAnalysisSummary[] = []
+  for (const analysis of analyses) {
+    if (!analysis) continue
     summaries.push({
       id: analysis.id,
       createdAt: analysis.createdAt,
@@ -301,7 +311,6 @@ export async function listAnalyses(
     })
   }
 
-  // Sort newest first
   summaries.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   return summaries
 }

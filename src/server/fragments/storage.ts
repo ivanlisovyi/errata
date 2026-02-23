@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, writeFile, rm } from 'node:fs/promises'
+import { mkdir, readdir, readFile, writeFile, rm, rename } from 'node:fs/promises'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
 import type { Fragment, FragmentVersion, StoryMeta } from './schema'
@@ -27,22 +27,120 @@ async function fragmentsDir(dataDir: string, storyId: string) {
   return join(root, 'fragments')
 }
 
-async function fragmentPath(dataDir: string, storyId: string, fragmentId: string) {
-  const dir = await fragmentsDir(dataDir, storyId)
-  return join(dir, `${fragmentId}.json`)
-}
-
 // --- JSON read/write helpers ---
 
 async function readJson<T>(path: string): Promise<T | null> {
-  if (!existsSync(path)) return null
-  const raw = await readFile(path, 'utf-8')
-  return JSON.parse(raw) as T
+  try {
+    const raw = await readFile(path, 'utf-8')
+    return JSON.parse(raw) as T
+  } catch {
+    return null
+  }
 }
 
-async function writeJson(path: string, data: unknown): Promise<void> {
-  await writeFile(path, JSON.stringify(data, null, 2), 'utf-8')
+async function writeJsonAtomic(path: string, data: unknown): Promise<void> {
+  const tmpPath = `${path}.tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+  await writeFile(tmpPath, JSON.stringify(data, null, 2), 'utf-8')
+  await rename(tmpPath, path)
 }
+
+// --- Fragment index ---
+
+export interface FragmentIndexEntry {
+  type: string
+  name: string
+  description: string
+  sticky: boolean
+  placement: 'system' | 'user'
+  archived: boolean
+  order: number
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export type FragmentIndex = Record<string, FragmentIndexEntry>
+
+export interface FragmentSummary extends FragmentIndexEntry {
+  id: string
+}
+
+const INDEX_FILENAME = '_index.json'
+
+const indexCache = new Map<string, FragmentIndex>()
+
+function indexFilePath(dir: string): string {
+  return join(dir, INDEX_FILENAME)
+}
+
+function toIndexEntry(fragment: Fragment): FragmentIndexEntry {
+  return {
+    type: fragment.type,
+    name: fragment.name,
+    description: fragment.description,
+    sticky: fragment.sticky,
+    placement: fragment.placement,
+    archived: fragment.archived ?? false,
+    order: fragment.order,
+    tags: fragment.tags,
+    createdAt: fragment.createdAt,
+    updatedAt: fragment.updatedAt,
+  }
+}
+
+async function rebuildFragmentIndex(dir: string): Promise<FragmentIndex> {
+  const index: FragmentIndex = {}
+  if (!existsSync(dir)) {
+    indexCache.set(dir, index)
+    return index
+  }
+
+  const entries = await readdir(dir)
+  const jsonFiles = entries.filter(e => e.endsWith('.json') && e !== INDEX_FILENAME)
+
+  const fragments = await Promise.all(
+    jsonFiles.map(async (entry) => {
+      const raw = await readJson<Fragment>(join(dir, entry))
+      return raw ? normalizeFragment(raw) : null
+    })
+  )
+
+  for (const fragment of fragments) {
+    if (fragment) {
+      index[fragment.id] = toIndexEntry(fragment)
+    }
+  }
+
+  await writeJsonAtomic(indexFilePath(dir), index)
+  indexCache.set(dir, index)
+  return index
+}
+
+async function getFragmentIndex(dir: string): Promise<FragmentIndex> {
+  const cached = indexCache.get(dir)
+  if (cached) return cached
+
+  const index = await readJson<FragmentIndex>(indexFilePath(dir))
+  if (index) {
+    indexCache.set(dir, index)
+    return index
+  }
+
+  return rebuildFragmentIndex(dir)
+}
+
+async function setIndexEntry(dir: string, fragmentId: string, entry: FragmentIndexEntry | null): Promise<void> {
+  const index = await getFragmentIndex(dir)
+  if (entry) {
+    index[fragmentId] = entry
+  } else {
+    delete index[fragmentId]
+  }
+  indexCache.set(dir, index)
+  await writeJsonAtomic(indexFilePath(dir), index)
+}
+
+// --- Fragment normalization ---
 
 function normalizeFragment(fragment: Fragment | null): Fragment | null {
   if (!fragment) return null
@@ -74,7 +172,7 @@ export async function createStory(
   const dir = storyDir(dataDir, story.id)
   await mkdir(dir, { recursive: true })
   await initBranches(dataDir, story.id)
-  await writeJson(storyMetaPath(dataDir, story.id), story)
+  await writeJsonAtomic(storyMetaPath(dataDir, story.id), story)
 }
 
 export async function getStory(
@@ -89,23 +187,20 @@ export async function listStories(dataDir: string): Promise<StoryMeta[]> {
   if (!existsSync(dir)) return []
 
   const entries = await readdir(dir, { withFileTypes: true })
-  const stories: StoryMeta[] = []
+  const stories = await Promise.all(
+    entries
+      .filter(entry => entry.isDirectory())
+      .map(entry => getStory(dataDir, entry.name))
+  )
 
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      const meta = await getStory(dataDir, entry.name)
-      if (meta) stories.push(meta)
-    }
-  }
-
-  return stories
+  return stories.filter((s): s is StoryMeta => s !== null)
 }
 
 export async function updateStory(
   dataDir: string,
   story: StoryMeta
 ): Promise<void> {
-  await writeJson(storyMetaPath(dataDir, story.id), story)
+  await writeJsonAtomic(storyMetaPath(dataDir, story.id), story)
 }
 
 export async function deleteStory(
@@ -127,8 +222,10 @@ export async function createFragment(
 ): Promise<void> {
   const dir = await fragmentsDir(dataDir, storyId)
   await mkdir(dir, { recursive: true })
-  const normalized = normalizeFragment(fragment)
-  await writeJson(await fragmentPath(dataDir, storyId, fragment.id), normalized)
+  const normalized = normalizeFragment(fragment)!
+  const filePath = join(dir, `${fragment.id}.json`)
+  await writeJsonAtomic(filePath, normalized)
+  await setIndexEntry(dir, fragment.id, toIndexEntry(normalized))
 }
 
 export async function getFragment(
@@ -136,8 +233,9 @@ export async function getFragment(
   storyId: string,
   fragmentId: string
 ): Promise<Fragment | null> {
-  const fragment = await readJson<Fragment>(await fragmentPath(dataDir, storyId, fragmentId))
-  return normalizeFragment(fragment)
+  const dir = await fragmentsDir(dataDir, storyId)
+  const raw = await readJson<Fragment>(join(dir, `${fragmentId}.json`))
+  return normalizeFragment(raw)
 }
 
 export async function listFragments(
@@ -150,27 +248,49 @@ export async function listFragments(
   if (!existsSync(dir)) return []
 
   const includeArchived = opts?.includeArchived ?? false
-  const entries = await readdir(dir)
-  const fragments: Fragment[] = []
+  const index = await getFragmentIndex(dir)
 
-  // Determine prefix filter
   const prefix = type ? (PREFIXES[type] ?? type.slice(0, 2)) : null
 
-  for (const entry of entries) {
-    if (!entry.endsWith('.json')) continue
-    const id = entry.replace('.json', '')
-    if (prefix && !id.startsWith(prefix + '-')) continue
+  const matchingIds = Object.entries(index)
+    .filter(([id, entry]) => {
+      if (prefix && !id.startsWith(prefix + '-')) return false
+      if (!includeArchived && entry.archived) return false
+      return true
+    })
+    .map(([id]) => id)
 
-    const rawFragment = await readJson<Fragment>(join(dir, entry))
-    const fragment = normalizeFragment(rawFragment)
-    if (fragment) {
-      // Skip archived fragments unless caller opts in
-      if (!includeArchived && fragment.archived) continue
-      fragments.push(fragment)
-    }
-  }
+  const fragments = await Promise.all(
+    matchingIds.map(async (id) => {
+      const raw = await readJson<Fragment>(join(dir, `${id}.json`))
+      return normalizeFragment(raw)
+    })
+  )
 
-  return fragments
+  return fragments.filter((f): f is Fragment => f !== null)
+}
+
+export async function listFragmentSummaries(
+  dataDir: string,
+  storyId: string,
+  type?: string,
+  opts?: { includeArchived?: boolean }
+): Promise<FragmentSummary[]> {
+  const dir = await fragmentsDir(dataDir, storyId)
+  if (!existsSync(dir)) return []
+
+  const includeArchived = opts?.includeArchived ?? false
+  const index = await getFragmentIndex(dir)
+
+  const prefix = type ? (PREFIXES[type] ?? type.slice(0, 2)) : null
+
+  return Object.entries(index)
+    .filter(([id, entry]) => {
+      if (prefix && !id.startsWith(prefix + '-')) return false
+      if (!includeArchived && entry.archived) return false
+      return true
+    })
+    .map(([id, entry]) => ({ id, ...entry }))
 }
 
 export async function archiveFragment(
@@ -178,14 +298,18 @@ export async function archiveFragment(
   storyId: string,
   fragmentId: string
 ): Promise<Fragment | null> {
-  const fragment = await getFragment(dataDir, storyId, fragmentId)
+  const dir = await fragmentsDir(dataDir, storyId)
+  const filePath = join(dir, `${fragmentId}.json`)
+  const raw = await readJson<Fragment>(filePath)
+  const fragment = normalizeFragment(raw)
   if (!fragment) return null
   const updated: Fragment = {
     ...fragment,
     archived: true,
     updatedAt: new Date().toISOString(),
   }
-  await writeJson(await fragmentPath(dataDir, storyId, fragmentId), updated)
+  await writeJsonAtomic(filePath, updated)
+  await setIndexEntry(dir, fragmentId, toIndexEntry(updated))
   return updated
 }
 
@@ -194,14 +318,18 @@ export async function restoreFragment(
   storyId: string,
   fragmentId: string
 ): Promise<Fragment | null> {
-  const fragment = await getFragment(dataDir, storyId, fragmentId)
+  const dir = await fragmentsDir(dataDir, storyId)
+  const filePath = join(dir, `${fragmentId}.json`)
+  const raw = await readJson<Fragment>(filePath)
+  const fragment = normalizeFragment(raw)
   if (!fragment) return null
   const updated: Fragment = {
     ...fragment,
     archived: false,
     updatedAt: new Date().toISOString(),
   }
-  await writeJson(await fragmentPath(dataDir, storyId, fragmentId), updated)
+  await writeJsonAtomic(filePath, updated)
+  await setIndexEntry(dir, fragmentId, toIndexEntry(updated))
   return updated
 }
 
@@ -210,10 +338,12 @@ export async function updateFragment(
   storyId: string,
   fragment: Fragment
 ): Promise<void> {
-  const normalized = normalizeFragment(fragment)
-  const path = await fragmentPath(dataDir, storyId, fragment.id)
-  requestLogger.info('Updating fragment', { path })
-  await writeJson(path, normalized)
+  const dir = await fragmentsDir(dataDir, storyId)
+  const normalized = normalizeFragment(fragment)!
+  const filePath = join(dir, `${fragment.id}.json`)
+  requestLogger.info('Updating fragment', { path: filePath })
+  await writeJsonAtomic(filePath, normalized)
+  await setIndexEntry(dir, fragment.id, toIndexEntry(normalized))
 }
 
 export async function updateFragmentVersioned(
@@ -308,8 +438,12 @@ export async function deleteFragment(
   storyId: string,
   fragmentId: string
 ): Promise<void> {
-  const path = await fragmentPath(dataDir, storyId, fragmentId)
-  if (existsSync(path)) {
-    await rm(path)
+  const dir = await fragmentsDir(dataDir, storyId)
+  const filePath = join(dir, `${fragmentId}.json`)
+  try {
+    await rm(filePath)
+  } catch {
+    // file may already be removed
   }
+  await setIndexEntry(dir, fragmentId, null)
 }

@@ -1,5 +1,4 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ProseChain } from './schema'
 import { getContentRoot } from './branches'
@@ -20,11 +19,12 @@ export async function getProseChain(
   storyId: string,
 ): Promise<ProseChain | null> {
   const path = await proseChainPath(dataDir, storyId)
-  if (!existsSync(path)) {
+  try {
+    const raw = await readFile(path, 'utf-8')
+    return JSON.parse(raw) as ProseChain
+  } catch {
     return null
   }
-  const raw = await readFile(path, 'utf-8')
-  return JSON.parse(raw) as ProseChain
 }
 
 /**
