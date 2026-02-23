@@ -22,7 +22,9 @@ const StoryStoryIdRoute = StoryStoryIdRouteImport.update({
   id: '/story/$storyId',
   path: '/story/$storyId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/story.$storyId.lazy').then((d) => d.Route),
+)
 const ApiSplatRoute = ApiSplatRouteImport.update({
   id: '/api/$',
   path: '/api/$',
