@@ -50,7 +50,7 @@ function SegmentedControl<T extends string>({ value, options, onChange, disabled
           key={opt.value}
           onClick={() => onChange(opt.value)}
           disabled={disabled}
-          className={`px-2.5 text-[11px] font-medium transition-colors ${value === opt.value
+          className={`px-2.5 text-[0.6875rem] font-medium transition-colors ${value === opt.value
               ? 'bg-foreground text-background'
               : 'bg-transparent text-muted-foreground hover:text-foreground/70'
             }`}
@@ -68,7 +68,7 @@ function SettingRow({ label, description, helpTopic, children }: { label: string
     <div className="flex items-center justify-between gap-3 px-3 py-2">
       <div className="min-w-0">
         <div className="flex items-center gap-1">
-          <p className="text-[12px] font-medium text-foreground/80">{label}</p>
+          <p className="text-[0.75rem] font-medium text-foreground/80">{label}</p>
           {helpTopic && (
             <button
               type="button"
@@ -80,7 +80,7 @@ function SettingRow({ label, description, helpTopic, children }: { label: string
             </button>
           )}
         </div>
-        {description && <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{description}</p>}
+        {description && <p className="text-[0.625rem] text-muted-foreground mt-0.5 leading-snug">{description}</p>}
       </div>
       <div className="shrink-0">{children}</div>
     </div>
@@ -101,10 +101,10 @@ function NumberStepper({ value, min, max, onChange, disabled, suffix, wide }: {
           const v = parseInt(e.target.value, 10)
           if (!isNaN(v) && v >= min && v <= max) onChange(v)
         }}
-        className={`${wide ? 'w-20' : 'w-14'} h-[26px] px-2 text-[11px] font-mono text-center bg-background border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none`}
+        className={`${wide ? 'w-20' : 'w-14'} h-[26px] px-2 text-[0.6875rem] font-mono text-center bg-background border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none`}
         disabled={disabled}
       />
-      {suffix && <span className="text-[10px] text-muted-foreground">{suffix}</span>}
+      {suffix && <span className="text-[0.625rem] text-muted-foreground">{suffix}</span>}
     </div>
   )
 }
@@ -119,8 +119,8 @@ function FontPicker({ role, label, description, activeFont, onSelect }: {
   const options = FONT_CATALOGUE[role]
   return (
     <div className="px-3 py-2.5">
-      <p className="text-[12px] font-medium text-foreground/80 mb-0.5">{label}</p>
-      <p className="text-[10px] text-muted-foreground mb-2 leading-snug">{description}</p>
+      <p className="text-[0.75rem] font-medium text-foreground/80 mb-0.5">{label}</p>
+      <p className="text-[0.625rem] text-muted-foreground mb-2 leading-snug">{description}</p>
       <div className="flex flex-wrap gap-1.5">
         {options.map((opt) => {
           const isActive = opt.name === activeFont
@@ -129,14 +129,14 @@ function FontPicker({ role, label, description, activeFont, onSelect }: {
               key={opt.name}
               onClick={() => onSelect(opt.name)}
               style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
-              className={`px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150 inline-flex items-center gap-1.5 ${isActive
+              className={`px-2.5 py-1 rounded-md text-[0.75rem] border transition-all duration-150 inline-flex items-center gap-1.5 ${isActive
                   ? 'border-foreground/25 bg-foreground/5 text-foreground shadow-[0_0_0_1px_var(--foreground)/5]'
                   : 'border-transparent text-muted-foreground hover:text-foreground/70 hover:bg-accent/30'
                 }`}
             >
               {opt.name}
               {opt.tag && (
-                <span className="text-[8px] font-sans font-medium uppercase tracking-wider text-primary/60 bg-primary/8 px-1.5 py-px rounded-full leading-tight">
+                <span className="text-[0.5rem] font-sans font-medium uppercase tracking-wider text-primary/60 bg-primary/8 px-1.5 py-px rounded-full leading-tight">
                   {opt.tag}
                 </span>
               )}
@@ -169,7 +169,7 @@ function LLMSection({ story, globalConfig, updateMutation, onManageProviders }: 
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-2">
-        <label className="text-[10px] text-muted-foreground uppercase tracking-wider">LLM</label>
+        <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">LLM</label>
         <button
           type="button"
           onClick={() => openHelp('settings#providers')}
@@ -190,8 +190,8 @@ function LLMSection({ story, globalConfig, updateMutation, onManageProviders }: 
             <div key={role.key} className="px-3 py-2">
               <div className="flex items-center justify-between gap-2 mb-1.5">
                 <div className="min-w-0">
-                  <p className="text-[12px] font-medium text-foreground/80">{role.label}</p>
-                  <p className="text-[10px] text-muted-foreground leading-snug">{role.description}</p>
+                  <p className="text-[0.75rem] font-medium text-foreground/80">{role.label}</p>
+                  <p className="text-[0.625rem] text-muted-foreground leading-snug">{role.description}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ function LLMSection({ story, globalConfig, updateMutation, onManageProviders }: 
         <button
           type="button"
           onClick={onManageProviders}
-          className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground/60 hover:bg-accent/20 transition-colors rounded-b-lg"
+          className="w-full flex items-center justify-between px-3 py-2 text-[0.6875rem] text-muted-foreground hover:text-foreground/60 hover:bg-accent/20 transition-colors rounded-b-lg"
           data-component-id="settings-manage-providers"
         >
           <span className="flex items-center gap-1.5">
@@ -275,13 +275,13 @@ function GuidedPromptsPanel({ story, onClose, onUpdate, isPending }: {
         </button>
         <div>
           <h3 className="text-sm font-medium">Guided mode prompts</h3>
-          <p className="text-[10px] text-muted-foreground">Customize the prompts used in guided writing mode</p>
+          <p className="text-[0.625rem] text-muted-foreground">Customize the prompts used in guided writing mode</p>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4" style={{ scrollbarWidth: 'thin' }}>
         <div>
-          <label className="text-[11px] font-medium text-foreground/80 mb-1 block">Continue prompt</label>
-          <p className="text-[10px] text-muted-foreground mb-1.5 leading-snug">Used when clicking the "Continue" button</p>
+          <label className="text-[0.6875rem] font-medium text-foreground/80 mb-1 block">Continue prompt</label>
+          <p className="text-[0.625rem] text-muted-foreground mb-1.5 leading-snug">Used when clicking the "Continue" button</p>
           <textarea
             value={continuePrompt}
             onChange={(e) => setContinuePrompt(e.target.value)}
@@ -289,12 +289,12 @@ function GuidedPromptsPanel({ story, onClose, onUpdate, isPending }: {
             placeholder={DEFAULT_CONTINUE}
             rows={3}
             disabled={isPending}
-            className="w-full text-[12px] bg-muted/30 border border-border/30 rounded-md px-2.5 py-2 resize-none outline-none focus:border-primary/30 transition-colors placeholder:text-muted-foreground/50 disabled:opacity-40"
+            className="w-full text-[0.75rem] bg-muted/30 border border-border/30 rounded-md px-2.5 py-2 resize-none outline-none focus:border-primary/30 transition-colors placeholder:text-muted-foreground/50 disabled:opacity-40"
           />
         </div>
         <div>
-          <label className="text-[11px] font-medium text-foreground/80 mb-1 block">Scene-setting prompt</label>
-          <p className="text-[10px] text-muted-foreground mb-1.5 leading-snug">Used when clicking the "Scene-setting" button</p>
+          <label className="text-[0.6875rem] font-medium text-foreground/80 mb-1 block">Scene-setting prompt</label>
+          <p className="text-[0.625rem] text-muted-foreground mb-1.5 leading-snug">Used when clicking the "Scene-setting" button</p>
           <textarea
             value={sceneSettingPrompt}
             onChange={(e) => setSceneSettingPrompt(e.target.value)}
@@ -302,13 +302,13 @@ function GuidedPromptsPanel({ story, onClose, onUpdate, isPending }: {
             placeholder={DEFAULT_SCENE_SETTING}
             rows={3}
             disabled={isPending}
-            className="w-full text-[12px] bg-muted/30 border border-border/30 rounded-md px-2.5 py-2 resize-none outline-none focus:border-primary/30 transition-colors placeholder:text-muted-foreground/50 disabled:opacity-40"
+            className="w-full text-[0.75rem] bg-muted/30 border border-border/30 rounded-md px-2.5 py-2 resize-none outline-none focus:border-primary/30 transition-colors placeholder:text-muted-foreground/50 disabled:opacity-40"
           />
         </div>
         <div>
-          <label className="text-[11px] font-medium text-foreground/80 mb-1 block">Suggest directions prompt</label>
-          <p className="text-[10px] text-muted-foreground mb-1.5 leading-snug">
-            Prompt for generating direction suggestions. Use <code className="text-[10px] bg-muted/50 px-1 rounded">{'{{count}}'}</code> for the number of suggestions.
+          <label className="text-[0.6875rem] font-medium text-foreground/80 mb-1 block">Suggest directions prompt</label>
+          <p className="text-[0.625rem] text-muted-foreground mb-1.5 leading-snug">
+            Prompt for generating direction suggestions. Use <code className="text-[0.625rem] bg-muted/50 px-1 rounded">{'{{count}}'}</code> for the number of suggestions.
           </p>
           <textarea
             value={suggestPrompt}
@@ -317,10 +317,10 @@ function GuidedPromptsPanel({ story, onClose, onUpdate, isPending }: {
             placeholder={DEFAULT_SUGGEST}
             rows={6}
             disabled={isPending}
-            className="w-full text-[12px] bg-muted/30 border border-border/30 rounded-md px-2.5 py-2 resize-none outline-none focus:border-primary/30 transition-colors placeholder:text-muted-foreground/50 disabled:opacity-40"
+            className="w-full text-[0.75rem] bg-muted/30 border border-border/30 rounded-md px-2.5 py-2 resize-none outline-none focus:border-primary/30 transition-colors placeholder:text-muted-foreground/50 disabled:opacity-40"
           />
         </div>
-        <p className="text-[10px] text-muted-foreground italic">
+        <p className="text-[0.625rem] text-muted-foreground italic">
           Leave empty to use the default prompt. Changes are saved when you leave each field.
         </p>
       </div>
@@ -406,7 +406,7 @@ export function SettingsPanel({
     <div className="p-4 space-y-4" data-component-id="settings-panel-root">
       {/* Appearance */}
       <div>
-        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 block">Appearance</label>
+        <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-2 block">Appearance</label>
         <div className="rounded-lg border border-border/30 divide-y divide-border/20">
           <SettingRow label="Theme">
             <SegmentedControl
@@ -473,7 +473,7 @@ export function SettingsPanel({
             <button
               type="button"
               onClick={() => setCustomCssPanelOpen(true)}
-              className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground/60 hover:bg-accent/20 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 text-[0.6875rem] text-muted-foreground hover:text-foreground/60 hover:bg-accent/20 transition-colors"
             >
               <span className="flex items-center gap-1.5">
                 <Code className="size-3" />
@@ -488,11 +488,11 @@ export function SettingsPanel({
       {/* Typography */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Typography</label>
+          <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Typography</label>
           {hasCustomFonts && (
             <button
               onClick={resetFonts}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground/60 transition-colors"
+              className="flex items-center gap-1 text-[0.625rem] text-muted-foreground hover:text-foreground/60 transition-colors"
             >
               <RotateCcw className="size-2.5" />
               Reset
@@ -533,7 +533,7 @@ export function SettingsPanel({
 
       {/* Writing */}
       <div>
-        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 block">Writing</label>
+        <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-2 block">Writing</label>
         <div className="rounded-lg border border-border/30 divide-y divide-border/20">
           <button
             type="button"
@@ -543,9 +543,9 @@ export function SettingsPanel({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <Wand2 className="size-3 text-muted-foreground" />
-                <p className="text-[12px] font-medium text-foreground/80">Selection transforms</p>
+                <p className="text-[0.75rem] font-medium text-foreground/80">Selection transforms</p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+              <p className="text-[0.625rem] text-muted-foreground mt-0.5 leading-snug">
                 {enabledTransformCount} custom transform{enabledTransformCount !== 1 ? 's' : ''} active
               </p>
             </div>
@@ -559,9 +559,9 @@ export function SettingsPanel({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <Compass className="size-3 text-muted-foreground" />
-                <p className="text-[12px] font-medium text-foreground/80">Guided mode prompts</p>
+                <p className="text-[0.75rem] font-medium text-foreground/80">Guided mode prompts</p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+              <p className="text-[0.625rem] text-muted-foreground mt-0.5 leading-snug">
                 {story.settings.guidedContinuePrompt || story.settings.guidedSceneSettingPrompt || story.settings.guidedSuggestPrompt ? 'Custom prompts configured' : 'Using default prompts'}
               </p>
             </div>
@@ -573,7 +573,7 @@ export function SettingsPanel({
       {/* Generation */}
       <div>
         <div className="flex items-center gap-1.5 mb-2">
-          <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Generation</label>
+          <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Generation</label>
           <button
             type="button"
             onClick={() => openHelp('generation#overview')}
@@ -616,12 +616,12 @@ export function SettingsPanel({
             />
           </SettingRow>
           <div className="px-3 py-2.5 border-t border-border/20">
-            <p className="text-[12px] font-medium text-foreground/80">Summary compaction</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">Keeps rolling summary bounded as stories grow</p>
+            <p className="text-[0.75rem] font-medium text-foreground/80">Summary compaction</p>
+            <p className="text-[0.625rem] text-muted-foreground mt-0.5 leading-snug">Keeps rolling summary bounded as stories grow</p>
 
             <div className="mt-2.5 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Max characters</span>
+                <span className="text-[0.6875rem] text-muted-foreground">Max characters</span>
                 <NumberStepper
                   value={summaryCompact.maxCharacters}
                   min={100}
@@ -641,7 +641,7 @@ export function SettingsPanel({
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">Target characters</span>
+                <span className="text-[0.6875rem] text-muted-foreground">Target characters</span>
                 <NumberStepper
                   value={summaryCompact.targetCharacters}
                   min={100}
@@ -675,7 +675,7 @@ export function SettingsPanel({
           {/* Context limit — stacked layout for breathing room */}
           <div className="px-3 py-2.5">
             <div className="flex items-center gap-1">
-              <p className="text-[12px] font-medium text-foreground/80">Context limit</p>
+              <p className="text-[0.75rem] font-medium text-foreground/80">Context limit</p>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); openHelp('generation#context-limit') }}
@@ -685,7 +685,7 @@ export function SettingsPanel({
                 <CircleHelp className="size-3" />
               </button>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">How much recent prose to include</p>
+            <p className="text-[0.625rem] text-muted-foreground mt-0.5 leading-snug">How much recent prose to include</p>
             <div className="flex items-center justify-between gap-2 mt-2.5">
               <SegmentedControl
                 value={(story.settings.contextCompact?.type ?? 'proseLimit') as 'proseLimit' | 'maxTokens' | 'maxCharacters'}
@@ -752,7 +752,7 @@ export function SettingsPanel({
       {/* Plugins */}
       <div>
         <div className="flex items-center gap-1.5 mb-3">
-          <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Plugins</label>
+          <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Plugins</label>
           <button
             type="button"
             onClick={() => openHelp('settings#plugins')}
@@ -792,10 +792,10 @@ export function SettingsPanel({
                       />
                     </button>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-medium leading-tight text-foreground/85">{plugin.name}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{plugin.description}</p>
+                      <p className="text-[0.8125rem] font-medium leading-tight text-foreground/85">{plugin.name}</p>
+                      <p className="text-[0.6875rem] text-muted-foreground mt-0.5 leading-snug">{plugin.description}</p>
                     </div>
-                    <span className={`text-[9px] uppercase tracking-widest mt-1 shrink-0 ${isEnabled ? 'text-foreground/50' : 'text-muted-foreground'
+                    <span className={`text-[0.5625rem] uppercase tracking-widest mt-1 shrink-0 ${isEnabled ? 'text-foreground/50' : 'text-muted-foreground'
                       }`}>
                       v{plugin.version}
                     </span>
@@ -807,7 +807,7 @@ export function SettingsPanel({
                       {onOpenPluginPanel && (
                         <button
                           onClick={() => onOpenPluginPanel(plugin.name)}
-                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground/70 hover:bg-accent/40 transition-colors"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[0.6875rem] text-muted-foreground hover:text-foreground/70 hover:bg-accent/40 transition-colors"
                         >
                           <ExternalLink className="size-3" />
                           Open panel
@@ -816,7 +816,7 @@ export function SettingsPanel({
                       {onTogglePluginSidebar && (
                         <button
                           onClick={() => onTogglePluginSidebar(plugin.name, !isSidebarVisible)}
-                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground/70 hover:bg-accent/40 transition-colors"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[0.6875rem] text-muted-foreground hover:text-foreground/70 hover:bg-accent/40 transition-colors"
                         >
                           {isSidebarVisible ? <Eye className="size-3" /> : <EyeOff className="size-3" />}
                           {isSidebarVisible ? 'Visible in sidebar' : 'Hidden from sidebar'}
@@ -831,14 +831,14 @@ export function SettingsPanel({
         ) : (
           <div className="flex flex-col items-center py-6 text-center">
             <Puzzle className="size-5 text-muted-foreground mb-2" />
-            <p className="text-[11px] text-muted-foreground">No plugins available</p>
+            <p className="text-[0.6875rem] text-muted-foreground">No plugins available</p>
           </div>
         )}
       </div>
 
       {/* Attribution */}
       <div className="pt-4 mt-2 border-t border-border/20">
-        <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+        <p className="text-[0.625rem] text-muted-foreground text-center leading-relaxed">
           Errata v{__BUILD_VERSION__}
           <br />
           Built by{' '}

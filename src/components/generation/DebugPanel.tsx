@@ -45,7 +45,7 @@ export function DebugPanel({ storyId, logId, fragmentId, onClose }: DebugPanelPr
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50" data-component-id="debug-panel-header">
         <div className="flex items-center gap-2">
           <h2 className="font-display text-lg">Debug</h2>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Generation Logs</span>
+          <span className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Generation Logs</span>
         </div>
         <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" onClick={onClose} data-component-id="debug-close">
           <X className="size-4" />
@@ -57,7 +57,7 @@ export function DebugPanel({ storyId, logId, fragmentId, onClose }: DebugPanelPr
         {!directLookup && (
           <div className="w-56 border-r border-border/50 flex flex-col" data-component-id="debug-log-list">
             <div className="px-3 py-2.5 border-b border-border/50">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Recent</span>
+              <span className="text-[0.625rem] font-medium text-muted-foreground uppercase tracking-wider">Recent</span>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-1.5 space-y-0.5">
@@ -101,7 +101,7 @@ export function DebugPanel({ storyId, logId, fragmentId, onClose }: DebugPanelPr
                   >
                     {tab === 'prewriter-prompt' ? 'prewriter prompt' : tab}
                     {tab === 'tools' && selectedLog.toolCalls.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 text-[9px] px-1 h-3.5">
+                      <Badge variant="secondary" className="ml-1 text-[0.5625rem] px-1 h-3.5">
                         {selectedLog.toolCalls.length}
                       </Badge>
                     )}
@@ -109,9 +109,9 @@ export function DebugPanel({ storyId, logId, fragmentId, onClose }: DebugPanelPr
                 ))}
 
                 {/* Stats */}
-                <div className="ml-auto flex items-center gap-2 text-[10px] text-muted-foreground">
+                <div className="ml-auto flex items-center gap-2 text-[0.625rem] text-muted-foreground">
                   {selectedLog.prewriterModel && (
-                    <Badge variant="outline" className="text-[9px] h-3.5 px-1 font-normal border-primary/20 text-primary/60">
+                    <Badge variant="outline" className="text-[0.5625rem] h-3.5 px-1 font-normal border-primary/20 text-primary/60">
                       prewriter
                     </Badge>
                   )}
@@ -128,7 +128,7 @@ export function DebugPanel({ storyId, logId, fragmentId, onClose }: DebugPanelPr
                     <span className="font-mono">{selectedLog.fragmentId}</span>
                   )}
                   {selectedLog.stepsExceeded && (
-                    <Badge variant="destructive" className="text-[9px] h-3.5">EXCEEDED</Badge>
+                    <Badge variant="destructive" className="text-[0.5625rem] h-3.5">EXCEEDED</Badge>
                   )}
                 </div>
               </div>
@@ -187,10 +187,10 @@ function LogListItem({
       <div className="flex items-center gap-1.5 mt-1 text-muted-foreground">
         <span>{new Date(log.createdAt).toLocaleString()}</span>
         {log.toolCallCount > 0 && (
-          <Badge variant="secondary" className="text-[9px] h-3.5 px-1">{log.toolCallCount} tools</Badge>
+          <Badge variant="secondary" className="text-[0.5625rem] h-3.5 px-1">{log.toolCallCount} tools</Badge>
         )}
         {log.stepsExceeded && (
-          <Badge variant="destructive" className="text-[9px] h-3.5 px-1">exceeded</Badge>
+          <Badge variant="destructive" className="text-[0.5625rem] h-3.5 px-1">exceeded</Badge>
         )}
       </div>
     </button>
@@ -273,7 +273,7 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
     <button
       onClick={handleCopy}
       className={cn(
-        'inline-flex items-center gap-1 text-[9px] text-muted-foreground hover:text-muted-foreground transition-colors',
+        'inline-flex items-center gap-1 text-[0.5625rem] text-muted-foreground hover:text-muted-foreground transition-colors',
         className,
       )}
       title="Copy to clipboard"
@@ -315,15 +315,15 @@ function ToolsTab({ log }: { log: GenerationLog }) {
     <div className="space-y-2">
       {/* Summary bar */}
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[0.625rem] text-muted-foreground">
           {log.toolCalls.length} call{log.toolCalls.length === 1 ? '' : 's'}
         </span>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[0.625rem] text-muted-foreground">
           {log.toolCalls.filter((tc) => getToolKind(tc.toolName) === 'write').length} writes
         </span>
         <button
           onClick={toggleAll}
-          className="ml-auto text-[10px] text-muted-foreground hover:text-muted-foreground transition-colors"
+          className="ml-auto text-[0.625rem] text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           {allExpanded ? 'Collapse all' : 'Expand all'}
         </button>
@@ -352,7 +352,7 @@ function ToolsTab({ log }: { log: GenerationLog }) {
               className="w-full text-left px-3 py-1.5 flex items-center gap-2 bg-muted/10 border-b border-border/10 hover:bg-muted/20 transition-colors"
             >
               {/* Step number */}
-              <span className="text-[9px] tabular-nums text-muted-foreground w-3 text-right shrink-0">
+              <span className="text-[0.5625rem] tabular-nums text-muted-foreground w-3 text-right shrink-0">
                 {i + 1}
               </span>
 
@@ -363,7 +363,7 @@ function ToolsTab({ log }: { log: GenerationLog }) {
               )}
 
               {/* Tool name */}
-              <span className="text-[10px] font-mono font-medium text-foreground/70 shrink-0">
+              <span className="text-[0.625rem] font-mono font-medium text-foreground/70 shrink-0">
                 {tc.toolName}
               </span>
 
@@ -372,14 +372,14 @@ function ToolsTab({ log }: { log: GenerationLog }) {
                 {argEntries.slice(0, 3).map(([key, val]) => (
                   <span
                     key={key}
-                    className="text-[9px] font-mono text-muted-foreground bg-muted/20 rounded px-1 py-px truncate max-w-[140px] shrink-0"
+                    className="text-[0.5625rem] font-mono text-muted-foreground bg-muted/20 rounded px-1 py-px truncate max-w-[140px] shrink-0"
                   >
                     <span className="text-muted-foreground">{key}=</span>
                     {formatArgValue(val)}
                   </span>
                 ))}
                 {argEntries.length > 3 && (
-                  <span className="text-[9px] text-muted-foreground">+{argEntries.length - 3}</span>
+                  <span className="text-[0.5625rem] text-muted-foreground">+{argEntries.length - 3}</span>
                 )}
               </div>
 
@@ -387,7 +387,7 @@ function ToolsTab({ log }: { log: GenerationLog }) {
               <Badge
                 variant="outline"
                 className={cn(
-                  'text-[9px] h-3.5 px-1 font-normal border-transparent shrink-0 ml-auto',
+                  'text-[0.5625rem] h-3.5 px-1 font-normal border-transparent shrink-0 ml-auto',
                   kind === 'write'
                     ? 'text-amber-500/70 bg-amber-500/8'
                     : 'text-muted-foreground bg-muted/30',
@@ -400,18 +400,18 @@ function ToolsTab({ log }: { log: GenerationLog }) {
             {/* Collapsed: result summary */}
             {!isOpen && (
               <div className="px-3 py-1.5 flex items-center gap-1.5">
-                <span className="text-[9px] text-muted-foreground shrink-0">
+                <span className="text-[0.5625rem] text-muted-foreground shrink-0">
                   &rarr;
                 </span>
                 <span
                   className={cn(
-                    'text-[11px] font-mono truncate',
+                    'text-[0.6875rem] font-mono truncate',
                     isError ? 'text-destructive/70' : 'text-muted-foreground',
                   )}
                 >
                   {summary}
                 </span>
-                <span className="text-[9px] text-muted-foreground tabular-nums ml-auto shrink-0">
+                <span className="text-[0.5625rem] text-muted-foreground tabular-nums ml-auto shrink-0">
                   {resultStr.length.toLocaleString()} ch
                 </span>
               </div>
@@ -423,20 +423,20 @@ function ToolsTab({ log }: { log: GenerationLog }) {
                 {/* Arguments */}
                 <div className="p-3">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">
+                    <span className="text-[0.5625rem] text-muted-foreground uppercase tracking-[0.15em] font-medium">
                       Arguments
                     </span>
                     <CopyButton text={argsStr} className="ml-auto" />
                   </div>
                   {argEntries.length === 0 ? (
-                    <span className="text-[11px] text-muted-foreground italic">none</span>
+                    <span className="text-[0.6875rem] text-muted-foreground italic">none</span>
                   ) : (
                     <div className="space-y-px">
                       {argEntries.map(([key, val]) => {
                         const valStr = typeof val === 'string' ? val : JSON.stringify(val)
                         const isLong = valStr.length > 80
                         return (
-                          <div key={key} className="flex gap-2 text-[11px] font-mono leading-relaxed">
+                          <div key={key} className="flex gap-2 text-[0.6875rem] font-mono leading-relaxed">
                             <span className="text-muted-foreground shrink-0 select-none w-[100px] text-right truncate" title={key}>
                               {key}
                             </span>
@@ -457,15 +457,15 @@ function ToolsTab({ log }: { log: GenerationLog }) {
                 {/* Result */}
                 <div className="p-3">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">
+                    <span className="text-[0.5625rem] text-muted-foreground uppercase tracking-[0.15em] font-medium">
                       Result
                     </span>
-                    <span className="text-[9px] text-muted-foreground tabular-nums">
+                    <span className="text-[0.5625rem] text-muted-foreground tabular-nums">
                       {resultStr.length.toLocaleString()} chars
                     </span>
                     <CopyButton text={resultStr} className="ml-auto" />
                   </div>
-                  <pre className="whitespace-pre-wrap text-[11px] font-mono text-muted-foreground max-h-[300px] overflow-y-auto leading-relaxed">
+                  <pre className="whitespace-pre-wrap text-[0.6875rem] font-mono text-muted-foreground max-h-[300px] overflow-y-auto leading-relaxed">
                     {resultStr}
                   </pre>
                 </div>
@@ -493,16 +493,16 @@ function OutputTab({ log }: { log: GenerationLog }) {
           >
             {prewriterReasoningExpanded ? <ChevronDown className="size-3 text-primary/50" /> : <ChevronRight className="size-3 text-primary/50" />}
             <Brain className="size-3 text-primary/50" />
-            <span className="text-[10px] font-medium text-primary/70">
+            <span className="text-[0.625rem] font-medium text-primary/70">
               Prewriter Reasoning
             </span>
-            <span className="text-[9px] text-muted-foreground tabular-nums ml-auto shrink-0">
+            <span className="text-[0.5625rem] text-muted-foreground tabular-nums ml-auto shrink-0">
               {log.prewriterReasoning.length.toLocaleString()} chars
             </span>
           </button>
           {prewriterReasoningExpanded && (
             <div className="p-3 max-h-[300px] overflow-y-auto">
-              <pre className="whitespace-pre-wrap text-[11px] font-mono text-muted-foreground italic leading-relaxed">
+              <pre className="whitespace-pre-wrap text-[0.6875rem] font-mono text-muted-foreground italic leading-relaxed">
                 {log.prewriterReasoning}
               </pre>
             </div>
@@ -518,15 +518,15 @@ function OutputTab({ log }: { log: GenerationLog }) {
           >
             {prewriterExpanded ? <ChevronDown className="size-3 text-primary/50" /> : <ChevronRight className="size-3 text-primary/50" />}
             <FileText className="size-3 text-primary/50" />
-            <span className="text-[10px] font-medium text-primary/70">
+            <span className="text-[0.625rem] font-medium text-primary/70">
               Writing Brief
             </span>
             {log.prewriterModel && (
-              <span className="text-[9px] text-muted-foreground font-mono">
+              <span className="text-[0.5625rem] text-muted-foreground font-mono">
                 {log.prewriterModel}
               </span>
             )}
-            <span className="text-[9px] text-muted-foreground tabular-nums ml-auto shrink-0 flex items-center gap-2">
+            <span className="text-[0.5625rem] text-muted-foreground tabular-nums ml-auto shrink-0 flex items-center gap-2">
               {log.prewriterDurationMs != null && (
                 <span>{log.prewriterDurationMs.toLocaleString()}ms</span>
               )}
@@ -543,7 +543,7 @@ function OutputTab({ log }: { log: GenerationLog }) {
               <div className="flex justify-end mb-1.5">
                 <CopyButton text={log.prewriterBrief} />
               </div>
-              <div className="text-[11px] text-muted-foreground leading-relaxed prose prose-sm prose-muted max-w-none [&_p]:text-[11px] [&_p]:text-muted-foreground [&_p]:leading-relaxed">
+              <div className="text-[0.6875rem] text-muted-foreground leading-relaxed prose prose-sm prose-muted max-w-none [&_p]:text-[0.6875rem] [&_p]:text-muted-foreground [&_p]:leading-relaxed">
                 <StreamMarkdown content={log.prewriterBrief} />
               </div>
             </div>
@@ -559,16 +559,16 @@ function OutputTab({ log }: { log: GenerationLog }) {
           >
             {reasoningExpanded ? <ChevronDown className="size-3 text-muted-foreground" /> : <ChevronRight className="size-3 text-muted-foreground" />}
             <Brain className="size-3 text-muted-foreground" />
-            <span className="text-[10px] font-medium text-muted-foreground">
+            <span className="text-[0.625rem] font-medium text-muted-foreground">
               Reasoning
             </span>
-            <span className="text-[9px] text-muted-foreground tabular-nums ml-auto shrink-0">
+            <span className="text-[0.5625rem] text-muted-foreground tabular-nums ml-auto shrink-0">
               {log.reasoning.length.toLocaleString()} chars
             </span>
           </button>
           {reasoningExpanded && (
             <div className="p-3 max-h-[300px] overflow-y-auto">
-              <pre className="whitespace-pre-wrap text-[11px] font-mono text-muted-foreground italic leading-relaxed">
+              <pre className="whitespace-pre-wrap text-[0.6875rem] font-mono text-muted-foreground italic leading-relaxed">
                 {log.reasoning}
               </pre>
             </div>
@@ -579,17 +579,17 @@ function OutputTab({ log }: { log: GenerationLog }) {
       <div className="rounded-lg border border-border/20 overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/10 border-b border-border/10">
-          <span className="text-[10px] font-medium text-muted-foreground truncate">
+          <span className="text-[0.625rem] font-medium text-muted-foreground truncate">
             Generated text
           </span>
-          <span className="text-[9px] text-muted-foreground tabular-nums ml-auto shrink-0">
+          <span className="text-[0.5625rem] text-muted-foreground tabular-nums ml-auto shrink-0">
             {log.generatedText.length.toLocaleString()} chars
           </span>
         </div>
 
         {/* Content */}
         <div className="p-3 max-h-[500px] overflow-y-auto">
-          <div className="text-[11px] text-muted-foreground leading-relaxed prose prose-sm prose-muted max-w-none [&_p]:text-[11px] [&_p]:text-muted-foreground [&_p]:leading-relaxed">
+          <div className="text-[0.6875rem] text-muted-foreground leading-relaxed prose prose-sm prose-muted max-w-none [&_p]:text-[0.6875rem] [&_p]:text-muted-foreground [&_p]:leading-relaxed">
             <StreamMarkdown content={log.generatedText} />
           </div>
         </div>

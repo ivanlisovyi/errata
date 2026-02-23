@@ -48,7 +48,7 @@ const InsertChapterDivider = memo(function InsertChapterDivider({
       <button
         onClick={() => createMutation.mutate()}
         disabled={createMutation.isPending}
-        className="opacity-0 group-hover/insert:opacity-100 transition-opacity duration-200 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-amber-500/60 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20"
+        className="opacity-0 group-hover/insert:opacity-100 transition-opacity duration-200 flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] text-amber-500/60 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20"
       >
         <Bookmark className="size-2.5" />
         <span>Chapter</span>
@@ -140,7 +140,7 @@ function StreamingSection({
             {isGenerating && (
               <div className="flex items-center gap-2 mt-3 opacity-60">
                 <Loader2 className="size-3 animate-spin text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-[0.625rem] text-muted-foreground">
                   generating...
                 </span>
               </div>

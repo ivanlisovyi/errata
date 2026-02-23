@@ -29,7 +29,7 @@ export function BlockPreviewDialog({ storyId, open, onOpenChange }: BlockPreview
           <DialogTitle className="font-display text-lg flex items-center gap-2.5">
             Context Preview
             {data && (
-              <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
+              <Badge variant="outline" className="text-[0.625rem] font-normal text-muted-foreground">
                 {data.blockCount} {data.blockCount === 1 ? 'block' : 'blocks'}
               </Badge>
             )}
@@ -39,7 +39,7 @@ export function BlockPreviewDialog({ storyId, open, onOpenChange }: BlockPreview
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="size-5 rounded-full border-2 border-muted-foreground/15 border-t-muted-foreground/50 animate-spin" />
-            <p className="mt-3 text-[11px] text-muted-foreground">Compiling context...</p>
+            <p className="mt-3 text-[0.6875rem] text-muted-foreground">Compiling context...</p>
           </div>
         ) : data?.messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

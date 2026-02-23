@@ -260,13 +260,13 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
                     Drop a file or <span className="text-foreground/70 underline underline-offset-2">browse</span>
                   </p>
                   <div className="flex items-center justify-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1 text-[0.6875rem] text-muted-foreground">
                       <FileArchive className="size-3" />.zip
                     </span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1 text-[0.6875rem] text-muted-foreground">
                       <FileJson className="size-3" />.json
                     </span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1 text-[0.6875rem] text-muted-foreground">
                       <Image className="size-3" />.png
                     </span>
                   </div>
@@ -284,7 +284,7 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
           {/* URL input */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <label className="text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wider">
               Or import from URL
             </label>
             <div className="flex gap-2">
@@ -320,7 +320,7 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
           )}
 
           {/* Help text */}
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
+          <p className="text-[0.6875rem] text-muted-foreground leading-relaxed">
             <strong className="text-muted-foreground">.zip</strong> — Errata story export
             {' · '}
             <strong className="text-muted-foreground">.json</strong> — SillyTavern / TavernAI character card (V2/V3)

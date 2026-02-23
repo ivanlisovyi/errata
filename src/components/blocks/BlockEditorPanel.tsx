@@ -253,7 +253,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="size-5 rounded-full border-2 border-muted-foreground/15 border-t-muted-foreground/50 animate-spin" />
-        <p className="mt-3 text-[11px] text-muted-foreground">Loading blocks...</p>
+        <p className="mt-3 text-[0.6875rem] text-muted-foreground">Loading blocks...</p>
       </div>
     )
   }
@@ -270,7 +270,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
     <div className="flex h-full min-h-0 flex-col" data-component-id="block-editor-root">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/30 flex items-center gap-3">
-        <p className="text-[11px] text-muted-foreground leading-snug flex-1">
+        <p className="text-[0.6875rem] text-muted-foreground leading-snug flex-1">
           Arrange and customize the model context pipeline.{' '}
           <button
             className="text-muted-foreground underline underline-offset-2 hover:text-foreground/70 transition-colors"
@@ -306,7 +306,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                 {showRoleLabel && (
                   <div className={cn("flex items-center gap-2 px-1", index > 0 && "mt-3 mb-1.5", index === 0 && "mb-1.5")}>
                     <div className="size-1 rounded-full bg-muted-foreground/50" />
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">
+                    <span className="text-[0.5625rem] text-muted-foreground uppercase tracking-[0.15em] font-medium">
                       {block.role} messages
                     </span>
                     <div className="flex-1 h-px bg-border/20" />
@@ -362,9 +362,9 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
 
                     {/* Name + content preview */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-medium truncate leading-tight">{block.name}</p>
+                      <p className="text-[0.75rem] font-medium truncate leading-tight">{block.name}</p>
                       {!isExpanded && block.contentPreview && (
-                        <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-snug">
+                        <p className="text-[0.625rem] text-muted-foreground truncate mt-0.5 leading-snug">
                           {block.contentPreview.slice(0, 80)}
                         </p>
                       )}
@@ -373,7 +373,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                     {/* Role badge */}
                     <Badge
                       variant="outline"
-                      className="text-[9px] h-4 px-1.5 shrink-0 font-normal border-transparent text-muted-foreground bg-muted/30"
+                      className="text-[0.5625rem] h-4 px-1.5 shrink-0 font-normal border-transparent text-muted-foreground bg-muted/30"
                     >
                       {block.role === 'system' ? 'sys' : 'usr'}
                     </Badge>
@@ -415,7 +415,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                               <Badge
                                 variant="outline"
                                 className={cn(
-                                  'text-[10px] h-5 px-2 font-normal',
+                                  'text-[0.625rem] h-5 px-2 font-normal',
                                   isScript
                                     ? 'text-amber-500/70 border-amber-500/15 bg-amber-500/5'
                                     : 'text-muted-foreground bg-muted/20',
@@ -475,17 +475,17 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                           <>
                             {/* Builtin block: original content preview */}
                             <div className="pt-2">
-                              <h4 className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-1.5">
+                              <h4 className="text-[0.5625rem] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-1.5">
                                 Original Content
                               </h4>
-                              <pre className="whitespace-pre-wrap text-[11px] text-muted-foreground bg-muted/15 rounded-md p-3 max-h-[120px] overflow-y-auto border border-border/15 leading-relaxed">
+                              <pre className="whitespace-pre-wrap text-[0.6875rem] text-muted-foreground bg-muted/15 rounded-md p-3 max-h-[120px] overflow-y-auto border border-border/15 leading-relaxed">
                                 {block.contentPreview}{block.contentPreview.length >= 200 ? '...' : ''}
                               </pre>
                             </div>
 
                             {/* Content mode pill selector */}
                             <div>
-                              <h4 className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-1.5">
+                              <h4 className="text-[0.5625rem] text-muted-foreground uppercase tracking-[0.15em] font-medium mb-1.5">
                                 Modify
                               </h4>
                               <div className="flex rounded-lg bg-muted/25 p-[3px] gap-[3px]">
@@ -495,7 +495,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
                                     <button
                                       key={label}
                                       className={cn(
-                                        'flex-1 px-1 py-[5px] rounded-md text-[10px] font-medium transition-all duration-150',
+                                        'flex-1 px-1 py-[5px] rounded-md text-[0.625rem] font-medium transition-all duration-150',
                                         isActive
                                           ? 'bg-background text-foreground shadow-sm'
                                           : 'text-muted-foreground hover:text-muted-foreground',
@@ -531,7 +531,7 @@ export function BlockEditorPanel({ storyId }: BlockEditorPanelProps) {
 
           {/* Add custom block */}
           <button
-            className="w-full mt-3 py-3.5 rounded-lg border-2 border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-200 flex items-center justify-center gap-2 text-[11px] text-muted-foreground hover:text-primary/60 group"
+            className="w-full mt-3 py-3.5 rounded-lg border-2 border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-200 flex items-center justify-center gap-2 text-[0.6875rem] text-muted-foreground hover:text-primary/60 group"
             onClick={() => setShowCreateDialog(true)}
             data-component-id="block-editor-add"
           >

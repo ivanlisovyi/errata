@@ -177,7 +177,7 @@ export function GenerationPanel({ storyId, onBack }: GenerationPanelProps) {
                   </>
                 )}
               </div>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[0.625rem] text-muted-foreground">
                 Ctrl+Enter to generate & save
               </span>
             </div>

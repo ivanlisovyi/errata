@@ -150,11 +150,11 @@ export function useProseWidth(): [ProseWidth, (v: ProseWidth) => void] {
 export type UiFontSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 export const UI_FONT_SIZE_VALUES: Record<UiFontSize, number> = {
-  xs: 12,
-  sm: 14,
+  xs: 13,
+  sm: 14.5,
   md: 16,   // browser default — no override
-  lg: 18,
-  xl: 20,
+  lg: 17.5,
+  xl: 19,
 }
 
 export const UI_FONT_SIZE_LABELS: Record<UiFontSize, string> = {
@@ -169,10 +169,19 @@ const UI_FONT_SIZE_KEY = 'errata-ui-font-size'
 const UI_FONT_SIZE_EVENT = 'errata-ui-font-size-change'
 
 function applyUiFontSize(size: UiFontSize) {
+  if (typeof document === 'undefined') return
   if (size === 'md') {
     document.documentElement.style.removeProperty('font-size')
   } else {
     document.documentElement.style.setProperty('font-size', `${UI_FONT_SIZE_VALUES[size]}px`)
+  }
+}
+
+// Apply saved preference eagerly on module load (prevents FOUC)
+if (typeof window !== 'undefined') {
+  const _stored = localStorage.getItem(UI_FONT_SIZE_KEY)
+  if (_stored && _stored in UI_FONT_SIZE_VALUES) {
+    applyUiFontSize(_stored as UiFontSize)
   }
 }
 

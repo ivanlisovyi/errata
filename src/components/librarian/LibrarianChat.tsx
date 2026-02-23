@@ -232,7 +232,7 @@ export function LibrarianChat({ storyId, initialInput }: LibrarianChatProps) {
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-muted-foreground"
+              className="h-6 text-[0.625rem] gap-1 text-muted-foreground hover:text-muted-foreground"
               onClick={handleClear}
               data-component-id="librarian-chat-clear"
             >
@@ -269,7 +269,7 @@ export function LibrarianChat({ storyId, initialInput }: LibrarianChatProps) {
           </Button>
         </div>
 
-        <p className="text-[10px] text-muted-foreground text-center">
+        <p className="text-[0.625rem] text-muted-foreground text-center">
           Enter to send, Shift+Enter for newline
         </p>
       </div>

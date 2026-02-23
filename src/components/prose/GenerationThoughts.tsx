@@ -54,7 +54,7 @@ export function GenerationThoughts({
                   label="Thinking"
                   status={isThinking && i === steps.length - 1 ? 'active' : 'complete'}
                 >
-                  <div className="text-[10px] text-muted-foreground italic font-mono whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto">
+                  <div className="text-[0.625rem] text-muted-foreground italic font-mono whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto">
                     {step.text}
                   </div>
                 </ChainOfThoughtStep>
@@ -69,7 +69,7 @@ export function GenerationThoughts({
                   label="Writing Brief"
                   status={isActive ? 'active' : 'complete'}
                 >
-                  <div className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto">
+                  <div className="text-[0.625rem] text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto">
                     {step.text}
                   </div>
                 </ChainOfThoughtStep>

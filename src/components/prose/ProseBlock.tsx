@@ -72,7 +72,7 @@ function ProviderQuickSwitch({
         providerMutation.mutate({ providerId, modelId: null })
       }}
       disabled={providerMutation.isPending || isStreamingAction}
-      className="text-[10px] text-muted-foreground bg-transparent hover:bg-muted/40 border border-border/30 hover:border-border/50 rounded outline-none cursor-pointer transition-all appearance-none pl-1.5 pr-4 py-0.5 font-mono max-w-[140px] truncate disabled:opacity-30 focus:ring-1 focus:ring-primary/20"
+      className="text-[0.625rem] text-muted-foreground bg-transparent hover:bg-muted/40 border border-border/30 hover:border-border/50 rounded outline-none cursor-pointer transition-all appearance-none pl-1.5 pr-4 py-0.5 font-mono max-w-[140px] truncate disabled:opacity-30 focus:ring-1 focus:ring-primary/20"
       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center' }}
     >
       <option value="">
@@ -441,11 +441,11 @@ export const ProseBlock = memo(function ProseBlock({
                 />
                 <div className="flex items-center gap-2 mt-1.5">
                   <ProviderQuickSwitch storyId={storyId} isStreamingAction={isStreamingAction} />
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[0.625rem] text-muted-foreground">
                     Enter &middot; Esc
                   </span>
                   <button
-                    className="ml-auto text-[10px] px-1.5 py-0.5 rounded text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors font-medium disabled:opacity-30"
+                    className="ml-auto text-[0.625rem] px-1.5 py-0.5 rounded text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors font-medium disabled:opacity-30"
                     disabled={!actionInput.trim()}
                     onClick={handlePromptSubmit}
                   >
@@ -474,7 +474,7 @@ export const ProseBlock = memo(function ProseBlock({
               </span>
               <RefreshCw className="size-3 shrink-0 mt-1 opacity-0 group-hover/prompt:opacity-40 transition-opacity" />
               {hasMultiple && (
-                <span className="text-[10px] font-mono text-muted-foreground shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
+                <span className="text-[0.625rem] font-mono text-muted-foreground shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
               )}
             </button>
           ) : (
@@ -482,7 +482,7 @@ export const ProseBlock = memo(function ProseBlock({
               <div className="w-0.5 min-h-[1.25rem] rounded-full bg-border/30 shrink-0 mt-0.5" />
               <span className="font-display italic text-sm text-muted-foreground truncate">{fragment.description}</span>
               {hasMultiple && (
-                <span className="text-[10px] font-mono text-muted-foreground shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
+                <span className="text-[0.625rem] font-mono text-muted-foreground shrink-0 ml-auto mt-0.5">{variationIndex + 1}/{variationCount}</span>
               )}
             </div>
           )}
@@ -553,18 +553,18 @@ export const ProseBlock = memo(function ProseBlock({
           <div className="flex flex-col items-center rounded-2xl border border-border/50 bg-popover/95 backdrop-blur-md shadow-2xl shadow-black/10 overflow-hidden min-w-0">
             {/* Info row — ID, prompt (clickable to re-run), variation, debug */}
             <div className="flex items-center gap-2 px-3 py-1.5 min-w-0 w-full">
-              <span className="text-[10px] font-mono text-muted-foreground shrink-0">{fragment.id}</span>
+              <span className="text-[0.625rem] font-mono text-muted-foreground shrink-0">{fragment.id}</span>
               {hasMultiple && (
                 <>
                   <span className="text-muted-foreground shrink-0">&middot;</span>
-                  <span className="text-[10px] font-mono text-muted-foreground shrink-0">{variationIndex + 1}/{variationCount}</span>
+                  <span className="text-[0.625rem] font-mono text-muted-foreground shrink-0">{variationIndex + 1}/{variationCount}</span>
                 </>
               )}
               {(generatedFrom || fragment.description) && (
                 <>
                   <span className="text-muted-foreground shrink-0">&middot;</span>
                   <button
-                    className="text-[10px] text-muted-foreground italic truncate hover:text-primary/70 transition-colors text-left"
+                    className="text-[0.625rem] text-muted-foreground italic truncate hover:text-primary/70 transition-colors text-left"
                     onClick={() => {
                       setActionMode('regenerate')
                       setActionInput(generatedFrom || fragment.description || '')
@@ -613,18 +613,18 @@ export const ProseBlock = memo(function ProseBlock({
                   }}
                 />
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[0.625rem] text-muted-foreground">
                     Esc to cancel &middot; Ctrl+Enter to {actionMode}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
-                      className="px-2.5 py-1 rounded-lg text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all"
+                      className="px-2.5 py-1 rounded-lg text-[0.6875rem] text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all"
                       onClick={() => { setActionMode(null); setActionInput('') }}
                     >
                       Cancel
                     </button>
                     <button
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-medium text-primary-foreground bg-primary hover:bg-primary/90 disabled:opacity-40 transition-all"
+                      className="px-2.5 py-1 rounded-lg text-[0.6875rem] font-medium text-primary-foreground bg-primary hover:bg-primary/90 disabled:opacity-40 transition-all"
                       disabled={!actionInput.trim()}
                       onClick={handleActionSubmit}
                     >

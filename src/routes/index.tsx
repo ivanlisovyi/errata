@@ -664,7 +664,7 @@ function StoryListPage() {
       <button
         data-component-id="onboarding-launch-button"
         onClick={() => setManualWizard(true)}
-        className="fixed bottom-4 left-4 sm:bottom-4 sm:left-4 flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors safe-area-bottom"
+        className="fixed bottom-4 left-4 sm:bottom-4 sm:left-4 flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground hover:text-muted-foreground transition-colors safe-area-bottom"
       >
         <Sparkles className="size-3" />
         Setup wizard
@@ -787,7 +787,7 @@ function StoryCard({ story, onDelete }: { story: StoryMeta; onDelete: () => void
               {story.name}
             </h2>
             {story.description && (
-              <p className={`text-[13px] leading-relaxed mt-1 line-clamp-2 ${
+              <p className={`text-[0.8125rem] leading-relaxed mt-1 line-clamp-2 ${
                 isLightCover ? 'text-stone-600' : 'text-white/70'
               }`}>
                 {story.description}
@@ -799,32 +799,32 @@ function StoryCard({ story, onDelete }: { story: StoryMeta; onDelete: () => void
               {hasStats ? (
                 <>
                   {stats.prose > 0 && (
-                    <span className={`flex items-center gap-1 text-[11px] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.prose} passage${stats.prose !== 1 ? 's' : ''}`}>
+                    <span className={`flex items-center gap-1 text-[0.6875rem] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.prose} passage${stats.prose !== 1 ? 's' : ''}`}>
                       <BookOpen className="size-3" />
                       {stats.prose}
                     </span>
                   )}
                   {stats.characters > 0 && (
-                    <span className={`flex items-center gap-1 text-[11px] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.characters} character${stats.characters !== 1 ? 's' : ''}`}>
+                    <span className={`flex items-center gap-1 text-[0.6875rem] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.characters} character${stats.characters !== 1 ? 's' : ''}`}>
                       <Users className="size-3" />
                       {stats.characters}
                     </span>
                   )}
                   {stats.knowledge > 0 && (
-                    <span className={`flex items-center gap-1 text-[11px] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.knowledge} knowledge`}>
+                    <span className={`flex items-center gap-1 text-[0.6875rem] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.knowledge} knowledge`}>
                       <Globe className="size-3" />
                       {stats.knowledge}
                     </span>
                   )}
                   {stats.guidelines > 0 && (
-                    <span className={`flex items-center gap-1 text-[11px] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.guidelines} guideline${stats.guidelines !== 1 ? 's' : ''}`}>
+                    <span className={`flex items-center gap-1 text-[0.6875rem] ${isLightCover ? 'text-stone-500' : 'text-white/50'}`} title={`${stats.guidelines} guideline${stats.guidelines !== 1 ? 's' : ''}`}>
                       <Scroll className="size-3" />
                       {stats.guidelines}
                     </span>
                   )}
                 </>
               ) : null}
-              <span className={`text-[11px] ml-auto ${isLightCover ? 'text-stone-400' : 'text-white/40'}`}>
+              <span className={`text-[0.6875rem] ml-auto ${isLightCover ? 'text-stone-400' : 'text-white/40'}`}>
                 {new Date(story.updatedAt).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',

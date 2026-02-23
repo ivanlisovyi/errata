@@ -23,7 +23,7 @@ export function ProviderSelect({ value, globalConfig, onChange, disabled, inheri
     <select
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value || null)}
-      className="w-full h-[26px] px-2 text-[11px] text-foreground/80 bg-muted/50 border border-border/50 rounded-md focus:border-primary/30 focus:outline-none truncate"
+      className="w-full h-[26px] px-2 text-[0.6875rem] text-foreground/80 bg-muted/50 border border-border/50 rounded-md focus:border-primary/30 focus:outline-none truncate"
       disabled={disabled}
     >
       <option value="">

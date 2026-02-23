@@ -51,9 +51,9 @@ export function ProviderList({ onManage }: { onManage: () => void }) {
           <div key={p.id} className="flex items-center gap-1.5 py-0.5">
             <span className="text-sm truncate">{p.name}</span>
             {defaultId === p.id && (
-              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full shrink-0">default</span>
+              <span className="text-[0.625rem] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full shrink-0">default</span>
             )}
-            <span className="text-[11px] text-muted-foreground truncate ml-auto">{p.defaultModel}</span>
+            <span className="text-[0.6875rem] text-muted-foreground truncate ml-auto">{p.defaultModel}</span>
           </div>
         ))
       )}
@@ -258,7 +258,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
             </Button>
           )}
           <h2 className="font-display text-lg">Providers</h2>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+          <span className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">
             {form ? (editingId ? 'Edit' : 'Add New') : 'LLM Configuration'}
           </span>
         </div>
@@ -333,14 +333,14 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                 <label className={labelClass + ' !mb-0'}>Custom Headers</label>
                 <button
                   type="button"
-                  className="text-[11px] text-muted-foreground hover:text-muted-foreground flex items-center gap-0.5 transition-colors"
+                  className="text-[0.6875rem] text-muted-foreground hover:text-muted-foreground flex items-center gap-0.5 transition-colors"
                   onClick={() => setForm({ ...form, customHeaders: [...form.customHeaders, { key: '', value: '', _id: crypto.randomUUID() }] })}
                 >
                   <Plus className="size-3" /> Add
                 </button>
               </div>
               {form.customHeaders.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground italic">No custom headers</p>
+                <p className="text-[0.6875rem] text-muted-foreground italic">No custom headers</p>
               ) : (
                 <div className="space-y-1.5">
                   {form.customHeaders.map((header, i) => (
@@ -425,7 +425,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
               {fetchedModels.length > 0 && (
                 <button
                   type="button"
-                  className="text-[11px] text-muted-foreground hover:text-muted-foreground mt-1 underline"
+                  className="text-[0.6875rem] text-muted-foreground hover:text-muted-foreground mt-1 underline"
                   onClick={() => setUseCustomModel(!useCustomModel)}
                 >
                   {useCustomModel ? 'Use fetched models' : 'Enter model ID manually'}
@@ -435,7 +435,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                 <p className="text-xs text-destructive mt-1">{fetchError}</p>
               )}
               {fetchedModels.length > 0 && !fetchError && (
-                <p className="text-[11px] text-muted-foreground mt-1">{fetchedModels.length} models available</p>
+                <p className="text-[0.6875rem] text-muted-foreground mt-1">{fetchedModels.length} models available</p>
               )}
             </div>
 
@@ -491,13 +491,13 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{p.name}</span>
                     {defaultId === p.id && (
-                      <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">default</span>
+                      <span className="text-[0.625rem] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">default</span>
                     )}
                     {p.preset !== 'custom' && (
-                      <span className="text-[10px] text-muted-foreground">{p.preset}</span>
+                      <span className="text-[0.625rem] text-muted-foreground">{p.preset}</span>
                     )}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 flex gap-3">
+                  <div className="text-[0.6875rem] text-muted-foreground mt-0.5 flex gap-3">
                     <span>Model: {p.defaultModel}</span>
                     <span>URL: {p.baseURL}</span>
                     <span>Key: {p.apiKey}</span>
@@ -538,7 +538,7 @@ export function ProviderPanel({ onClose }: { onClose: () => void }) {
 
       {/* Creator */}
       <div className="px-6 py-3 border-t border-border/30 text-center">
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[0.625rem] text-muted-foreground">
           built by{' '}
           <a
             href="https://github.com/tealios/"

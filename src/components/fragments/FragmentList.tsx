@@ -141,21 +141,21 @@ const FragmentRow = memo(function FragmentRow({
       >
         <p className="font-medium text-sm truncate leading-tight">{fragment.name}</p>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[10px] font-mono text-muted-foreground">
+          <span className="text-[0.625rem] font-mono text-muted-foreground">
             {fragment.id}
           </span>
           {fragment.sticky && (
-            <Badge variant="secondary" className="text-[9px] h-3.5 px-1">
+            <Badge variant="secondary" className="text-[0.5625rem] h-3.5 px-1">
               pinned
             </Badge>
           )}
           {fragment.sticky && fragment.placement === 'system' && (
-            <Badge variant="outline" className="text-[9px] h-3.5 px-1">
+            <Badge variant="outline" className="text-[0.5625rem] h-3.5 px-1">
               sys
             </Badge>
           )}
           {showType && (
-            <Badge variant="outline" className="text-[9px] h-3.5 px-1">
+            <Badge variant="outline" className="text-[0.5625rem] h-3.5 px-1">
               {fragment.type}
             </Badge>
           )}
@@ -324,7 +324,7 @@ const FolderHeader = memo(function FolderHeader({
       )}
 
       {/* Count badge */}
-      <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+      <span className="text-[0.625rem] text-muted-foreground tabular-nums shrink-0">
         {count}
       </span>
 
@@ -401,7 +401,7 @@ function UncategorizedHeader({
       <button onClick={onToggle} className="flex-1 min-w-0 text-left">
         <span className="text-xs text-muted-foreground italic truncate block">Uncategorized</span>
       </button>
-      <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+      <span className="text-[0.625rem] text-muted-foreground tabular-nums shrink-0">
         {count}
       </span>
     </div>
@@ -980,7 +980,7 @@ export function FragmentList({
                   <button
                     onClick={() => setSort(mode)}
                     data-component-id={componentId(listIdBase ?? type ?? 'fragment', 'sort', mode)}
-                    className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                    className={`text-[0.625rem] px-1.5 py-0.5 rounded transition-colors ${
                       sort === mode
                         ? 'bg-accent text-accent-foreground'
                         : 'text-muted-foreground hover:text-muted-foreground'
@@ -1042,7 +1042,7 @@ export function FragmentList({
 
       {/* Pinning info */}
       <div className="px-3 py-2.5 border-b border-border/30">
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
+        <p className="text-[0.625rem] text-muted-foreground leading-relaxed">
           <Pin className="size-2.5 inline -mt-0.5 mr-0.5" />
           Pinned fragments are always sent to the model. Unpinned ones appear as a shortlist.
         </p>

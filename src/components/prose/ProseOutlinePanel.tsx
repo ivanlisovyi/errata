@@ -102,7 +102,7 @@ export function ProseOutlinePanel({
           <>
             {/* Header */}
             <div className="shrink-0 px-4 pb-3 flex items-center justify-between">
-              <h3 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+              <h3 className="text-[0.625rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">
                 Passages
               </h3>
               <Tooltip>
@@ -115,7 +115,7 @@ export function ProseOutlinePanel({
                     <Bookmark className="size-3" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="left" className="text-[10px]">Add chapter</TooltipContent>
+                <TooltipContent side="left" className="text-[0.625rem]">Add chapter</TooltipContent>
               </Tooltip>
             </div>
 
@@ -140,7 +140,7 @@ export function ProseOutlinePanel({
                     >
                       <div className="flex items-center gap-1.5">
                         <Bookmark className="size-2.5 text-amber-500/50 shrink-0" />
-                        <span className={`text-[10px] font-medium tracking-wide truncate ${
+                        <span className={`text-[0.625rem] font-medium tracking-wide truncate ${
                           isActive ? 'text-amber-400/80' : 'text-amber-500/40 group-hover/item:text-amber-400/60'
                         }`}>
                           {fragment.name}
@@ -165,13 +165,13 @@ export function ProseOutlinePanel({
                         : 'hover:bg-accent/40'
                     }`}
                   >
-                    <span className={`block text-[10px] font-mono mb-0.5 ${
+                    <span className={`block text-[0.625rem] font-mono mb-0.5 ${
                       isActive ? 'text-primary/70' : 'text-muted-foreground'
                     }`}>
                       {currentProseNumber}
                     </span>
                     {fragment.description && (
-                      <span className={`block text-[10px] italic truncate mb-0.5 ${
+                      <span className={`block text-[0.625rem] italic truncate mb-0.5 ${
                         isActive
                           ? 'text-muted-foreground'
                           : 'text-muted-foreground group-hover/item:text-muted-foreground'
@@ -179,7 +179,7 @@ export function ProseOutlinePanel({
                         {fragment.description.slice(0, 50)}{fragment.description.length > 50 ? '...' : ''}
                       </span>
                     )}
-                    <span className={`block text-[11px] leading-snug font-prose ${
+                    <span className={`block text-[0.6875rem] leading-snug font-prose ${
                       isActive
                         ? 'text-foreground/80'
                         : 'text-muted-foreground group-hover/item:text-muted-foreground'
@@ -201,7 +201,7 @@ export function ProseOutlinePanel({
                     className="w-full flex items-center justify-center gap-1.5 rounded-md py-1.5 text-muted-foreground hover:text-muted-foreground hover:bg-accent/40 transition-colors"
                   >
                     <ChevronsDown className="size-3.5" />
-                    <span className="text-[10px]">Bottom</span>
+                    <span className="text-[0.625rem]">Bottom</span>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="left">Scroll to bottom</TooltipContent>
@@ -234,7 +234,7 @@ export function ProseOutlinePanel({
                           }`} />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="left" className="text-[10px]">{fragment.name}</TooltipContent>
+                      <TooltipContent side="left" className="text-[0.625rem]">{fragment.name}</TooltipContent>
                     </Tooltip>
                   )
                 }
@@ -255,7 +255,7 @@ export function ProseOutlinePanel({
                         }`} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="left" className="text-[10px]">{idx + 1}</TooltipContent>
+                    <TooltipContent side="left" className="text-[0.625rem]">{idx + 1}</TooltipContent>
                   </Tooltip>
                 )
               })}

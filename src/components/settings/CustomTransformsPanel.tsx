@@ -75,7 +75,7 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <div className="flex items-center gap-2">
           <h2 className="font-display text-lg">Selection Transforms</h2>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Writing</span>
+          <span className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Writing</span>
         </div>
         <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" onClick={onClose}>
           <X className="size-4" />
@@ -116,7 +116,7 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
                       {isExpanded
                         ? <ChevronDown className="size-3 text-muted-foreground shrink-0" />
                         : <ChevronRight className="size-3 text-muted-foreground shrink-0" />}
-                      <span className={`text-[12px] truncate ${t.enabled ? 'text-foreground/80' : 'text-muted-foreground line-through'}`}>
+                      <span className={`text-[0.75rem] truncate ${t.enabled ? 'text-foreground/80' : 'text-muted-foreground line-through'}`}>
                         {t.label}
                       </span>
                     </button>
@@ -147,23 +147,23 @@ export function CustomTransformsPanel({ onClose }: CustomTransformsPanelProps) {
                   {isExpanded && (
                     <div className="px-3 pb-3 space-y-2 border-t border-border/20 pt-2">
                       <div>
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">Label</label>
+                        <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-1 block">Label</label>
                         <input
                           type="text"
                           value={t.label}
                           onChange={(e) => updateLabel(t.id, e.target.value)}
                           draggable={false}
-                          className="w-full h-8 px-2.5 text-[12px] bg-muted/30 border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none cursor-text"
+                          className="w-full h-8 px-2.5 text-[0.75rem] bg-muted/30 border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none cursor-text"
                           placeholder="Transform name"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">Instruction</label>
+                        <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-1 block">Instruction</label>
                         <textarea
                           value={t.instruction}
                           onChange={(e) => updateInstruction(t.id, e.target.value)}
                           draggable={false}
-                          className="w-full min-h-[80px] px-2.5 py-2 text-[12px] bg-muted/30 border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none resize-y cursor-text"
+                          className="w-full min-h-[80px] px-2.5 py-2 text-[0.75rem] bg-muted/30 border border-border/40 rounded-md focus:border-foreground/20 focus:outline-none resize-y cursor-text"
                           placeholder="Describe what this transform should do to the selected text..."
                         />
                       </div>

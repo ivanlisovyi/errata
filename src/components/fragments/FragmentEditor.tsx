@@ -452,10 +452,10 @@ export function FragmentEditor({
           </h2>
           {fragment && (
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[10px] font-mono text-muted-foreground hidden sm:inline">{fragment.id}</span>
-              <Badge variant="secondary" className="text-[10px] h-4">{fragment.type}</Badge>
+              <span className="text-[0.625rem] font-mono text-muted-foreground hidden sm:inline">{fragment.id}</span>
+              <Badge variant="secondary" className="text-[0.625rem] h-4">{fragment.type}</Badge>
               {fragment.sticky && (
-                <Badge className="text-[10px] h-4 gap-0.5">
+                <Badge className="text-[0.625rem] h-4 gap-0.5">
                   <Pin className="size-2" />
                   pinned
                 </Badge>
@@ -716,7 +716,7 @@ export function FragmentEditor({
                           }}
                         />
                       </label>
-                      <span className="text-[10px] text-muted-foreground">or paste a URL below</span>
+                      <span className="text-[0.625rem] text-muted-foreground">or paste a URL below</span>
                     </div>
                   )}
                   {isEditing && (
@@ -746,7 +746,7 @@ export function FragmentEditor({
                     <p className="text-sm text-muted-foreground">
                       {isEditing ? 'Drop an image here or click to upload' : 'No image set'}
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-1">PNG, JPG, SVG, or paste a URL</p>
+                    <p className="text-[0.6875rem] text-muted-foreground mt-1">PNG, JPG, SVG, or paste a URL</p>
                   </div>
                   {isEditing && (
                     <input
@@ -769,7 +769,7 @@ export function FragmentEditor({
                   className="mt-2 h-7 text-xs bg-transparent font-mono"
                 />
               )}
-              {uploadError && <p className="text-[11px] text-destructive mt-1">{uploadError}</p>}
+              {uploadError && <p className="text-[0.6875rem] text-destructive mt-1">{uploadError}</p>}
             </>
           ) : (
             <>
@@ -816,7 +816,7 @@ export function FragmentEditor({
                                 type="button"
                                 onClick={() => unfreezeSection(seg.id)}
                                 disabled={metaMutation.isPending}
-                                className="shrink-0 mt-0.5 inline-flex items-center gap-1 h-5 px-1.5 rounded text-[10px] text-sky-600/70 dark:text-sky-400/60 opacity-0 group-hover:opacity-100 hover:bg-sky-500/10 hover:text-sky-700 dark:hover:text-sky-300 transition-all"
+                                className="shrink-0 mt-0.5 inline-flex items-center gap-1 h-5 px-1.5 rounded text-[0.625rem] text-sky-600/70 dark:text-sky-400/60 opacity-0 group-hover:opacity-100 hover:bg-sky-500/10 hover:text-sky-700 dark:hover:text-sky-300 transition-all"
                               >
                                 <Snowflake className="size-2.5" />
                                 <span>Unfreeze</span>
@@ -854,7 +854,7 @@ export function FragmentEditor({
                     onClick={freezeSelection}
                     disabled={!hasTextSelection || metaMutation.isPending}
                     className={`
-                      inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[11px] transition-all
+                      inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-[0.6875rem] transition-all
                       ${hasTextSelection
                         ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25 hover:bg-sky-500/20 cursor-pointer'
                         : 'text-muted-foreground/50 cursor-default'
@@ -865,7 +865,7 @@ export function FragmentEditor({
                     {hasTextSelection ? 'Freeze selected text' : 'Select text to freeze'}
                   </button>
                 ) : <span />}
-                <div className="flex gap-3 text-[10px] text-muted-foreground tabular-nums">
+                <div className="flex gap-3 text-[0.625rem] text-muted-foreground tabular-nums">
                   <span>{content.trim() ? content.trim().split(/\s+/).length : 0} words</span>
                   <span>{content.length} chars</span>
                 </div>
@@ -874,9 +874,9 @@ export function FragmentEditor({
               {/* Orphaned frozen sections — text no longer in content */}
               {orphanedFrozen.length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400/70">Orphaned:</span>
+                  <span className="text-[0.625rem] text-amber-600 dark:text-amber-400/70">Orphaned:</span>
                   {orphanedFrozen.map((s) => (
-                    <span key={s.id} className="inline-flex items-center gap-1 h-5 px-1.5 rounded border border-amber-500/20 bg-amber-500/[0.05] text-[10px] text-amber-700 dark:text-amber-400/60">
+                    <span key={s.id} className="inline-flex items-center gap-1 h-5 px-1.5 rounded border border-amber-500/20 bg-amber-500/[0.05] text-[0.625rem] text-amber-700 dark:text-amber-400/60">
                       <span className="max-w-[120px] truncate">{s.text}</span>
                       <button type="button" onClick={() => unfreezeSection(s.id)} className="hover:text-destructive transition-colors">&times;</button>
                     </span>
@@ -896,7 +896,7 @@ export function FragmentEditor({
                 <div className="px-6 py-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Version history</p>
-                    <span className="text-[10px] text-muted-foreground">Current v{fragment.version ?? 1}</span>
+                    <span className="text-[0.625rem] text-muted-foreground">Current v{fragment.version ?? 1}</span>
                   </div>
                   {versions.length === 0 ? (
                     <p className="text-xs text-muted-foreground">No previous versions yet.</p>
@@ -906,7 +906,7 @@ export function FragmentEditor({
                         <div key={v.version} className="flex items-center justify-between rounded-md border border-border/40 px-2 py-1.5">
                           <div className="min-w-0">
                             <p className="text-xs font-medium">v{v.version}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{new Date(v.createdAt).toLocaleString()}</p>
+                            <p className="text-[0.625rem] text-muted-foreground truncate">{new Date(v.createdAt).toLocaleString()}</p>
                           </div>
                           <div className="flex items-center gap-1">
                             <Button
@@ -947,8 +947,8 @@ export function FragmentEditor({
                           Close
                         </Button>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">`-` current content, `+` selected version</p>
-                      <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded border border-border/30 bg-background/50 p-2 text-[11px] leading-4">
+                      <p className="text-[0.625rem] text-muted-foreground">`-` current content, `+` selected version</p>
+                      <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded border border-border/30 bg-background/50 p-2 text-[0.6875rem] leading-4">
                         {versionDiffLines.join('\n') || 'No content differences.'}
                       </pre>
                     </div>
@@ -1131,7 +1131,7 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{m?.name ?? ref.fragmentId}</p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[0.625rem] text-muted-foreground">
                     {ref.kind}
                     {ref.boundary && (
                       <span className="ml-1 text-muted-foreground">
@@ -1217,7 +1217,7 @@ function VisualRefsSection({ storyId, fragmentId }: { storyId: string; fragmentI
           {/* Upload tile */}
           <label className={`size-12 rounded-md border-2 border-dashed border-border/40 flex flex-col items-center justify-center gap-0.5 shrink-0 transition-colors ${uploading ? 'opacity-50' : 'hover:border-primary/40 hover:bg-accent/30 cursor-pointer'}`}>
             <Upload className="size-3.5 text-muted-foreground" />
-            <span className="text-[8px] text-muted-foreground">{uploading ? '...' : 'Upload'}</span>
+            <span className="text-[0.5rem] text-muted-foreground">{uploading ? '...' : 'Upload'}</span>
             <input
               type="file"
               accept="image/*"
@@ -1407,7 +1407,7 @@ function RefsSection({ storyId, fragmentId }: { storyId: string; fragmentId: str
         <div className="flex flex-wrap gap-1 mb-1.5">
           <span className="text-xs text-muted-foreground">Referenced by:</span>
           {data.backRefs.map((refId) => (
-            <Badge key={refId} variant="secondary" className="text-[10px]">
+            <Badge key={refId} variant="secondary" className="text-[0.625rem]">
               {refId}
             </Badge>
           ))}

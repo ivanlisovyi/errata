@@ -119,12 +119,12 @@ function WizardShell({
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+        <span className="text-[0.625rem] text-muted-foreground uppercase tracking-widest">
           {showStepCount ? `Step ${stepIndex} of ${STEPS.length - 2}` : '\u00a0'}
         </span>
         <button
           onClick={onSkip}
-          className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
+          className="text-[0.6875rem] text-muted-foreground hover:text-muted-foreground transition-colors"
           data-component-id="wizard-skip"
         >
           Skip setup
@@ -225,7 +225,7 @@ function ContentPreview({
         )}
       </div>
       {charLimit && content && (
-        <div className={`text-[10px] mt-1 text-right ${
+        <div className={`text-[0.625rem] mt-1 text-right ${
           content.length < charLimit.min ? 'text-muted-foreground' :
           content.length > charLimit.max ? 'text-destructive' :
           'text-muted-foreground'
@@ -630,7 +630,7 @@ function ContentStep({
             }`}
           />
           {charLimit && (
-            <div className={`text-[10px] text-right ${
+            <div className={`text-[0.625rem] text-right ${
               content.length < charLimit.min ? 'text-muted-foreground' :
               content.length > charLimit.max ? 'text-destructive' :
               'text-muted-foreground'
@@ -912,7 +912,7 @@ function CharactersStep({
                   /* Inline edit form */
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
+                      <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-1 block">
                         Name
                       </label>
                       <Input
@@ -923,7 +923,7 @@ function CharactersStep({
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
+                      <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-1 block">
                         Description
                       </label>
                       <Textarea
@@ -1048,7 +1048,7 @@ function CharactersStep({
             {/* Cast preview with checkboxes */}
             {showCastPreview && castParsed.length > 0 && (
               <div className="space-y-2">
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">
                   Select characters to add
                 </label>
                 {castParsed.map((char, i) => (
@@ -1123,7 +1123,7 @@ function CharactersStep({
           <div className="space-y-3 animate-wizard-reveal">
             <div className="p-4 rounded-xl border border-border/30 bg-card/20 space-y-3">
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
+                <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-1 block">
                   Character Name
                 </label>
                 <Input
@@ -1141,7 +1141,7 @@ function CharactersStep({
                 />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
+                <label className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-1 block">
                   Brief Description
                 </label>
                 <Textarea
@@ -1244,8 +1244,8 @@ function PreferencesStep({
               }`}
             >
               <Eye className="size-4 text-muted-foreground mb-2.5" />
-              <div className="font-display text-[13px] italic leading-snug">Review first</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Review first</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 The Librarian flags suggestions for you to accept or dismiss. Nothing changes without your say.
               </p>
             </button>
@@ -1259,8 +1259,8 @@ function PreferencesStep({
               }`}
             >
               <Zap className="size-4 text-muted-foreground mb-2.5" />
-              <div className="font-display text-[13px] italic leading-snug">Auto-accept</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Auto-accept</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 New knowledge is created and updated automatically. Your world-bible stays current as you write.
               </p>
             </button>
@@ -1290,8 +1290,8 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <div className="font-display text-[13px] italic leading-snug">Simple</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Simple</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 Errata assembles the prompt for you &mdash; guidelines, world, characters, then prose.
                 The right choice for most writers.
               </p>
@@ -1305,8 +1305,8 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <div className="font-display text-[13px] italic leading-snug">Advanced</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Advanced</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 Unlocks the Block Editor &mdash; reorder, override, or inject custom
                 blocks into the AI prompt directly.
               </p>
@@ -1337,8 +1337,8 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <div className="font-display text-[13px] italic leading-snug">Prewriter</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Prewriter</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 Two-phase generation: a planner creates a writing brief, then a writer
                 follows it. Better quality, slightly slower.
               </p>
@@ -1352,8 +1352,8 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <div className="font-display text-[13px] italic leading-snug">Standard</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Standard</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 Single-pass generation using the full context directly.
                 Faster, but the writer sees everything at once.
               </p>
@@ -1384,8 +1384,8 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <div className="font-display text-[13px] italic leading-snug">Enabled</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Enabled</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 Early prose is condensed into summaries, keeping the full context
                 within the model&rsquo;s window. Best for longer stories.
               </p>
@@ -1399,8 +1399,8 @@ function PreferencesStep({
                   : 'border-border/30 bg-card/10 hover:border-border/50'
               }`}
             >
-              <div className="font-display text-[13px] italic leading-snug">Disabled</div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <div className="font-display text-[0.8125rem] italic leading-snug">Disabled</div>
+              <p className="text-[0.6875rem] text-muted-foreground mt-1.5 leading-relaxed">
                 All prose is sent verbatim. Works well for short stories or models
                 with very large context windows.
               </p>
@@ -1408,7 +1408,7 @@ function PreferencesStep({
           </div>
         </div>
 
-        <p className="text-[10px] text-muted-foreground leading-relaxed font-prose">
+        <p className="text-[0.625rem] text-muted-foreground leading-relaxed font-prose">
           All settings can be changed anytime in Settings.
         </p>
       </div>
@@ -1460,7 +1460,7 @@ function CompleteStep({
               >
                 <Check className="size-4 text-primary/50 shrink-0" />
                 <span className="text-sm font-medium">{item.label}</span>
-                <span className="text-[10px] text-muted-foreground ml-auto uppercase tracking-wider">
+                <span className="text-[0.625rem] text-muted-foreground ml-auto uppercase tracking-wider">
                   {item.type}
                 </span>
               </div>

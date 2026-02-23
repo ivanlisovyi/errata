@@ -112,7 +112,7 @@ export function RefinementPanel({
                 <Sparkles className="size-3" />
                 Refine
               </Button>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[0.625rem] text-muted-foreground">
                 Ctrl+Enter to start
               </span>
             </div>

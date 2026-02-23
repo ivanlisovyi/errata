@@ -248,7 +248,7 @@ function Wisp({
             <span className="text-foreground/50 mx-1">&middot;</span>
             {meta.action}
           </span>
-          <span className="text-[10px] text-foreground/60 tabular-nums">{elapsed}</span>
+          <span className="text-[0.625rem] text-foreground/60 tabular-nums">{elapsed}</span>
         </div>
       </TooltipContent>
     </Tooltip>
