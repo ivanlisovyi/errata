@@ -382,10 +382,10 @@ export function SingleFragmentPreview({
     <div className="rounded-lg border border-border/50 bg-accent/20 overflow-hidden">
       <div className="px-4 py-3 space-y-2">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-[10px] h-4">{f.type}</Badge>
-          {f.sticky && <Badge className="text-[10px] h-4">pinned</Badge>}
+          <Badge variant="secondary" className="text-[0.625rem] h-4">{f.type}</Badge>
+          {f.sticky && <Badge className="text-[0.625rem] h-4">pinned</Badge>}
           {data.source && (
-            <span className="text-[9px] font-mono text-muted-foreground ml-auto truncate max-w-24" title={`Source: ${data.source}`}>
+            <span className="text-[0.5625rem] font-mono text-muted-foreground ml-auto truncate max-w-24" title={`Source: ${data.source}`}>
               {data.source.slice(0, 8)}
             </span>
           )}
@@ -404,13 +404,13 @@ export function SingleFragmentPreview({
         {f.tags && f.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {f.tags.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-[9px] h-3.5">{tag}</Badge>
+              <Badge key={tag} variant="outline" className="text-[0.5625rem] h-3.5">{tag}</Badge>
             ))}
           </div>
         )}
         {data.attachments && data.attachments.length > 0 && (
           <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[0.625rem] text-muted-foreground">
               <ImageIcon className="size-3" />
               {data.attachments.length} attached {data.attachments.length === 1 ? 'image' : 'images'}
             </div>
@@ -435,7 +435,7 @@ export function SingleFragmentPreview({
       <div className="border-t border-border/30 px-4 py-2">
         <button
           onClick={onClear}
-          className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
+          className="text-[0.6875rem] text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           Paste different fragment
         </button>
@@ -486,11 +486,11 @@ export function BundlePreview({
         <div className="flex items-center gap-2">
           <Package className="size-3.5 text-muted-foreground" />
           <span className="text-xs font-medium">Fragment Bundle</span>
-          <Badge variant="secondary" className="text-[10px] h-4 tabular-nums">
+          <Badge variant="secondary" className="text-[0.625rem] h-4 tabular-nums">
             {data.fragments.length} fragments
           </Badge>
           {data.storyName && (
-            <span className="text-[10px] text-muted-foreground ml-auto truncate max-w-32">
+            <span className="text-[0.625rem] text-muted-foreground ml-auto truncate max-w-32">
               from {data.storyName}
             </span>
           )}
@@ -498,11 +498,11 @@ export function BundlePreview({
         <div className="flex items-center gap-2 mt-2">
           <button
             onClick={allSelected ? onDeselectAll : onSelectAll}
-            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[0.6875rem] text-muted-foreground hover:text-foreground transition-colors"
           >
             {allSelected ? 'Deselect all' : 'Select all'}
           </button>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-[0.625rem] text-muted-foreground">
             {selectedIndices.size} of {data.fragments.length} selected
           </span>
         </div>
@@ -513,7 +513,7 @@ export function BundlePreview({
         {Object.entries(groupedEntries).map(([type, items]) => (
           <div key={type}>
             <div className="px-4 py-1.5 bg-background/30 border-b border-border/20">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{type}</span>
+              <span className="text-[0.625rem] font-medium uppercase tracking-wider text-muted-foreground">{type}</span>
             </div>
             {items.map(({ entry, index }) => (
               <div
@@ -536,11 +536,11 @@ export function BundlePreview({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate leading-tight">{entry.name}</p>
                   {entry.description && (
-                    <p className="text-[11px] text-muted-foreground truncate">{entry.description}</p>
+                    <p className="text-[0.6875rem] text-muted-foreground truncate">{entry.description}</p>
                   )}
                 </div>
                 {entry.sticky && (
-                  <Badge variant="secondary" className="text-[9px] h-3.5 px-1 shrink-0">pinned</Badge>
+                  <Badge variant="secondary" className="text-[0.5625rem] h-3.5 px-1 shrink-0">pinned</Badge>
                 )}
                 {entry.attachments && entry.attachments.length > 0 && (
                   <ImageIcon className="size-3 text-muted-foreground shrink-0" />
@@ -557,7 +557,7 @@ export function BundlePreview({
           <div className="px-4 py-2 bg-background/30 border-b border-border/20">
             <div className="flex items-center gap-1.5">
               <Settings2 className="size-3 text-muted-foreground" />
-              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Context Configuration</span>
+              <span className="text-[0.625rem] font-medium uppercase tracking-wider text-muted-foreground">Context Configuration</span>
             </div>
           </div>
           <div className="px-4 py-1.5">
@@ -574,7 +574,7 @@ export function BundlePreview({
                 <Checkbox checked={importBlockConfig} className="size-3.5 shrink-0" tabIndex={-1} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate leading-tight">Generation blocks</p>
-                  <p className="text-[11px] text-muted-foreground truncate">Custom blocks and overrides for generation context</p>
+                  <p className="text-[0.6875rem] text-muted-foreground truncate">Custom blocks and overrides for generation context</p>
                 </div>
               </div>
             )}
@@ -592,7 +592,7 @@ export function BundlePreview({
                 <Checkbox checked={importAgentConfigs?.has(name)} className="size-3.5 shrink-0" tabIndex={-1} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate leading-tight">{formatAgentName(name)}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">Agent-specific block configuration</p>
+                  <p className="text-[0.6875rem] text-muted-foreground truncate">Agent-specific block configuration</p>
                 </div>
               </div>
             ))}
@@ -604,7 +604,7 @@ export function BundlePreview({
       <div className="border-t border-border/30 px-4 py-2">
         <button
           onClick={onClear}
-          className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
+          className="text-[0.6875rem] text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           Load different file
         </button>

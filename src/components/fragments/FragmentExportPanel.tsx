@@ -194,7 +194,7 @@ export function FragmentExportPanel({ storyId, storyName, onClose }: FragmentExp
           <Package className="size-4 text-muted-foreground" />
           <h2 className="font-display text-lg">Export Fragments</h2>
           {selected.size > 0 && (
-            <Badge variant="secondary" className="text-[10px] h-4 tabular-nums">
+            <Badge variant="secondary" className="text-[0.625rem] h-4 tabular-nums">
               {selected.size} selected
             </Badge>
           )}
@@ -208,11 +208,11 @@ export function FragmentExportPanel({ storyId, storyName, onClose }: FragmentExp
       <div className="flex items-center gap-3 px-6 py-3 border-b border-border/30">
         <button
           onClick={allSelected ? deselectAll : selectAll}
-          className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          className="text-[0.6875rem] text-muted-foreground hover:text-foreground transition-colors"
         >
           {allSelected ? 'Deselect all' : 'Select all'}
         </button>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[0.625rem] text-muted-foreground">
           {allExportable.length} fragments available
         </span>
       </div>
@@ -246,7 +246,7 @@ export function FragmentExportPanel({ storyId, storyName, onClose }: FragmentExp
                   <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
                     {config.label}
                   </span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">
+                  <span className="text-[0.625rem] text-muted-foreground ml-auto">
                     {fragments.filter((f) => selected.has(f.id)).length}/{fragments.length}
                   </span>
                 </div>
@@ -301,9 +301,9 @@ export function FragmentExportPanel({ storyId, storyName, onClose }: FragmentExp
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate leading-tight">{fragment.name}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] font-mono text-muted-foreground">{fragment.id}</span>
+                            <span className="text-[0.625rem] font-mono text-muted-foreground">{fragment.id}</span>
                             {fragment.sticky && (
-                              <Badge variant="secondary" className="text-[9px] h-3.5 px-1">pinned</Badge>
+                              <Badge variant="secondary" className="text-[0.5625rem] h-3.5 px-1">pinned</Badge>
                             )}
                           </div>
                         </div>
@@ -340,7 +340,7 @@ export function FragmentExportPanel({ storyId, storyName, onClose }: FragmentExp
           </span>
         </div>
         {includeConfigs && configSummary && (
-          <p className="text-[10px] text-muted-foreground mt-1.5 ml-6">
+          <p className="text-[0.625rem] text-muted-foreground mt-1.5 ml-6">
             {[
               configSummary.hasBlockConfig && `${configSummary.customBlockCount} custom block${configSummary.customBlockCount !== 1 ? 's' : ''}, ${configSummary.overrideCount} override${configSummary.overrideCount !== 1 ? 's' : ''}`,
               configSummary.agentCount > 0 && `${configSummary.agentCount} agent config${configSummary.agentCount !== 1 ? 's' : ''}`,
@@ -348,7 +348,7 @@ export function FragmentExportPanel({ storyId, storyName, onClose }: FragmentExp
           </p>
         )}
         {includeConfigs && !configSummary && exportedConfigs && (
-          <p className="text-[10px] text-muted-foreground mt-1.5 ml-6 italic">
+          <p className="text-[0.625rem] text-muted-foreground mt-1.5 ml-6 italic">
             No custom configuration to export
           </p>
         )}

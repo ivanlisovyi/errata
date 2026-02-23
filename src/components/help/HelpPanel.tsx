@@ -139,8 +139,8 @@ export function HelpPanel() {
 
         {/* Footer */}
         <div className="shrink-0 border-t border-border/20 px-6 py-3">
-          <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            Press <kbd className="px-1 py-0.5 rounded border border-border/30 bg-muted/30 text-[9px] font-mono">Esc</kbd> to close
+          <p className="text-[0.625rem] text-muted-foreground text-center leading-relaxed">
+            Press <kbd className="px-1 py-0.5 rounded border border-border/30 bg-muted/30 text-[0.5625rem] font-mono">Esc</kbd> to close
           </p>
         </div>
       </div>
@@ -155,7 +155,7 @@ export function HelpPanel() {
 function TopicIndex({ onSelect }: { onSelect: (sectionId: string) => void }) {
   return (
     <div className="space-y-2">
-      <p className="text-[11px] text-muted-foreground leading-relaxed mb-4">
+      <p className="text-[0.6875rem] text-muted-foreground leading-relaxed mb-4">
         Select a topic to learn more about Errata's features.
       </p>
       {HELP_SECTIONS.map((section, idx) => (
@@ -168,10 +168,10 @@ function TopicIndex({ onSelect }: { onSelect: (sectionId: string) => void }) {
         >
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[13px] font-medium text-foreground/80 group-hover:text-foreground transition-colors">
+              <p className="text-[0.8125rem] font-medium text-foreground/80 group-hover:text-foreground transition-colors">
                 {section.title}
               </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+              <p className="text-[0.6875rem] text-muted-foreground mt-0.5 leading-snug">
                 {section.description}
               </p>
             </div>
@@ -180,7 +180,7 @@ function TopicIndex({ onSelect }: { onSelect: (sectionId: string) => void }) {
           {/* Subsection preview */}
           <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
             {section.subsections.map((sub) => (
-              <span key={sub.id} className="text-[10px] text-muted-foreground">
+              <span key={sub.id} className="text-[0.625rem] text-muted-foreground">
                 {sub.title}
               </span>
             ))}
@@ -198,13 +198,13 @@ function SectionView({ section, scrollAreaRef }: { section: HelpSection; scrollA
   return (
     <div className="space-y-6">
       {/* Section description */}
-      <p className="text-[12px] text-muted-foreground leading-relaxed -mt-1">
+      <p className="text-[0.75rem] text-muted-foreground leading-relaxed -mt-1">
         {section.description}
       </p>
 
       {/* Table of contents */}
       <nav className="rounded-lg border border-border/20 bg-accent/10 px-4 py-3">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">On this page</p>
+        <p className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-2">On this page</p>
         <div className="space-y-1">
           {section.subsections.map((sub) => (
             <button
@@ -212,7 +212,7 @@ function SectionView({ section, scrollAreaRef }: { section: HelpSection; scrollA
               onClick={() => {
                 if (scrollAreaRef.current) scrollToHelpAnchor(scrollAreaRef.current, sub.id)
               }}
-              className="block text-left text-[11.5px] text-foreground/50 hover:text-foreground/80 transition-colors py-0.5"
+              className="block text-left text-[0.71875rem] text-foreground/50 hover:text-foreground/80 transition-colors py-0.5"
               data-component-id={componentId('help-nav', sub.id)}
             >
               {sub.title}
@@ -229,7 +229,7 @@ function SectionView({ section, scrollAreaRef }: { section: HelpSection; scrollA
           className="scroll-mt-4"
         >
           {idx > 0 && <div className="h-px bg-border/15 mb-5" />}
-          <h3 className="font-display text-[15px] text-foreground/85 mb-3">
+          <h3 className="font-display text-[0.9375rem] text-foreground/85 mb-3">
             {sub.title}
           </h3>
           <div>{sub.content}</div>

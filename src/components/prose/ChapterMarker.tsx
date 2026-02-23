@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, memo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api, type Fragment } from '@/lib/api'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
@@ -9,11 +9,11 @@ interface ChapterMarkerProps {
   fragment: Fragment
   displayIndex: number
   sectionIndex: number
-  onSelect: () => void
+  onSelect: (fragment: Fragment) => void
   onDelete: (sectionIndex: number) => void
 }
 
-export function ChapterMarker({
+export const ChapterMarker = memo(function ChapterMarker({
   storyId,
   fragment,
   displayIndex,
@@ -113,13 +113,13 @@ export function ChapterMarker({
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={onSelect}
+              onClick={() => onSelect(fragment)}
               className="flex items-center justify-center size-6 rounded-md text-muted-foreground hover:text-amber-400/70 hover:bg-amber-500/10 transition-colors duration-200"
             >
               <Pencil className="size-3" />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-[10px]">Edit chapter</TooltipContent>
+          <TooltipContent side="bottom" className="text-[0.625rem]">Edit chapter</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -136,7 +136,7 @@ export function ChapterMarker({
               )}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-[10px]">Generate summary</TooltipContent>
+          <TooltipContent side="bottom" className="text-[0.625rem]">Generate summary</TooltipContent>
         </Tooltip>
 
         {hasSummary && (
@@ -149,7 +149,7 @@ export function ChapterMarker({
                 {summaryExpanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[10px]">{summaryExpanded ? 'Collapse summary' : 'Expand summary'}</TooltipContent>
+            <TooltipContent side="bottom" className="text-[0.625rem]">{summaryExpanded ? 'Collapse summary' : 'Expand summary'}</TooltipContent>
           </Tooltip>
         )}
 
@@ -162,18 +162,18 @@ export function ChapterMarker({
               <Trash2 className="size-3" />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-[10px]">Delete chapter</TooltipContent>
+          <TooltipContent side="bottom" className="text-[0.625rem]">Delete chapter</TooltipContent>
         </Tooltip>
       </div>
 
       {/* Summary — collapsible */}
       {hasSummary && summaryExpanded && (
         <div className="mt-3 mx-auto max-w-md animate-in fade-in slide-in-from-top-1 duration-200">
-          <p className="text-[11px] leading-relaxed text-muted-foreground italic text-center px-4">
+          <p className="text-[0.6875rem] leading-relaxed text-muted-foreground italic text-center px-4">
             {fragment.content}
           </p>
         </div>
       )}
     </div>
   )
-}
+})

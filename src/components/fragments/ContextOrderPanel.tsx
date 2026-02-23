@@ -117,7 +117,7 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border/30">
-        <p className="text-[11px] text-muted-foreground leading-snug">
+        <p className="text-[0.6875rem] text-muted-foreground leading-snug">
           Drag to reorder how pinned fragments appear in the model context
         </p>
       </div>
@@ -144,19 +144,19 @@ export function ContextOrderPanel({ storyId, story }: ContextOrderPanelProps) {
 
               {/* Fragment info */}
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium truncate leading-tight">{fragment.name}</p>
+                <p className="text-[0.75rem] font-medium truncate leading-tight">{fragment.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[10px] font-mono text-muted-foreground">
+                  <span className="text-[0.625rem] font-mono text-muted-foreground">
                     {fragment.id}
                   </span>
                   <Badge
                     variant="outline"
-                    className={cn('text-[9px] h-3.5 px-1', typeBadgeColor[fragment.type] ?? '')}
+                    className={cn('text-[0.5625rem] h-3.5 px-1', typeBadgeColor[fragment.type] ?? '')}
                   >
                     {fragment.type}
                   </Badge>
                   {fragment.placement === 'system' && (
-                    <Badge variant="outline" className="text-[9px] h-3.5 px-1 text-muted-foreground bg-muted/30 border-transparent">
+                    <Badge variant="outline" className="text-[0.5625rem] h-3.5 px-1 text-muted-foreground bg-muted/30 border-transparent">
                       sys
                     </Badge>
                   )}

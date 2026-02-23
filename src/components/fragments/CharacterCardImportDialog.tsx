@@ -303,7 +303,7 @@ export function CharacterCardImportDialog({
               <span className="flex items-center gap-2">
                 <span className="font-medium text-foreground/70">{cardData.card.name}</span>
                 {cardData.card.spec && (
-                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-border/40 text-muted-foreground">
+                  <Badge variant="outline" className="text-[0.5625rem] h-4 px-1.5 border-border/40 text-muted-foreground">
                     {cardData.card.spec}
                   </Badge>
                 )}
@@ -372,7 +372,7 @@ export function CharacterCardImportDialog({
                   }`}>
                     Drop character card JSON
                   </p>
-                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                  <p className="text-[0.6875rem] text-muted-foreground mt-1.5">
                     V2 or V3 character card .json files
                   </p>
                 </div>
@@ -381,7 +381,7 @@ export function CharacterCardImportDialog({
               {/* URL input */}
               <div className="flex items-center gap-2">
                 <div className="h-px flex-1 bg-border/30" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">or paste URL</span>
+                <span className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">or paste URL</span>
                 <div className="h-px flex-1 bg-border/30" />
               </div>
 
@@ -436,7 +436,7 @@ export function CharacterCardImportDialog({
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{cardData.card.name}</p>
                     {cardData.card.description && (
-                      <p className="text-[11px] text-muted-foreground line-clamp-1">
+                      <p className="text-[0.6875rem] text-muted-foreground line-clamp-1">
                         {cardData.card.description}
                       </p>
                     )}
@@ -445,7 +445,7 @@ export function CharacterCardImportDialog({
               )}
 
               {/* Select controls */}
-              <div className="flex items-center gap-3 text-[11px]">
+              <div className="flex items-center gap-3 text-[0.6875rem]">
                 <button
                   onClick={selectAll}
                   className="text-primary/60 hover:text-primary transition-colors"
@@ -476,12 +476,12 @@ export function CharacterCardImportDialog({
                     return (
                       <div key={group.key}>
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                          <span className="text-[0.625rem] uppercase tracking-wider text-muted-foreground font-medium">
                             {group.label}
                           </span>
                           <div className="h-px flex-1 bg-border/20" />
                           {group.key === 'lorebook' && (
-                            <span className="text-[10px] text-muted-foreground tabular-nums">
+                            <span className="text-[0.625rem] text-muted-foreground tabular-nums">
                               {groupItems.length}
                             </span>
                           )}
@@ -529,7 +529,7 @@ export function CharacterCardImportDialog({
         {/* ── Footer ── */}
         <DialogFooter className="px-5 py-3.5 flex-row items-center">
           {hasCard && (
-            <span className="text-[11px] text-muted-foreground mr-auto tabular-nums">
+            <span className="text-[0.6875rem] text-muted-foreground mr-auto tabular-nums">
               {selectedCount} of {totalCount} selected
             </span>
           )}
@@ -608,7 +608,7 @@ function ItemRow({
         </div>
 
         {/* Content preview */}
-        <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">
+        <p className="text-[0.6875rem] text-muted-foreground line-clamp-1 leading-relaxed">
           {item.content.slice(0, 120)}
         </p>
 
@@ -618,13 +618,13 @@ function ItemRow({
             {item.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
-                className="text-[9px] px-1.5 py-0.5 rounded-md bg-muted-foreground/[0.06] text-muted-foreground"
+                className="text-[0.5625rem] px-1.5 py-0.5 rounded-md bg-muted-foreground/[0.06] text-muted-foreground"
               >
                 {tag}
               </span>
             ))}
             {item.tags.length > 4 && (
-              <span className="text-[9px] text-muted-foreground">
+              <span className="text-[0.5625rem] text-muted-foreground">
                 +{item.tags.length - 4}
               </span>
             )}
@@ -637,7 +637,7 @@ function ItemRow({
         <DropdownMenuTrigger asChild>
           <button
             onClick={(e) => e.stopPropagation()}
-            className={`shrink-0 flex items-center gap-1 text-[10px] h-5 px-1.5 rounded-md border transition-colors ${config.className} hover:opacity-80`}
+            className={`shrink-0 flex items-center gap-1 text-[0.625rem] h-5 px-1.5 rounded-md border transition-colors ${config.className} hover:opacity-80`}
           >
             <Icon className="size-3" />
             <span>{config.label}</span>

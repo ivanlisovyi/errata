@@ -24,7 +24,7 @@ export function CharacterPreviewCard({
             {character.name}
           </div>
           {character.description && (
-            <p className="text-[11px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+            <p className="text-[0.6875rem] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
               {character.description}
             </p>
           )}
@@ -47,7 +47,7 @@ export function CharacterPreviewCard({
             <Badge
               key={tag}
               variant="secondary"
-              className="text-[10px] px-1.5 py-0 h-4"
+              className="text-[0.625rem] px-1.5 py-0 h-4"
             >
               {tag}
             </Badge>

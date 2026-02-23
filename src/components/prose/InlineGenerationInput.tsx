@@ -3,7 +3,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { PenLine, ChevronsDown, ArrowRight, Pause, Compass, RefreshCw, Loader2 } from 'lucide-react'
+import { PenLine, ChevronsDown, ArrowRight, Pause, Compass, RefreshCw, Loader2, PenSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { SuggestionDirection } from '@/lib/api/types'
 
@@ -82,7 +82,6 @@ export function InlineGenerationInput({
     // When analysis transitions from running → idle/error, refresh analyses and prose fragments
     // (librarian writes annotations to fragment.meta, so prose fragments must be re-fetched)
     if (prev === 'running' && (curr === 'idle' || curr === 'error')) {
-      setManualSuggestions(null)
       queryClient.invalidateQueries({ queryKey: ['librarian-analyses', storyId] })
       queryClient.invalidateQueries({ queryKey: ['fragments', storyId, 'prose'] })
     }
@@ -108,12 +107,14 @@ export function InlineGenerationInput({
     [latestAnalysis?.directions],
   )
 
-  // Merge: manual suggestions take priority, fall back to analysis directions
+  // Merge: prewriter/manual directions first, then append analysis directions (deduplicated by title)
   useEffect(() => {
-    if (manualSuggestions) {
-      setSuggestions(manualSuggestions)
-    } else if (analysisDirections.length > 0) {
-      setSuggestions(analysisDirections)
+    const base = manualSuggestions ?? []
+    const baseTitles = new Set(base.map(s => s.title))
+    const extra = analysisDirections.filter(s => !baseTitles.has(s.title))
+    const merged = [...base, ...extra]
+    if (merged.length > 0) {
+      setSuggestions(merged)
     }
   }, [manualSuggestions, analysisDirections])
 
@@ -151,11 +152,14 @@ export function InlineGenerationInput({
     el.style.height = Math.min(el.scrollHeight, 200) + 'px'
   }, [input])
 
+  const prewriterDirectionsRef = useRef<SuggestionDirection[] | null>(null)
+
   const handleGenerateWithInput = useCallback(async (generationInput: string) => {
     if (!generationInput.trim() || isGenerating) return
 
     onGenerationStart()
     setError(null)
+    prewriterDirectionsRef.current = null
 
     const ac = new AbortController()
     abortRef.current = ac
@@ -201,6 +205,8 @@ export function InlineGenerationInput({
             thoughtSteps.push({ type: 'prewriter-text', text: value.text })
           }
           thoughtsDirty = true
+        } else if (value.type === 'prewriter-directions') {
+          prewriterDirectionsRef.current = value.directions
         } else if (value.type === 'phase') {
           accumulatedReasoning = ''
           thoughtSteps.push({ type: 'phase', phase: value.phase })
@@ -226,6 +232,10 @@ export function InlineGenerationInput({
 
       await queryClient.invalidateQueries({ queryKey: ['fragments', storyId] })
       await queryClient.invalidateQueries({ queryKey: ['proseChain', storyId] })
+
+      if (prewriterDirectionsRef.current?.length) {
+        setManualSuggestions(prewriterDirectionsRef.current)
+      }
 
       setInput('')
       onGenerationComplete()
@@ -304,7 +314,7 @@ export function InlineGenerationInput({
             type="button"
             onClick={() => handleModeChange('freeform')}
             className={cn(
-              'px-2.5 py-1 text-[11px] font-sans rounded-md transition-all duration-200',
+              'px-2.5 py-1 text-[0.6875rem] font-sans rounded-md transition-all duration-200',
               mode === 'freeform'
                 ? 'text-foreground/80 bg-muted/60 font-medium'
                 : 'text-muted-foreground hover:text-foreground/60 hover:bg-muted/30',
@@ -316,7 +326,7 @@ export function InlineGenerationInput({
             type="button"
             onClick={() => handleModeChange('guided')}
             className={cn(
-              'px-2.5 py-1 text-[11px] font-sans rounded-md transition-all duration-200',
+              'px-2.5 py-1 text-[0.6875rem] font-sans rounded-md transition-all duration-200',
               mode === 'guided'
                 ? 'text-foreground/80 bg-muted/60 font-medium'
                 : 'text-muted-foreground hover:text-foreground/60 hover:bg-muted/30',
@@ -337,7 +347,7 @@ export function InlineGenerationInput({
             onBlur={() => setIsFocused(false)}
             placeholder="What happens next..."
             rows={1}
-            className="w-full resize-none bg-transparent border-none outline-none px-4 pt-1.5 pb-2 font-prose text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground placeholder:italic disabled:opacity-40"
+            className="w-full resize-none bg-transparent border-none outline-none px-4 pt-1.5 pb-2 font-prose text-[0.9375rem] leading-relaxed text-foreground placeholder:text-muted-foreground placeholder:italic disabled:opacity-40"
             style={{ minHeight: '44px', maxHeight: '200px', overflowY: 'auto', scrollbarWidth: 'none' }}
             disabled={isGenerating}
             onKeyDown={(e) => {
@@ -368,8 +378,8 @@ export function InlineGenerationInput({
                   <ArrowRight className="size-3.5 text-primary/70" />
                 </div>
                 <div>
-                  <div className="text-[13px] font-medium text-foreground/85 font-sans leading-tight">Continue</div>
-                  <div className="text-[10.5px] text-muted-foreground leading-snug mt-0.5">Advance the plot naturally</div>
+                  <div className="text-[0.8125rem] font-medium text-foreground/85 font-sans leading-tight">Continue</div>
+                  <div className="text-[0.65625rem] text-muted-foreground leading-snug mt-0.5">Advance the plot naturally</div>
                 </div>
               </button>
               <button
@@ -386,8 +396,8 @@ export function InlineGenerationInput({
                   <Pause className="size-3.5 text-primary/70" />
                 </div>
                 <div>
-                  <div className="text-[13px] font-medium text-foreground/85 font-sans leading-tight">Scene-setting</div>
-                  <div className="text-[10.5px] text-muted-foreground leading-snug mt-0.5">Atmosphere &amp; character moments</div>
+                  <div className="text-[0.8125rem] font-medium text-foreground/85 font-sans leading-tight">Scene-setting</div>
+                  <div className="text-[0.65625rem] text-muted-foreground leading-snug mt-0.5">Atmosphere &amp; character moments</div>
                 </div>
               </button>
             </div>
@@ -400,7 +410,7 @@ export function InlineGenerationInput({
                 onClick={handleFetchSuggestions}
                 className={cn(
                   'w-full flex items-center justify-center gap-2 py-2 rounded-lg transition-all duration-200',
-                  'text-[12px] font-sans text-muted-foreground hover:text-foreground/70',
+                  'text-[0.75rem] font-sans text-muted-foreground hover:text-foreground/70',
                   'border border-dashed border-border/40 hover:border-primary/25 hover:bg-primary/[0.02]',
                   'disabled:opacity-40 disabled:pointer-events-none',
                 )}
@@ -414,7 +424,7 @@ export function InlineGenerationInput({
             {isFetchingSuggestions && (
               <div className="flex items-center justify-center gap-2 py-4">
                 <Loader2 className="size-4 text-primary/50 animate-spin" />
-                <span className="text-[12px] text-muted-foreground font-sans italic">Imagining possibilities...</span>
+                <span className="text-[0.75rem] text-muted-foreground font-sans italic">Imagining possibilities...</span>
               </div>
             )}
 
@@ -422,7 +432,7 @@ export function InlineGenerationInput({
             {suggestions.length > 0 && !isFetchingSuggestions && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-muted-foreground font-sans uppercase tracking-wider">Directions</span>
+                  <span className="text-[0.625rem] text-muted-foreground font-sans uppercase tracking-wider">Directions</span>
                   <button
                     type="button"
                     disabled={isGenerating}
@@ -433,24 +443,45 @@ export function InlineGenerationInput({
                   </button>
                 </div>
                 {suggestions.map((s, i) => (
-                  <button
+                  <div
                     key={i}
-                    type="button"
-                    disabled={isGenerating}
-                    onClick={() => { setManualSuggestions(null); setSuggestions([]); handleGenerateWithInput(s.instruction) }}
                     className={cn(
-                      'group w-full text-left px-3.5 py-2.5 rounded-lg border transition-all duration-200',
+                      'group/card flex items-stretch rounded-lg border transition-all duration-200',
                       'border-border/25 hover:border-primary/25 bg-card/30 hover:bg-primary/[0.03]',
-                      'disabled:opacity-40 disabled:pointer-events-none',
+                      isGenerating && 'opacity-40 pointer-events-none',
                     )}
                   >
-                    <div className="text-[13px] font-medium text-foreground/80 font-sans leading-snug group-hover:text-foreground/90 transition-colors">
-                      {s.title}
-                    </div>
-                    <div className="text-[11.5px] text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">
-                      {s.description}
-                    </div>
-                  </button>
+                    <button
+                      type="button"
+                      disabled={isGenerating}
+                      onClick={() => { setManualSuggestions(null); setSuggestions([]); handleGenerateWithInput(s.instruction) }}
+                      className="flex-1 text-left px-3.5 py-2.5 min-w-0"
+                    >
+                      <div className="text-[0.8125rem] font-medium text-foreground/80 font-sans leading-snug group-hover/card:text-foreground/90 transition-colors">
+                        {s.title}
+                      </div>
+                      <div className="text-[0.71875rem] text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">
+                        {s.description}
+                      </div>
+                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={isGenerating}
+                          onClick={() => {
+                            setInput(s.instruction)
+                            handleModeChange('freeform')
+                            requestAnimationFrame(() => textareaRef.current?.focus())
+                          }}
+                          className="shrink-0 flex items-center justify-center w-9 border-l border-border/20 text-muted-foreground/40 hover:text-foreground/60 hover:bg-muted/30 transition-colors rounded-r-lg"
+                        >
+                          <PenSquare className="size-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Edit before sending</TooltipContent>
+                    </Tooltip>
+                  </div>
                 ))}
               </div>
             )}
@@ -471,7 +502,7 @@ export function InlineGenerationInput({
                     providerMutation.mutate({ providerId, modelId: null })
                   }}
                   disabled={providerMutation.isPending || isGenerating}
-                  className="text-[10px] text-foreground/60 bg-muted/50 hover:bg-muted/70 border border-border/40 hover:border-border/60 rounded-md outline-none cursor-pointer transition-all duration-200 appearance-none pl-2 pr-5 py-1 font-mono max-w-[180px] truncate disabled:opacity-30 disabled:cursor-default focus:ring-1 focus:ring-primary/20 focus:border-primary/30"
+                  className="text-[0.625rem] text-foreground/60 bg-muted/50 hover:bg-muted/70 border border-border/40 hover:border-border/60 rounded-md outline-none cursor-pointer transition-all duration-200 appearance-none pl-2 pr-5 py-1 font-mono max-w-[180px] truncate disabled:opacity-30 disabled:cursor-default focus:ring-1 focus:ring-primary/20 focus:border-primary/30"
                   style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}
                   title={modelLabel ?? undefined}
                 >
@@ -527,7 +558,7 @@ export function InlineGenerationInput({
           {/* Right: Write/Stop button + shortcut hint */}
           <div className="flex items-center gap-2.5">
             {mode === 'freeform' && !isGenerating && (
-              <span className="text-[10px] text-muted-foreground font-sans select-none hidden sm:inline">
+              <span className="text-[0.625rem] text-muted-foreground font-sans select-none hidden sm:inline">
                 Ctrl+Enter
               </span>
             )}

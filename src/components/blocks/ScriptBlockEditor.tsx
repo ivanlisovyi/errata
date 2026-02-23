@@ -83,19 +83,19 @@ export function ScriptBlockEditor({
       {/* Live output preview */}
       <div>
         <div className="flex items-center gap-1.5 mb-1">
-          <span className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-medium">Output</span>
+          <span className="text-[0.5625rem] text-muted-foreground uppercase tracking-[0.15em] font-medium">Output</span>
           {evalLoading && <Loader2 className="size-2.5 text-muted-foreground animate-spin" />}
         </div>
         {evalResult?.error ? (
-          <pre className="whitespace-pre-wrap text-[11px] text-red-400 bg-red-500/5 rounded-md p-2.5 border border-red-500/10 leading-relaxed">
+          <pre className="whitespace-pre-wrap text-[0.6875rem] text-red-400 bg-red-500/5 rounded-md p-2.5 border border-red-500/10 leading-relaxed">
             {evalResult.error}
           </pre>
         ) : evalResult?.result ? (
-          <pre className="whitespace-pre-wrap text-[11px] text-muted-foreground bg-muted/15 rounded-md p-2.5 max-h-[120px] overflow-y-auto border border-border/15 leading-relaxed">
+          <pre className="whitespace-pre-wrap text-[0.6875rem] text-muted-foreground bg-muted/15 rounded-md p-2.5 max-h-[120px] overflow-y-auto border border-border/15 leading-relaxed">
             {evalResult.result}
           </pre>
         ) : !evalLoading && local.trim() ? (
-          <p className="text-[10px] text-muted-foreground/50 italic px-1">(no output)</p>
+          <p className="text-[0.625rem] text-muted-foreground/50 italic px-1">(no output)</p>
         ) : null}
       </div>
     </div>
@@ -132,7 +132,7 @@ export function FragmentReference({ storyId }: { storyId: string }) {
   return (
     <div>
       <button
-        className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground/70 transition-colors"
+        className="flex items-center gap-1.5 text-[0.625rem] text-muted-foreground hover:text-foreground/70 transition-colors"
         onClick={() => setOpen(!open)}
       >
         {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
@@ -147,11 +147,11 @@ export function FragmentReference({ storyId }: { storyId: string }) {
               <Loader2 className="size-3 text-muted-foreground animate-spin" />
             </div>
           ) : grouped.size === 0 ? (
-            <p className="text-[10px] text-muted-foreground/50 italic text-center py-2">No fragments</p>
+            <p className="text-[0.625rem] text-muted-foreground/50 italic text-center py-2">No fragments</p>
           ) : (
             Array.from(grouped.entries()).map(([type, items]) => (
               <div key={type}>
-                <p className="text-[9px] text-muted-foreground uppercase tracking-[0.12em] font-medium mb-1">{type}</p>
+                <p className="text-[0.5625rem] text-muted-foreground uppercase tracking-[0.12em] font-medium mb-1">{type}</p>
                 <div className="space-y-0.5">
                   {items.map((item) => (
                     <div key={item.id} className="flex items-center gap-2 group/ref px-1 py-0.5 rounded hover:bg-muted/30">
@@ -160,14 +160,14 @@ export function FragmentReference({ storyId }: { storyId: string }) {
                         onClick={() => handleCopy(item.id)}
                         title="Copy ID"
                       >
-                        <code className="text-[10px] font-mono text-primary/70">{item.id}</code>
+                        <code className="text-[0.625rem] font-mono text-primary/70">{item.id}</code>
                         {copiedId === item.id ? (
                           <Check className="size-2.5 text-emerald-500" />
                         ) : (
                           <Copy className="size-2.5 text-muted-foreground/40 opacity-0 group-hover/ref:opacity-100 transition-opacity" />
                         )}
                       </button>
-                      <span className="text-[10px] text-muted-foreground truncate">{item.name}</span>
+                      <span className="text-[0.625rem] text-muted-foreground truncate">{item.name}</span>
                     </div>
                   ))}
                 </div>

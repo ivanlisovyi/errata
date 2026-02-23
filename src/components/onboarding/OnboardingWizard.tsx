@@ -338,7 +338,7 @@ function TypographyStep({
       {/* Prose fonts — the main event */}
       <div className="mb-8">
         <p
-          className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3 animate-onboarding-fade-up"
+          className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-3 animate-onboarding-fade-up"
           style={{ animationDelay: '100ms' }}
         >
           Prose
@@ -357,9 +357,16 @@ function TypographyStep({
                 }`}
                 style={{ animationDelay: `${150 + i * 80}ms` }}
               >
-                <p className="text-[11px] font-medium text-muted-foreground mb-2">{opt.name}</p>
+                <p className="text-[0.6875rem] font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                  {opt.name}
+                  {opt.tag && (
+                    <span className="text-[0.5rem] font-medium uppercase tracking-wider text-primary/60 bg-primary/8 px-1.5 py-px rounded-full leading-tight">
+                      {opt.tag}
+                    </span>
+                  )}
+                </p>
                 <p
-                  className="text-[15px] leading-relaxed text-foreground/80"
+                  className="text-[0.9375rem] leading-relaxed text-foreground/80"
                   style={{ fontFamily: `"${opt.name}", ${opt.fallback}` }}
                 >
                   {PROSE_SAMPLE}
@@ -378,13 +385,13 @@ function TypographyStep({
       {/* Display fonts — secondary */}
       <div className="mb-10">
         <p
-          className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3 animate-onboarding-fade-up"
+          className="text-[0.625rem] text-muted-foreground uppercase tracking-wider mb-3 animate-onboarding-fade-up"
           style={{ animationDelay: '500ms' }}
         >
           Headings
         </p>
         <div
-          className="flex gap-3 animate-onboarding-fade-up"
+          className="grid grid-cols-3 gap-3 animate-onboarding-fade-up"
           style={{ animationDelay: '550ms' }}
         >
           {FONT_CATALOGUE.display.map((opt) => {
@@ -393,7 +400,7 @@ function TypographyStep({
               <button
                 key={opt.name}
                 onClick={() => setFont('display', opt.name)}
-                className={`relative flex-1 text-center p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                className={`relative text-center p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
                   isActive
                     ? 'border-primary/40 bg-primary/5 shadow-sm'
                     : 'border-border/30 hover:border-border/60 hover:bg-card/50'
@@ -405,7 +412,14 @@ function TypographyStep({
                 >
                   Chapter One
                 </p>
-                <p className="text-[10px] text-muted-foreground">{opt.name}</p>
+                <p className="text-[0.625rem] text-muted-foreground flex items-center justify-center gap-1">
+                  {opt.name}
+                  {opt.tag && (
+                    <span className="text-[0.4375rem] font-medium uppercase tracking-wider text-primary/60 bg-primary/8 px-1 py-px rounded-full leading-tight">
+                      {opt.tag}
+                    </span>
+                  )}
+                </p>
                 {isActive && (
                   <div className="absolute top-2 right-2 size-4 rounded-full bg-primary flex items-center justify-center animate-onboarding-scale-in">
                     <Check className="size-2.5 text-primary-foreground" />
@@ -572,7 +586,7 @@ function ProviderSelectStep({
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium">{card.name}</span>
                     {card.defaultModel && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/50 text-muted-foreground">
+                      <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-muted/50 text-muted-foreground">
                         {card.defaultModel}
                       </span>
                     )}
@@ -851,7 +865,7 @@ function ProviderSetupStep({
           {fetchedModels.length > 0 && (
             <button
               type="button"
-              className="text-[11px] text-muted-foreground hover:text-muted-foreground mt-1 underline"
+              className="text-[0.6875rem] text-muted-foreground hover:text-muted-foreground mt-1 underline"
               onClick={() => setUseCustomModel(!useCustomModel)}
             >
               {useCustomModel ? 'Use fetched models' : 'Enter model ID manually'}
@@ -859,7 +873,7 @@ function ProviderSetupStep({
           )}
           {fetchError && <p className="text-xs text-destructive mt-1">{fetchError}</p>}
           {fetchedModels.length > 0 && !fetchError && (
-            <p className="text-[11px] text-muted-foreground mt-1">
+            <p className="text-[0.6875rem] text-muted-foreground mt-1">
               {fetchedModels.length} models available
             </p>
           )}

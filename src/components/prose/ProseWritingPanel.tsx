@@ -97,13 +97,13 @@ const PassageItem = memo(function PassageItem({
     >
       <div className="flex items-center justify-between mb-0.5">
         <span className={cn(
-          'text-[10px] font-mono',
+          'text-[0.625rem] font-mono',
           isActive ? 'text-primary/70' : 'text-muted-foreground',
         )}>
           {proseNumber}
         </span>
         <span className={cn(
-          'text-[9px] font-mono tabular-nums',
+          'text-[0.5625rem] font-mono tabular-nums',
           isActive ? 'text-primary/40' : 'text-muted-foreground group-hover/item:text-muted-foreground',
         )}>
           {wc}w
@@ -111,7 +111,7 @@ const PassageItem = memo(function PassageItem({
       </div>
       {fragment.description && (
         <span className={cn(
-          'block text-[10px] italic truncate mb-0.5',
+          'block text-[0.625rem] italic truncate mb-0.5',
           isActive
             ? 'text-muted-foreground'
             : 'text-muted-foreground group-hover/item:text-muted-foreground',
@@ -120,7 +120,7 @@ const PassageItem = memo(function PassageItem({
         </span>
       )}
       <span className={cn(
-        'block text-[11px] leading-snug font-prose line-clamp-2',
+        'block text-[0.6875rem] leading-snug font-prose line-clamp-2',
         isActive
           ? 'text-foreground/70'
           : 'text-muted-foreground group-hover/item:text-muted-foreground',
@@ -134,7 +134,7 @@ const PassageItem = memo(function PassageItem({
 function SaveIndicator({ saveState, isDirty }: { saveState: 'idle' | 'saving' | 'saved'; isDirty: boolean }) {
   if (saveState === 'saving') {
     return (
-      <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground animate-in fade-in duration-150">
+      <span className="flex items-center gap-1.5 text-[0.625rem] text-muted-foreground animate-in fade-in duration-150">
         <Loader2 className="size-2.5 animate-spin" />
         <span className="hidden sm:inline">Saving</span>
       </span>
@@ -142,7 +142,7 @@ function SaveIndicator({ saveState, isDirty }: { saveState: 'idle' | 'saving' | 
   }
   if (saveState === 'saved') {
     return (
-      <span className="flex items-center gap-1.5 text-[10px] text-emerald-500/70 animate-in fade-in duration-150">
+      <span className="flex items-center gap-1.5 text-[0.625rem] text-emerald-500/70 animate-in fade-in duration-150">
         <Check className="size-2.5" />
         <span className="hidden sm:inline">Saved</span>
       </span>
@@ -152,7 +152,7 @@ function SaveIndicator({ saveState, isDirty }: { saveState: 'idle' | 'saving' | 
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="flex items-center gap-1.5 text-[10px] text-amber-500/60">
+          <span className="flex items-center gap-1.5 text-[0.625rem] text-amber-500/60">
             <Circle className="size-1.5 fill-current" />
             <span className="hidden sm:inline">Unsaved</span>
           </span>
@@ -573,7 +573,7 @@ export function ProseWritingPanel({
                   {prevFragment ? 'Previous passage (Alt+\u2191)' : 'First passage'}
                 </TooltipContent>
               </Tooltip>
-              <span className="text-[10px] font-mono text-muted-foreground tabular-nums min-w-[2.5ch] text-center">
+              <span className="text-[0.625rem] font-mono text-muted-foreground tabular-nums min-w-[2.5ch] text-center">
                 {currentProseIndex + 1}
               </span>
               <Tooltip>
@@ -691,7 +691,7 @@ export function ProseWritingPanel({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                      className="h-6 px-2 text-[0.625rem] gap-1 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         editor?.commands.undo()
                         setShowTransformUndo(false)
@@ -711,7 +711,7 @@ export function ProseWritingPanel({
                       key={t.id}
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground/80"
+                      className="h-6 px-2 text-[0.625rem] text-muted-foreground hover:text-foreground/80"
                       onClick={() => applySelectionTransform('custom', t.instruction, t.label)}
                       disabled={isTransformingSelection || !hasSelection}
                     >
@@ -726,9 +726,9 @@ export function ProseWritingPanel({
               {/* Reasoning stream */}
               {(isTransformingSelection || selectionTransformReasoning.trim()) && (
                 <div className="border-t border-border/50 px-2.5 py-2">
-                  <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">Reasoning</p>
+                  <p className="mb-1 text-[0.625rem] uppercase tracking-wide text-muted-foreground">Reasoning</p>
                   <div className="max-h-36 overflow-y-auto overscroll-contain pr-1">
-                    <p className="text-[11px] leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                    <p className="text-[0.6875rem] leading-relaxed text-muted-foreground whitespace-pre-wrap">
                       {selectionTransformReasoning.trim() || 'Thinking\u2026'}
                     </p>
                   </div>
@@ -745,7 +745,7 @@ export function ProseWritingPanel({
             >
               <div className="flex items-center gap-2 mb-1">
                 <ChevronUp className="size-3 text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors" />
-                <span className="text-[10px] text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors">
+                <span className="text-[0.625rem] text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors">
                   Previous passage
                 </span>
               </div>
@@ -771,7 +771,7 @@ export function ProseWritingPanel({
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <ChevronDown className="size-3 text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors" />
-                <span className="text-[10px] text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors">
+                <span className="text-[0.625rem] text-muted-foreground group-hover/ctx:text-muted-foreground transition-colors">
                   Next passage
                 </span>
               </div>
@@ -781,13 +781,13 @@ export function ProseWritingPanel({
 
         {/* Footer */}
         <div className="shrink-0 border-t border-border/30 px-4 py-2 sm:px-6 flex items-center justify-between gap-4">
-          <span className="text-[10px] text-muted-foreground hidden sm:inline">
+          <span className="text-[0.625rem] text-muted-foreground hidden sm:inline">
             Ctrl+S save &middot; Esc close &middot; Alt+&uarr;&darr; passages
           </span>
-          <span className="text-[10px] text-muted-foreground sm:hidden">
+          <span className="text-[0.625rem] text-muted-foreground sm:hidden">
             Ctrl+S &middot; Esc
           </span>
-          <span className="text-[10px] text-muted-foreground font-mono tabular-nums">
+          <span className="text-[0.625rem] text-muted-foreground font-mono tabular-nums">
             {editorStats.words.toLocaleString()}w
             &middot; {editorStats.chars.toLocaleString()}c
             &middot; ~{editorStats.tokens.toLocaleString()}t
@@ -807,10 +807,10 @@ export function ProseWritingPanel({
         {/* Sidebar header with search */}
         <div className="shrink-0 px-3 pt-4 pb-2">
           <div className="flex items-center justify-between mb-2.5">
-            <h3 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+            <h3 className="text-[0.625rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">
               Passages
             </h3>
-            <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
+            <span className="text-[0.625rem] font-mono text-muted-foreground tabular-nums">
               {proseItems.length}
             </span>
           </div>
@@ -822,7 +822,7 @@ export function ProseWritingPanel({
               value={sidebarSearch}
               onChange={(e) => setSidebarSearch(e.target.value)}
               placeholder="Filter"
-              className="w-full bg-muted/30 hover:bg-muted/50 focus:bg-muted/50 border border-transparent focus:border-border/40 rounded-md pl-7 pr-2 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground outline-none transition-all"
+              className="w-full bg-muted/30 hover:bg-muted/50 focus:bg-muted/50 border border-transparent focus:border-border/40 rounded-md pl-7 pr-2 py-1.5 text-[0.6875rem] text-foreground placeholder:text-muted-foreground outline-none transition-all"
             />
             {sidebarSearch && (
               <button
@@ -847,7 +847,7 @@ export function ProseWritingPanel({
                     <div className="flex items-center gap-1.5">
                       <div className="h-px flex-1 bg-amber-500/10" />
                       <Bookmark className="size-2.5 text-amber-500/40 shrink-0" />
-                      <span className="text-[10px] font-medium tracking-wide text-amber-500/40 shrink-0">
+                      <span className="text-[0.625rem] font-medium tracking-wide text-amber-500/40 shrink-0">
                         {fragment.name}
                       </span>
                       <div className="h-px flex-1 bg-amber-500/10" />
@@ -868,7 +868,7 @@ export function ProseWritingPanel({
             })}
 
             {sidebarSearch && filteredItems.length === 0 && (
-              <p className="text-[11px] text-muted-foreground text-center py-6 italic">
+              <p className="text-[0.6875rem] text-muted-foreground text-center py-6 italic">
                 No matches
               </p>
             )}

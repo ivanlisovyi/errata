@@ -282,7 +282,7 @@ export function TavernCardImportDialog({
                 }`}>
                   Drop character cards here
                 </p>
-                <p className="text-[11px] text-muted-foreground mt-1.5">
+                <p className="text-[0.6875rem] text-muted-foreground mt-1.5">
                   one or multiple .png files
                 </p>
               </div>
@@ -340,7 +340,7 @@ export function TavernCardImportDialog({
                   <Plus className={`size-5 transition-colors ${
                     dragOver ? 'text-primary/40' : 'text-muted-foreground group-hover:text-muted-foreground'
                   }`} />
-                  <p className="text-[11px] text-muted-foreground group-hover:text-muted-foreground transition-colors">
+                  <p className="text-[0.6875rem] text-muted-foreground group-hover:text-muted-foreground transition-colors">
                     Add more cards
                   </p>
                 </div>
@@ -375,7 +375,7 @@ export function TavernCardImportDialog({
         {/* ── Footer ── */}
         <DialogFooter className="px-5 py-3.5 flex-row items-center">
           {hasCards && (
-            <span className="text-[11px] text-muted-foreground mr-auto tabular-nums">
+            <span className="text-[0.6875rem] text-muted-foreground mr-auto tabular-nums">
               {selected.size} of {cards.length} selected
             </span>
           )}
@@ -463,7 +463,7 @@ function CharacterCard({
             {card.character.name}
           </p>
           {card.character.meta.tavernCreator && (
-            <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+            <p className="text-[0.625rem] text-muted-foreground mt-0.5 truncate">
               by {card.character.meta.tavernCreator}
             </p>
           )}
@@ -473,22 +473,22 @@ function CharacterCard({
       {/* Body */}
       <div className="px-3.5 py-2.5 space-y-1.5">
         {card.character.description && (
-          <p className={`text-muted-foreground leading-relaxed ${large ? 'text-[13px] line-clamp-3' : 'text-[11px] line-clamp-2'}`}>
+          <p className={`text-muted-foreground leading-relaxed ${large ? 'text-[0.8125rem] line-clamp-3' : 'text-[0.6875rem] line-clamp-2'}`}>
             {card.character.description}
           </p>
         )}
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+          <Badge variant="secondary" className="text-[0.5625rem] h-4 px-1.5">
             {card.character.meta.tavernSpec || 'character'}
           </Badge>
           {card.character.tags.slice(0, large ? 6 : 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="text-[9px] h-4 px-1.5 border-border/40 text-muted-foreground">
+            <Badge key={tag} variant="outline" className="text-[0.5625rem] h-4 px-1.5 border-border/40 text-muted-foreground">
               {tag}
             </Badge>
           ))}
           {card.character.tags.length > (large ? 6 : 3) && (
-            <span className="text-[9px] text-muted-foreground">
+            <span className="text-[0.5625rem] text-muted-foreground">
               +{card.character.tags.length - (large ? 6 : 3)}
             </span>
           )}

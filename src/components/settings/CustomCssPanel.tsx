@@ -32,7 +32,7 @@ export function CustomCssPanel({ onClose }: CustomCssPanelProps) {
         <div className="flex items-center gap-2">
           <Code2 className="size-4 text-muted-foreground" />
           <h2 className="font-display text-lg">Custom CSS</h2>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Appearance</span>
+          <span className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Appearance</span>
         </div>
         <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" onClick={onClose} data-component-id="custom-css-panel-close">
           <X className="size-4" />
